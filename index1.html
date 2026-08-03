@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROGNOZ — Управление резервами</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* ===== CSS Переменные для тем ===== */
+        :root {
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --bg-panel: #ffffff;
+            --bg-card: #f0f2f5;
+            --bg-header: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            --text-primary: #1e1e1e;
+            --text-secondary: #1a237e;
+            --text-muted: #666;
+            --border-color: #c5cae9;
+            --border-light: #e8eaf6;
+            --shadow-color: rgba(0,0,0,0.08);
+            --table-stripe: #f8f9fc;
+            --table-hover: #e8eaf6;
+            --input-bg: #ffffff;
+            --input-border: #9fa8da;
+            --success-bg: #e8f5e9;
+            --warning-bg: #fff3e0;
+            --danger-bg: #ffebee;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --stock-low: #e53935;
+            --stock-medium: #fb8c00;
+            --stock-high: #43a047;
+            --primary: #1a237e;
+            --primary-light: #3f51b5;
+            --critical: #e53935;
+            --warning: #fb8c00;
+            --info: #1e88e5;
+            --success: #43a047;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e2e;
+            --bg-panel: #1e1e2e;
+            --bg-card: #2a2a3e;
+            --bg-header: linear-gradient(135deg, #0d1442 0%, #1a237e 100%);
+            --text-primary: #e0e0e0;
+            --text-secondary: #7986cb;
+            --text-muted: #999;
+            --border-color: #333355;
+            --border-light: #2a2a4e;
+            --shadow-color: rgba(0,0,0,0.4);
+            --table-stripe: #1a1a32;
+            --table-hover: #2a2a52;
+            --input-bg: #2a2a4e;
+            --input-border: #444477;
+            --success-bg: #1a3a2a;
+            --warning-bg: #3a2a1a;
+            --danger-bg: #3a1a1a;
+            --primary: #5c6bc0;
+            --primary-light: #7986cb;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; }
+        body { background: var(--bg-primary); color: var(--text-primary); padding: 16px 20px; transition: all 0.3s; }
+        .app-container { max-width: 1600px; margin: 0 auto; }
+
+        .header {
+            background: var(--bg-header);
+            border-radius: 16px 16px 0 0;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            color: white;
+            margin-bottom: 16px;
+        }
+        .header h1 { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .header h1 small { font-size: 0.65rem; background: rgba(255,255,255,0.15); padding: 2px 14px; border-radius: 40px; }
+        .header-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .theme-toggle-btn { padding: 5px 14px; border-radius: 40px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; background: rgba(255,255,255,0.15); color: white; transition: 0.2s; }
+        .theme-toggle-btn:hover { background: rgba(255,255,255,0.25); }
+        .btn-help { padding: 5px 14px; border-radius: 40px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; background: rgba(255,255,255,0.15); color: white; transition: 0.2s; }
+        .btn-help:hover { background: rgba(255,255,255,0.25); }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .left-panel {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        .left-panel::-webkit-scrollbar { width: 4px; }
+        .left-panel::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 4px; }
+
+        .right-panel {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            min-width: 0;
+        }
+
+        .panel-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn-primary:hover { background: var(--primary-light); transform: scale(1.02); }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover { background: var(--table-hover); }
+
+        .btn-success {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-success:hover { background: #1b5e20; transform: scale(1.02); }
+
+        .btn-danger {
+            background: #c62828;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover { background: #b71c1c; }
+
+        .btn-warning {
+            background: #FF8C00;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-warning:hover { background: #e07c00; }
+
+        .filter-group { margin-bottom: 10px; }
+        .filter-group label { font-weight: 600; display: block; margin-bottom: 3px; color: var(--text-secondary); font-size: 0.7rem; }
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 0.7rem;
+            transition: 0.2s;
+            appearance: none;
+        }
+        .filter-group select[multiple] {
+            height: auto;
+            min-height: 60px;
+            appearance: auto;
+            padding: 4px;
+        }
+        .filter-group select[multiple] option {
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .filter-group select[multiple] option:checked {
+            background: var(--primary);
+            color: white;
+        }
+        .filter-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234285F4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .filter-group select[multiple] {
+            background-image: none;
+        }
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.15);
+        }
+
+        .filter-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        .upload-status { font-size: 0.6rem; color: var(--text-muted); padding: 2px 8px; background: var(--bg-card); border-radius: 12px; display: inline-block; }
+        .upload-status.loaded { color: #2e7d32; background: var(--success-bg); }
+        .upload-status.error { color: #c62828; background: var(--danger-bg); }
+
+        .stats-badge {
+            background: var(--bg-card);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: var(--text-primary);
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .pivot-wrapper {
+            overflow: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            max-height: 55vh;
+            position: relative;
+        }
+        .pivot-wrapper::-webkit-scrollbar { width: 5px; height: 5px; }
+        .pivot-wrapper::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 4px; }
+
+        .full-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.6rem;
+            min-width: 1200px;
+            background: var(--bg-panel);
+        }
+        .full-table th {
+            background: var(--primary);
+            color: white;
+            position: sticky;
+            top: 0;
+            font-weight: 700;
+            padding: 6px 8px;
+            text-align: left;
+            font-size: 0.55rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .full-table th:first-child, .full-table th:nth-child(2) {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            background: var(--primary);
+        }
+        .full-table td {
+            padding: 4px 6px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+        .full-table td:first-child, .full-table td:nth-child(2) {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background: var(--bg-panel);
+        }
+        .full-table tbody tr:nth-child(even) td { background-color: var(--table-stripe); }
+        .full-table tbody tr:nth-child(even) td:first-child,
+        .full-table tbody tr:nth-child(even) td:nth-child(2) { background-color: var(--table-stripe); }
+        .full-table tbody tr:hover td { background-color: var(--table-hover); }
+        .full-table tbody tr:hover td:first-child,
+        .full-table tbody tr:hover td:nth-child(2) { background-color: var(--table-hover); }
+
+        .full-table td.editable { background-color: #fffde7 !important; }
+        .full-table td select, .full-table td input[type="number"] {
+            width: 100%;
+            padding: 1px 4px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 0.6rem;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .full-table td.stock-critical { background: linear-gradient(135deg, #ffebee, #ffcdd2) !important; color: #b71c1c; font-weight: 700; }
+        .full-table td.stock-warning { background: linear-gradient(135deg, #fff3e0, #ffccbc) !important; color: #bf360c; font-weight: 600; }
+        .full-table td.stock-normal { background: linear-gradient(135deg, #e8f5e9, #c8e6c9) !important; color: #1b5e20; }
+
+        .full-table td.uto-highlight { background: linear-gradient(135deg, #f3e5f5, #e1bee7) !important; font-weight: 600; color: #4a148c; }
+        .full-table td.min-highlight { background: linear-gradient(135deg, #fff3e0, #ffab91) !important; font-weight: 600; color: #bf360c; }
+        .full-table td.best-highlight { background: linear-gradient(135deg, #fff8e1, #ffe082) !important; font-weight: 600; color: #e65100; }
+
+        .full-table tr.edited-row td { background-color: #e3f2fd !important; }
+        .full-table tr.edited-row td:first-child,
+        .full-table tr.edited-row td:nth-child(2) { background-color: #e3f2fd !important; }
+
+        .magportal-btn {
+            background: rgba(26, 35, 126, 0.12);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 9px;
+            padding: 1px 6px;
+            color: var(--primary);
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .magportal-btn:hover { background: var(--primary); color: white; }
+
+        .color-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            font-size: 0.55rem;
+            align-items: center;
+        }
+        .legend-item { display: inline-flex; align-items: center; gap: 4px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border-light); }
+        .legend-color.critical { background: #e53935; }
+        .legend-color.warning { background: #fb8c00; }
+        .legend-color.normal { background: #43a047; }
+        .legend-color.uto { background: linear-gradient(135deg, #f3e5f5, #e1bee7); border-color: #7b1fa2; }
+        .legend-color.min { background: linear-gradient(135deg, #fff3e0, #ffab91); border-color: #e65100; }
+        .legend-color.best { background: linear-gradient(135deg, #fff8e1, #ffe082); border-color: #f9a825; }
+
+        .empty-message {
+            padding: 30px 20px;
+            text-align: center;
+            background: var(--warning-bg);
+            border-radius: 10px;
+            border: 2px solid #fb8c00;
+        }
+        .empty-message .icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+        .empty-message .title { font-weight: 700; color: #e65100; font-size: 0.9rem; }
+        .empty-message .desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+
+        .loading-indicator {
+            display: none;
+            background: var(--bg-card);
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+            gap: 10px;
+        }
+        .loading-indicator.active { display: flex; }
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+        .toast {
+            background: #1e1e1e;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+        }
+        .toast.success { background: #2e7d32; border-left: 4px solid #4caf50; }
+        .toast.error { background: #c62828; border-left: 4px solid #ff5722; }
+        .toast.warning { background: #e65100; border-left: 4px solid #ffa726; }
+        .toast-close { cursor: pointer; margin-left: auto; font-weight: bold; opacity: 0.7; }
+        .toast-close:hover { opacity: 1; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .quick-actions { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+        .quick-actions .btn-secondary { flex: 1; min-width: 60px; text-align: center; }
+
+        footer {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 0.55rem;
+            border-top: 2px solid var(--border-color);
+            padding-top: 10px;
+            color: var(--text-muted);
+        }
+
+        /* ===== СТИЛИ ДЛЯ ПРОГНОЗА ===== */
+        .forecast-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            border-left: 4px solid #FF8C00;
+            transition: all 0.2s;
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+        .forecast-card:hover { transform: translateX(4px); box-shadow: var(--card-shadow); }
+        .forecast-card .article { font-weight: 700; color: #FF8C00; cursor: pointer; }
+        .forecast-card .article:hover { text-decoration: underline; }
+        .forecast-card .critical { color: #e53935; font-weight: 700; }
+        .forecast-card .warning { color: #fb8c00; font-weight: 700; }
+        .forecast-card .normal { color: #43a047; font-weight: 700; }
+        .forecast-card .badge-priority { padding: 1px 8px; border-radius: 10px; font-size: 0.5rem; font-weight: 600; }
+        .forecast-card .badge-critical { background: #e53935; color: white; }
+        .forecast-card .badge-high { background: #fb8c00; color: white; }
+        .forecast-card .badge-medium { background: #fdd835; color: #1e1e1e; }
+        .forecast-card .badge-low { background: #43a047; color: white; }
+
+        .order-list-btn {
+            background: #2c5f2d;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 0.55rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .order-list-btn:hover { background: #1f4520; transform: scale(1.02); }
+
+        .forecast-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .forecast-stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 8px 12px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .forecast-stat-card:hover { transform: scale(1.03); box-shadow: var(--card-shadow); }
+        .forecast-stat-card .value { font-size: 1.2rem; font-weight: 700; }
+        .forecast-stat-card .label { font-size: 0.5rem; color: var(--text-muted); }
+        .forecast-stat-card.critical { border-left: 4px solid var(--critical); }
+        .forecast-stat-card.warning { border-left: 4px solid var(--warning); }
+        .forecast-stat-card.info { border-left: 4px solid var(--info); }
+        .forecast-stat-card.success { border-left: 4px solid var(--success); }
+        .forecast-stat-card .value { color: var(--text-primary); }
+        .forecast-stat-card.critical .value { color: var(--critical); }
+        .forecast-stat-card.warning .value { color: var(--warning); }
+        .forecast-stat-card.info .value { color: var(--info); }
+        .forecast-stat-card.success .value { color: var(--success); }
+        .forecast-stat-card .sub-info { font-size: 0.45rem; color: var(--text-muted); margin-top: 2px; }
+
+        .info-tooltip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #FF8C00;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+        }
+        .info-tooltip:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(255,140,0,0.3); }
+
+        .show-all-btn {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            margin-top: 6px;
+        }
+        .show-all-btn:hover { background: var(--primary); transform: scale(1.02); }
+
+        .table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+        }
+
+        .seasonality-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 4px 0;
+            font-size: 0.65rem;
+        }
+        .seasonality-slider input[type="range"] {
+            flex: 1;
+            accent-color: #FF8C00;
+        }
+        .seasonality-slider .value {
+            font-weight: 700;
+            color: #FF8C00;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .forecast-detail {
+            font-size: 0.5rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .forecast-detail .tag {
+            background: var(--bg-panel);
+            padding: 1px 6px;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border-light);
+            border-radius: 3px;
+            margin: 4px 0;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-container.active { display: block; }
+        .progress-container .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .progress-text {
+            font-size: 0.5rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 2px;
+            display: none;
+        }
+        .progress-text.active { display: block; }
+
+        /* Модалка для графика */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: var(--bg-panel);
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 2px solid var(--border-color);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0 8px;
+            transition: 0.2s;
+            z-index: 10;
+            background: var(--bg-panel);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -10px;
+            margin-right: -10px;
+        }
+        .modal-close:hover { color: #e53935; transform: rotate(90deg); }
+        .modal-content h2 { color: #FF8C00; font-size: 1.2rem; margin-bottom: 4px; }
+        .modal-content .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+
+        .seasonality-chart-wrapper { background: var(--bg-card); border-radius: 12px; padding: 16px; margin-top: 8px; }
+        .seasonality-chart-wrapper canvas { max-height: 300px; max-width: 100%; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .left-panel { position: static; max-height: none; }
+            .forecast-stats-row { grid-template-columns: repeat(2, 1fr); }
+            .full-table { font-size: 0.5rem; min-width: 800px; }
+            .modal-content { padding: 16px; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>📊 PROGNOZ <small>Управление резервами</small></h1>
+        <div class="header-controls">
+            <button class="theme-toggle-btn" id="themeToggleBtn">🌙 Тёмная</button>
+            <button class="btn-help" onclick="showHelp()">❓ Помощь</button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Левая панель -->
+        <div class="left-panel">
+            <div class="panel-title">📁 Управление данными</div>
+            
+            <button class="btn-primary" id="autoLoadBtn" style="margin-bottom:8px;">📂 Загрузить отчёты из папки</button>
+            <div style="font-size:0.6rem; color:var(--text-muted); margin-bottom:8px;">
+                <span id="uploadSummary">📁 Загружено: 0 / 11 отчётов</span>
+                <div id="folderPath" style="font-size:0.55rem; margin-top:2px;"></div>
+            </div>
+            <div style="margin-bottom:10px;">
+                <button class="btn-secondary" id="toggleReportsBtn" style="width:100%;">📂 Загрузить отдельные отчёты ▼</button>
+                <div id="reportsList" style="max-height:0; overflow:hidden; transition:max-height 0.3s ease; margin-top:4px;">
+                    <div id="reportItems"></div>
+                </div>
+            </div>
+            
+            <div class="panel-title" style="margin-top:12px;">🔍 Фильтры</div>
+            <div class="filter-group">
+                <label>🏬 Магазин</label>
+                <select id="storeFilter"><option value="all">Все магазины</option></select>
+            </div>
+            <div class="filter-group">
+                <label>📁 Отдел</label>
+                <select id="departmentFilter"><option value="all">Все отделы</option></select>
+            </div>
+            <div class="filter-group">
+                <label>📌 Подотдел (множественный выбор)</label>
+                <select id="subdepartmentFilter" multiple>
+                    <option value="all" selected>Все подотделы</option>
+                </select>
+                <div style="font-size:0.5rem; color:var(--text-muted); margin-top:2px;">Hold Ctrl/Cmd для выбора нескольких</div>
+            </div>
+            <div class="filter-group">
+                <label>📌 ТИП</label>
+                <select id="typeFilter"><option value="all">Все</option></select>
+            </div>
+            <div class="filter-group">
+                <label>⭐ ТОП</label>
+                <select id="topFilter">
+                    <option value="all">Все</option>
+                    <option value="1" selected>1</option>
+                    <option value="2">2</option>
+                    <option value="0">0</option>
+                </select>
+            </div>
+            <div class="filter-row-2col">
+                <div class="filter-group">
+                    <label>📅 Запас (дн) <span id="stockRangeLabel" style="font-weight:400;color:var(--text-muted);">0-30</span></label>
+                    <div style="display:flex;gap:4px;">
+                        <input type="number" id="stockMinInput" value="0" style="width:50%;padding:4px 6px;border-radius:16px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-primary);font-size:0.65rem;">
+                        <span style="color:var(--text-muted);">—</span>
+                        <input type="number" id="stockMaxInput" value="30" style="width:50%;padding:4px 6px;border-radius:16px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-primary);font-size:0.65rem;">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>📦 В пути (дн) <span id="transitRangeLabel" style="font-weight:400;color:var(--text-muted);">0-30</span></label>
+                    <div style="display:flex;gap:4px;">
+                        <input type="number" id="transitMinInput" value="0" style="width:50%;padding:4px 6px;border-radius:16px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-primary);font-size:0.65rem;">
+                        <span style="color:var(--text-muted);">—</span>
+                        <input type="number" id="transitMaxInput" value="30" style="width:50%;padding:4px 6px;border-radius:16px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-primary);font-size:0.65rem;">
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>🔍 Поиск по артикулу</label>
+                <input type="text" id="articleSearchInput" placeholder="Введите артикул">
+            </div>
+            <div class="quick-actions">
+                <button class="btn-secondary" id="applySearchBtn" style="background:var(--primary);color:white;border-color:var(--primary);">🔍 Найти</button>
+                <button class="btn-secondary" id="clearSearchBtn">🗑️ Очистить</button>
+            </div>
+            
+            <div class="panel-title" style="margin-top:12px;">✏️ Редактирование</div>
+            <div class="quick-actions">
+                <button class="btn-secondary active" data-filter="all" id="filterAllBtn">📋 Все</button>
+                <button class="btn-secondary" data-filter="uto" id="filterUtoBtn" style="border-color:#7b1fa2;color:#7b1fa2;">📊 УТО</button>
+                <button class="btn-secondary" data-filter="best" id="filterBestBtn" style="border-color:#f9a825;color:#e65100;">⭐ Бест</button>
+                <button class="btn-secondary" data-filter="min" id="filterMinBtn" style="border-color:#e65100;color:#e65100;">📋 Мины</button>
+            </div>
+            <button class="btn-success" id="exportChangesBtn" style="margin-top:6px;">⬇️ ВЫГРУЗИТЬ MIN Custom</button>
+            <button class="btn-danger" id="resetChangesBtn" style="margin-top:4px;width:100%;">🗑️ Сбросить изменения</button>
+            <div style="font-size:0.5rem; color:var(--text-muted); margin-top:6px; text-align:center;">
+                ✏️ Изменено: <span id="editedCount">0</span> позиций
+            </div>
+        </div>
+
+        <!-- Правая панель -->
+        <div class="right-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                <h3 style="font-size:0.95rem; color:var(--text-secondary);">📋 Сводная таблица</h3>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="btn-primary" id="computeBtn" style="width:auto; padding:6px 16px;">🧮 ВЫЧИСЛИТЬ</button>
+                    <button class="btn-success" id="exportAllBtn" style="width:auto; padding:6px 16px;">⬇️ ВЫГРУЗИТЬ ВСЕ</button>
+                    <button class="btn-warning" id="loadHistoryBtn" style="width:auto; padding:6px 16px;">📊 Продажи Г-1</button>
+                </div>
+            </div>
+            <div class="stats-badge" id="statsInfo">📊 Загружено: 0 товаров</div>
+            <div class="color-legend">
+                <span class="legend-item"><span class="legend-color critical"></span> Критический &lt;7 дн</span>
+                <span class="legend-item"><span class="legend-color warning"></span> Внимание 7-14 дн</span>
+                <span class="legend-item"><span class="legend-color normal"></span> Норма &gt;14 дн</span>
+                <span class="legend-item"><span class="legend-color uto"></span> УТО</span>
+                <span class="legend-item"><span class="legend-color min"></span> Мины</span>
+                <span class="legend-item"><span class="legend-color best"></span> Бест</span>
+                <span class="legend-item"><span style="background:var(--primary);border-radius:50%;width:10px;height:10px;display:inline-block;"></span> 🏪 MagPortal</span>
+            </div>
+            <div class="loading-indicator" id="loadingIndicator">
+                <div class="spinner"></div>
+                <span id="loadingText">Обработка данных...</span>
+            </div>
+            
+            <!-- Прогресс загрузки продаж -->
+            <div class="progress-container" id="salesProgress">
+                <div class="progress-bar" id="salesProgressBar"></div>
+                <div class="progress-text" id="salesProgressText">Загрузка продаж Г-1...</div>
+            </div>
+            
+            <div class="pivot-wrapper" id="pivotWrapper">
+                <table class="full-table" id="masterTable">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="masterTbody"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="rowCounter">Показано: 0 из 0</span>
+                <button class="show-all-btn" id="showAllBtn">📋 Показать все</button>
+            </div>
+
+            <!-- Блок прогноза -->
+            <div style="margin-top:16px; border-top:2px solid var(--border-color); padding-top:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <h3 style="font-size:0.85rem; color:var(--text-secondary);">
+                        🔮 Прогноз "Алмаз" 
+                        <button class="info-tooltip" id="forecastHelpBtn" title="Как рассчитывается прогноз">i</button>
+                    </h3>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn-primary" id="genForecastBtn" style="width:auto; padding:4px 12px; font-size:0.65rem;">🧮 Рассчитать</button>
+                        <button class="btn-success" id="exportOrderBtn" style="width:auto; padding:4px 12px; font-size:0.65rem;">
+                            📦 Заказы <span id="orderCount" style="background:rgba(255,255,255,0.2);padding:0 6px;border-radius:10px;margin-left:4px;">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Настройки сезонности -->
+                <div style="display:flex; flex-wrap:wrap; gap:12px; margin:6px 0; padding:8px 12px; background:var(--bg-card); border-radius:8px; align-items:center;">
+                    <span style="font-size:0.6rem; font-weight:600;">🎯 Коэффициент сезонности:</span>
+                    <div class="seasonality-slider" style="flex:1; min-width:150px;">
+                        <span style="font-size:0.5rem;">0.5</span>
+                        <input type="range" id="seasonalitySlider" min="0.5" max="2.0" step="0.1" value="1.0">
+                        <span style="font-size:0.5rem;">2.0</span>
+                        <span class="value" id="seasonalityValue">1.0</span>
+                    </div>
+                    <button class="btn-secondary" id="resetSeasonalityBtn" style="padding:2px 10px; font-size:0.55rem;">↺ Сбросить</button>
+                    <span style="font-size:0.5rem; color:var(--text-muted);">(пересчёт заказа автоматический)</span>
+                </div>
+
+                <!-- Статистика -->
+                <div class="forecast-stats-row" id="forecastStats">
+                    <div class="forecast-stat-card critical" data-filter="critical">
+                        <div class="value" id="fcCritical">0</div>
+                        <div class="label">🔴 Срочно &lt;3 дн</div>
+                    </div>
+                    <div class="forecast-stat-card warning" data-filter="warning">
+                        <div class="value" id="fcWarning">0</div>
+                        <div class="label">🟡 План &lt;7 дн</div>
+                    </div>
+                    <div class="forecast-stat-card info" data-filter="info">
+                        <div class="value" id="fcInfo">0</div>
+                        <div class="label">🔵 Контроль &lt;14 дн</div>
+                    </div>
+                    <div class="forecast-stat-card success" data-filter="all">
+                        <div class="value" id="fcTotal">0</div>
+                        <div class="label">📊 Всего по срочности</div>
+                    </div>
+                </div>
+
+                <!-- Список прогнозов -->
+                <div id="forecastList" style="max-height:400px; overflow-y:auto; margin-top:6px;">
+                    <div style="color:var(--text-muted); text-align:center; padding:16px;">
+                        📊 Загрузите "Продажи Г-1" и нажмите "Рассчитать"
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>PROGNOZ — управление резервами. Двойной клик по строке → MagPortal.</footer>
+</div>
+
+<!-- Модалка для графика -->
+<div class="modal-overlay" id="seasonalityModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeSeasonalityModal()">✕</button>
+        <h2 id="seasonalityModalTitle">📈 Сезонность и продажи</h2>
+        <div class="subtitle" id="seasonalityModalSubtitle">Артикул: <span id="seasonalityArticleName"></span></div>
+        <div class="seasonality-chart-wrapper">
+            <canvas id="seasonalityChart"></canvas>
+        </div>
+        <div style="font-size:0.55rem; color:var(--text-muted); text-align:center; margin-top:8px;">
+            📊 H-8 ... H-1 — продажи за 8 недель до сегодня, H — текущая неделя, H+1 ... H+7 — прогноз на 7 недель вперёд
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ==================== TOAST ====================
+function showToast(msg, type = 'info', duration = 3000) {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${msg}</span><span class="toast-close">✕</span>`;
+    c.appendChild(t);
+    t.querySelector('.toast-close').onclick = () => { t.style.animation = 'slideOut 0.3s ease'; setTimeout(() => t.remove(), 300); };
+    setTimeout(() => { if (t.parentNode) { t.style.animation = 'slideOut 0.3s ease'; setTimeout(() => t.remove(), 300); } }, duration);
+}
+
+// ==================== ТЁМНАЯ ТЕМА ====================
+let isDark = localStorage.getItem('prognoz_theme') === 'dark';
+if (isDark) { document.documentElement.setAttribute('data-theme', 'dark'); document.getElementById('themeToggleBtn').textContent = '☀️ Светлая'; }
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    isDark = !isDark;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.getElementById('themeToggleBtn').textContent = isDark ? '☀️ Светлая' : '🌙 Тёмная';
+    localStorage.setItem('prognoz_theme', isDark ? 'dark' : 'light');
+});
+
+// ==================== MAGPORTAL ====================
+function openMagPortal(article) {
+    if (!article) return;
+    const clean = String(article).replace(/[^\d]/g, '');
+    if (clean && clean.length >= 4) {
+        window.open(`https://magportal.lemanapro.ru/catalogproducts/product/${clean}`, '_blank');
+        showToast(`🔗 Открываем артикул ${clean}`, 'info', 1500);
+    }
+}
+
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+function toNumber(v, def = 0) {
+    if (v === undefined || v === null || v === '') return def;
+    const num = typeof v === 'number' ? v : Number(String(v).replace(/,/g, '.').replace(/[^\d.\-]/g, ''));
+    return isNaN(num) ? def : num;
+}
+function round(v, d = 1) { const f = Math.pow(10, d); return Math.round(toNumber(v) * f) / f; }
+function getStore(item) {
+    for (const k of ['№ магазина', 'Магазин']) {
+        if (item[k] !== undefined && item[k] !== null && String(item[k]).trim() !== '') {
+            return String(item[k]).trim().match(/^(\d+)/)?.[1] || String(item[k]).trim();
+        }
+    }
+    for (const k of Object.keys(item)) {
+        if (k.includes('Магазин') || k.includes('Store')) {
+            const v = String(item[k]).trim();
+            if (v) return v.match(/^(\d+)/)?.[1] || v;
+        }
+    }
+    return '';
+}
+function getArt(item) {
+    for (const k of ['Артикул', 'SKU', 'Код', 'Article', 'ЛМ-код']) {
+        if (item[k] !== undefined && item[k] !== null && String(item[k]).trim() !== '') {
+            return String(item[k]).trim();
+        }
+    }
+    return '';
+}
+function getKey(store, art) { return `${store}|${art}`; }
+function formatDateDDMMYYYY(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return String(date);
+    return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+function addDays(date, days) { const r = new Date(date); r.setDate(r.getDate() + days); return r; }
+function getEndDate(type) {
+    const today = new Date();
+    if (type === "441") return "31.12.2049";
+    if (type === "401") return formatDateDDMMYYYY(addDays(today, 30));
+    if (type === "500" || type === "902") return formatDateDDMMYYYY(addDays(today, 140));
+    return formatDateDDMMYYYY(addDays(today, 140));
+}
+function getTomorrowDay() {
+    const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+    const dow = new Date().getDay();
+    let target = dow + 1;
+    if (dow === 5) target = 1;
+    else if (dow === 6) target = 1;
+    else if (dow === 0) target = 1;
+    return days[target];
+}
+
+// ==================== ДАННЫЕ ====================
+const reportNames = ['Гамма', 'Резервы', 'УТО', 'БЭСТ', 'Автоминимумы', 'Максы', 'ЭКСПО', 'Поставки', 'Коррекции', 'Недопоставки', 'Продажи Г-1'];
+const reportPatterns = {
+    'Гамма': ['гамма', 'gamma'],
+    'Резервы': ['резервы', 'резерв'],
+    'УТО': ['уто', 'uto'],
+    'БЭСТ': ['бэст', 'бест', 'best'],
+    'Автоминимумы': ['автоминимум', 'avto'],
+    'Максы': ['максы', 'max'],
+    'ЭКСПО': ['экспо', 'expo'],
+    'Поставки': ['детали постав', 'поставки', 'postav'],
+    'Коррекции': ['коррекции', 'korrek'],
+    'Недопоставки': ['недопоставки', 'nedopostav'],
+    'Продажи Г-1': ['продажи г-1', 'продажи г1', 'sales', 'г-1', 'Г-1']
+};
+
+let gammaData = [], reservyData = [], utoData = [], bestsData = [], avtoMinData = [], maxData = [], ekspoData = [], postavkiData = [], korrekciiData = [], nedopostavkiData = [], salesHistoryData = [];
+let loadedReports = {};
+let cachedData = { fullData: [], filteredData: [] };
+let filteredResult = [];
+let editedRows = new Map();
+let activeQuickFilter = 'all';
+let storesSet = new Set(), departmentsSet = new Set(), subdepartmentsSet = new Set(), typesSet = new Set();
+let showAllRows = false;
+const DISPLAY_LIMIT = 200;
+let currentForecastFilter = 'all';
+let manualSeasonality = 1.0;
+let forecastData = [];
+let seasonalityChartInstance = null;
+let orderList = [];
+
+// Кеши
+const reservyMap = new Map(), maxMap = new Map(), avtoMinMap = new Map(), bestsMap = new Map(), utoMap = new Map(), postavkiMap = new Map(), korrekciiMap = new Map(), nedopostavkiMap = new Map(), ekspoMap = new Map();
+const salesHistoryMap = new Map();
+const deliveryInfoMap = new Map();
+
+// ==================== ПОСТРОЕНИЕ КЕШЕЙ ====================
+function buildMaps() {
+    console.log('🔧 Построение кешей...');
+    
+    reservyMap.clear(); maxMap.clear(); avtoMinMap.clear(); bestsMap.clear(); utoMap.clear(); 
+    postavkiMap.clear(); korrekciiMap.clear(); nedopostavkiMap.clear(); ekspoMap.clear();
+    deliveryInfoMap.clear();
+    
+    for (const item of reservyData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            if (!reservyMap.has(key)) reservyMap.set(key, []);
+            reservyMap.get(key).push(item);
+        }
+    }
+    
+    for (const item of maxData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            maxMap.set(key, { days: item['Дни, значение'] || '', sht: item['Штуки, значение'] || '' });
+        }
+    }
+    
+    for (const item of avtoMinData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            avtoMinMap.set(key, item['Кол-во автоминимума'] || '');
+        }
+    }
+    
+    for (const item of bestsData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            bestsMap.set(key, '1');
+        }
+    }
+    
+    for (const item of utoData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            utoMap.set(key, item);
+        }
+    }
+    
+    for (const item of postavkiData) {
+        const code = String(item['Поставщик'] || item['№ поставщика'] || '').trim();
+        const days = String(item['Дни заказа'] || item['Дни выхода заказа'] || '').trim();
+        if (code && days) {
+            postavkiMap.set(code, days);
+        }
+        if (code) {
+            const deliveryDays = toNumber(item['Срок поставки в магазин'] || item['Срок поставки'] || 7);
+            const scheme = String(item['Схема поставки'] || '').trim();
+            deliveryInfoMap.set(code, {
+                deliveryDays: Math.max(deliveryDays, 1),
+                scheme: scheme,
+                supplierName: item['Поставщик'] || ''
+            });
+        }
+    }
+    
+    for (const item of korrekciiData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            korrekciiMap.set(key, (korrekciiMap.get(key) || 0) + toNumber(item['Сумма Количество'] || item['Количество'] || 0));
+        }
+    }
+    
+    for (const item of nedopostavkiData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            nedopostavkiMap.set(key, (nedopostavkiMap.get(key) || 0) + 1);
+        }
+    }
+    
+    for (const item of ekspoData) {
+        const store = getStore(item);
+        const art = getArt(item);
+        if (store && art) {
+            const key = `${store}|${art}`;
+            ekspoMap.set(key, toNumber(item['Кол-во EXPO']));
+        }
+    }
+    
+    // История продаж
+    salesHistoryMap.clear();
+    for (const item of salesHistoryData) {
+        const art = getArt(item);
+        if (art) {
+            salesHistoryMap.set(art, {
+                'Продано шт. Г-1': toNumber(item['Продано шт. Г-1'] || item['Продажи'] || 0),
+                'GMV Г-1': toNumber(item['GMV Г-1'] || item['GMV'] || 0),
+                'Кол-во чеков Г-1': toNumber(item['Кол-во чеков Г-1'] || item['Чеки'] || 0),
+                'Янв продажи': toNumber(item['Янв'] || 0),
+                'Фев продажи': toNumber(item['Фев'] || 0),
+                'Мар продажи': toNumber(item['Мар'] || 0),
+                'Апр продажи': toNumber(item['Апр'] || 0),
+                'Май продажи': toNumber(item['Май'] || 0),
+                'Июн продажи': toNumber(item['Июн'] || 0),
+                'Июл продажи': toNumber(item['Июл'] || 0),
+                'Авг продажи': toNumber(item['Авг'] || 0),
+                'Сен продажи': toNumber(item['Сен'] || 0),
+                'Окт продажи': toNumber(item['Окт'] || 0),
+                'Ноя продажи': toNumber(item['Ноя'] || 0),
+                'Дек продажи': toNumber(item['Дек'] || 0)
+            });
+        }
+    }
+    
+    console.log(`✅ Кеши построены. Продажи: ${salesHistoryMap.size} артикулов`);
+    console.log(`✅ Поставки: ${deliveryInfoMap.size} поставщиков`);
+}
+
+function getSumReserve(store, art, type) {
+    const key = `${store}|${art}`;
+    const items = reservyMap.get(key);
+    if (!items) return 0;
+    let sum = 0;
+    for (const item of items) {
+        const rezerv = String(item['Резерв'] || '');
+        if (rezerv.includes(type)) {
+            sum += toNumber(item['Кол-во резерва']);
+        }
+    }
+    return sum;
+}
+
+// ==================== РАСЧЁТ СТРОКИ ====================
+function calculateRow(item) {
+    const art = getArt(item);
+    const store = getStore(item);
+    if (!art || !store) return null;
+    const key = `${store}|${art}`;
+
+    const bestGamma = (toNumber(item['Сумма Best Seller']) + toNumber(item['Сумма Мертвый сток']) >= 1) ? 1 : '';
+    const bestNext = bestsMap.has(key) ? 1 : '';
+    const topVal = String(item['ТОП'] || item['Топ в магазине'] || '').trim().replace(/\.00$/, '');
+
+    const minDn = getSumReserve(store, art, 'Мин ЦО Амбиция') || getSumReserve(store, art, 'Мин Магазин Амбиция') || 0;
+    const maxItem = maxMap.get(key);
+    const maxDn = maxItem?.days || 0;
+    const avtoMin = maxItem?.sht || 0;
+
+    const minTsProekt = getSumReserve(store, art, 'Мин ЦО Амбиция проекта');
+    const minTsPak = getSumReserve(store, art, 'Мин ЦО ПАК-Подиум');
+    const minTsKoord = getSumReserve(store, art, 'Мин ЦО коорд.');
+    const min401 = getSumReserve(store, art, 'Мин Новый товар');
+    const min441 = getSumReserve(store, art, 'Мин Магазин ПМ');
+    const min500 = getSumReserve(store, art, 'Мин Магазин Амбиция проекта');
+    const min902 = getSumReserve(store, art, 'Мин Магазин В2В');
+    const brak = getSumReserve(store, art, 'Брак');
+    const ekspo = ekspoMap.get(key) || getSumReserve(store, art, 'ЭКСПО') || 0;
+    const prezMin = getSumReserve(store, art, 'През. минимум');
+    const tjPak = getSumReserve(store, art, 'ТЖ/ПАК');
+    const podium = getSumReserve(store, art, 'Подиум магазина');
+    const ulich = getSumReserve(store, art, 'Уличн. торговля');
+
+    const minTypes = {
+        'Авто min': avtoMin,
+        'min ЦО Проект': minTsProekt,
+        'min ЦО ПАК-Подиум': minTsPak,
+        'min ЦО коорд': minTsKoord,
+        '401 NEW': min401,
+        '441 ПМ': min441,
+        '500 Проект': min500,
+        '902 B2B': min902
+    };
+    let maxMin = 0, maxMinType = '';
+    for (const [t, v] of Object.entries(minTypes)) {
+        if (v > maxMin) { maxMin = v; maxMinType = t; }
+    }
+
+    const teorStok = toNumber(item['Сумма Кол-во в запасе']) || 0;
+    const otgruzheno = toNumber(item['Отгруженное кол-во']) || 0;
+    const otgruzhenoSred = otgruzheno > 0 ? round(otgruzheno / 6, 1) : 0;
+
+    let zapasSht = teorStok - ekspo - brak;
+    if (zapasSht < 0) zapasSht = 0;
+
+    let zapasDn = 0;
+    if (otgruzhenoSred > 0 && zapasSht > 0) {
+        zapasDn = round(zapasSht / otgruzhenoSred * 7, 1);
+        if (zapasDn < 0) zapasDn = 0;
+    } else if (zapasSht > 0 && otgruzhenoSred === 0) {
+        zapasDn = 999;
+    }
+
+    const vPutishSht = toNumber(item['Сумма В пути, шт.']) || 0;
+    let vPutishDn = 0;
+    if (vPutishSht > 0 && otgruzhenoSred > 0) {
+        vPutishDn = round(vPutishSht / otgruzhenoSred * 7, 1);
+    } else if (vPutishSht > 0 && otgruzhenoSred === 0) {
+        vPutishDn = 999;
+    }
+
+    const vmesimost = toNumber(item['Вместимость полки']) || 0;
+    const utoItem = utoMap.get(key);
+    const utoRub = utoItem ? toNumber(utoItem['Уп.GMV руб']) || 0 : 0;
+    const utoSht = utoItem ? toNumber(utoItem['Уп.GMV шт']) || 0 : 0;
+    const pereboiCount = utoItem ? toNumber(utoItem['Кол-во случаев перебоя за 30 дней']) || 0 : 0;
+    const pereboiDays = utoItem ? toNumber(utoItem['Кол-во дней в перебое за 30 дней']) || 0 : 0;
+
+    const supplierCode = String(item['№ Поставщика'] || item['Номер поставщика'] || '').trim();
+    const dniZakaza = postavkiMap.get(supplierCode) || '';
+    const korrekcii = korrekciiMap.get(key) || 0;
+    const nedopostavki = nedopostavkiMap.get(key) || 0;
+    
+    const almazForecast = toNumber(item['Прогноз продаж Almaz 42 дня, шт.'] || item['Прогноз продаж Almaz 42 дня'] || 0);
+
+    let status = 'Норма';
+    if (zapasDn === 999) status = 'Нет продаж';
+    else if (zapasDn < 7) status = 'Критический';
+    else if (zapasDn < 14) status = 'Внимание';
+    else if (zapasDn >= 14) status = 'Норма';
+
+    let szh = 0;
+    if (otgruzhenoSred > 0 && vPutishDn > 0) {
+        szh = round(otgruzhenoSred * (vPutishDn + 3) / 7, 0);
+    } else if (otgruzhenoSred > 0) {
+        szh = round(otgruzhenoSred * 3 / 7, 0);
+    }
+
+    let percentZapasa = 0;
+    if (vmesimost > 0 && zapasSht > 0) {
+        percentZapasa = Math.min(round((zapasSht / vmesimost) * 100, 0), 100);
+    }
+
+    return {
+        '№ магазина': store,
+        'Артикул': art,
+        'Наименование': item['Наименование'] || '',
+        'Подотдел': item['Подотдел'] || '',
+        'ТИП': item['Тип'] || '',
+        'Запас, дн.': zapasDn === 999 ? 999 : round(zapasDn, 1),
+        'В пути, дн.': vPutishDn === 999 ? 999 : round(vPutishDn, 1),
+        'В пути, шт.': vPutishSht,
+        'УТО, руб.': round(utoRub, 0),
+        'Статус стока': status,
+        'СХЗ': szh,
+        'Вид минимума': '',
+        'Кол-во проектов': '',
+        'Дни выхода заказа поставщика': dniZakaza,
+        'ТОП': topVal,
+        'BEST гамма': bestGamma,
+        'BEST NEXT': bestNext,
+        'Наибольший резерв MIN': maxMinType ? `${maxMinType} (${maxMin})` : '',
+        'Наполненность полки': percentZapasa,
+        'Запас, шт.': zapasSht,
+        'Отгружено в сред. За 7 дн': otgruzhenoSred,
+        'Вместимость': vmesimost,
+        'min 441 ПМ': min441,
+        'min 500 Проект': min500,
+        'min 401 NEW': min401,
+        'Номер поставщика': supplierCode,
+        'Прогноз Almaz 42 дня': almazForecast,
+        'Размер упаковки': item['Размер упаковки'] || 1
+    };
+}
+
+// ==================== ЗАГРУЗКА ФАЙЛОВ ====================
+function loadExcelFromFile(file, reportName, targetArr) {
+    return new Promise((resolve) => {
+        if (file.name.startsWith('~$')) {
+            resolve(false);
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+                
+                if (!rawData || rawData.length < 4) {
+                    throw new Error('Файл пуст или имеет неправильный формат');
+                }
+                
+                const headers = rawData[2] ? rawData[2].map(h => String(h || '').trim()) : [];
+                const jsonData = [];
+                
+                for (let i = 3; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    const obj = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        const header = headers[j];
+                        if (header && header !== '' && !header.startsWith('__EMPTY')) {
+                            const val = row[j] !== undefined && row[j] !== '' ? String(row[j]).trim() : '';
+                            obj[header] = val;
+                        }
+                    }
+                    
+                    const hasData = Object.keys(obj).some(k => obj[k] !== '');
+                    if (hasData) {
+                        jsonData.push(obj);
+                    }
+                }
+                
+                targetArr.length = 0;
+                targetArr.push(...jsonData);
+                
+                loadedReports[reportName] = true;
+                updateStatusDisplay(reportName, true);
+                console.log(`✅ Загружен: ${reportName} (${jsonData.length} записей)`);
+                
+                if (reportName === 'Гамма') {
+                    updateFiltersFromGamma();
+                }
+                
+                if (reportName === 'Продажи Г-1') {
+                    for (const item of jsonData) {
+                        const art = getArt(item);
+                        if (art) {
+                            salesHistoryMap.set(art, {
+                                'Продано шт. Г-1': toNumber(item['Продано шт. Г-1'] || item['Продажи'] || 0),
+                                'GMV Г-1': toNumber(item['GMV Г-1'] || item['GMV'] || 0),
+                                'Кол-во чеков Г-1': toNumber(item['Кол-во чеков Г-1'] || item['Чеки'] || 0),
+                                'Янв продажи': toNumber(item['Янв'] || 0),
+                                'Фев продажи': toNumber(item['Фев'] || 0),
+                                'Мар продажи': toNumber(item['Мар'] || 0),
+                                'Апр продажи': toNumber(item['Апр'] || 0),
+                                'Май продажи': toNumber(item['Май'] || 0),
+                                'Июн продажи': toNumber(item['Июн'] || 0),
+                                'Июл продажи': toNumber(item['Июл'] || 0),
+                                'Авг продажи': toNumber(item['Авг'] || 0),
+                                'Сен продажи': toNumber(item['Сен'] || 0),
+                                'Окт продажи': toNumber(item['Окт'] || 0),
+                                'Ноя продажи': toNumber(item['Ноя'] || 0),
+                                'Дек продажи': toNumber(item['Дек'] || 0)
+                            });
+                        }
+                    }
+                    showToast(`✅ Загружено ${jsonData.length} артикулов с историей продаж`, 'success');
+                }
+                
+                resolve(true);
+            } catch (err) {
+                console.error('Ошибка загрузки:', err);
+                loadedReports[reportName] = false;
+                updateStatusDisplay(reportName, false);
+                showToast(`Ошибка загрузки ${reportName}: ${err.message}`, 'error');
+                resolve(false);
+            }
+        };
+        
+        reader.onerror = function() {
+            showToast(`Ошибка чтения файла ${reportName}`, 'error');
+            resolve(false);
+        };
+        
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+function loadExcelFile(reportName, targetArr) {
+    return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xlsx,.xls';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                resolve(false);
+                return;
+            }
+            const result = await loadExcelFromFile(file, reportName, targetArr);
+            resolve(result);
+        };
+        input.click();
+    });
+}
+
+async function autoLoadFromFolder(files) {
+    const xlsx = Array.from(files).filter(f => f.name.match(/\.(xlsx|xls)$/i) && !f.name.startsWith('~$'));
+    if (!xlsx.length) {
+        showToast('📁 Нет Excel-файлов в папке', 'warning');
+        return;
+    }
+
+    gammaData = [];
+    reservyData = [];
+    utoData = [];
+    bestsData = [];
+    avtoMinData = [];
+    maxData = [];
+    ekspoData = [];
+    postavkiData = [];
+    korrekciiData = [];
+    nedopostavkiData = [];
+    salesHistoryData = [];
+    
+    for (const name of reportNames) {
+        loadedReports[name] = false;
+    }
+
+    let loadedCount = 0;
+    const path = xlsx[0].webkitRelativePath?.split('/')[0] || 'Папка';
+    document.getElementById('folderPath').textContent = `📁 ${path} (${xlsx.length} файлов)`;
+
+    for (const name of reportNames) {
+        const patterns = reportPatterns[name];
+        let found = null;
+        
+        for (const f of xlsx) {
+            const fn = f.name.toLowerCase();
+            if (patterns.some(p => fn.includes(p.toLowerCase()))) {
+                found = f;
+                break;
+            }
+        }
+        
+        if (found) {
+            let target;
+            switch(name) {
+                case 'Гамма': target = gammaData; break;
+                case 'Резервы': target = reservyData; break;
+                case 'УТО': target = utoData; break;
+                case 'БЭСТ': target = bestsData; break;
+                case 'Автоминимумы': target = avtoMinData; break;
+                case 'Максы': target = maxData; break;
+                case 'ЭКСПО': target = ekspoData; break;
+                case 'Поставки': target = postavkiData; break;
+                case 'Коррекции': target = korrekciiData; break;
+                case 'Недопоставки': target = nedopostavkiData; break;
+                case 'Продажи Г-1': target = salesHistoryData; break;
+                default: continue;
+            }
+            
+            const ok = await loadExcelFromFile(found, name, target);
+            if (ok) loadedCount++;
+        }
+    }
+
+    const total = Object.values(loadedReports).filter(v => v).length;
+    document.getElementById('uploadSummary').innerHTML = `📁 Загружено: ${total} / ${reportNames.length} отчётов`;
+    
+    if (gammaData.length) {
+        updateFiltersFromGamma();
+    }
+    
+    buildMaps();
+    showToast(`✅ Автозагрузка завершена! Загружено ${loadedCount} отчётов`, 'success');
+}
+
+function updateStatusDisplay(name, ok) {
+    const el = document.getElementById(`status-${name.replace(/\s/g, '')}`);
+    if (el) {
+        el.textContent = ok ? ' ✅' : ' ❌';
+        el.className = `upload-status ${ok ? 'loaded' : 'error'}`;
+    }
+    const total = Object.values(loadedReports).filter(v => v).length;
+    document.getElementById('uploadSummary').innerHTML = `📁 Загружено: ${total} / ${reportNames.length} отчётов`;
+}
+
+function updateFiltersFromGamma() {
+    storesSet.clear();
+    departmentsSet.clear();
+    subdepartmentsSet.clear();
+    typesSet.clear();
+    
+    for (const item of gammaData) {
+        const s = item['№ магазина'];
+        if (s) storesSet.add(String(s));
+        const d = item['Отдел'];
+        if (d) departmentsSet.add(String(d));
+        const sd = item['Подотдел'];
+        if (sd) subdepartmentsSet.add(String(sd));
+        const t = item['Тип'];
+        if (t) typesSet.add(String(t));
+    }
+    
+    const sf = document.getElementById('storeFilter');
+    sf.innerHTML = '<option value="all">Все магазины</option>' + 
+        Array.from(storesSet).sort().map(s => `<option value="${s}">${s}</option>`).join('');
+    
+    const df = document.getElementById('departmentFilter');
+    df.innerHTML = '<option value="all">Все отделы</option>' + 
+        Array.from(departmentsSet).sort().map(d => `<option value="${d}">${d}</option>`).join('');
+    
+    const sdf = document.getElementById('subdepartmentFilter');
+    const currentValues = Array.from(sdf.selectedOptions).map(opt => opt.value);
+    sdf.innerHTML = '';
+    const allOpt = document.createElement('option');
+    allOpt.value = 'all';
+    allOpt.textContent = 'Все подотделы';
+    if (currentValues.length === 0 || currentValues.includes('all')) {
+        allOpt.selected = true;
+    }
+    sdf.appendChild(allOpt);
+    
+    Array.from(subdepartmentsSet).sort().forEach(sd => {
+        const opt = document.createElement('option');
+        opt.value = sd;
+        opt.textContent = sd;
+        if (currentValues.includes(sd) && !currentValues.includes('all')) {
+            opt.selected = true;
+        }
+        sdf.appendChild(opt);
+    });
+    
+    const tf = document.getElementById('typeFilter');
+    tf.innerHTML = '<option value="all">Все типы</option>' + 
+        Array.from(typesSet).sort().map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+// ==================== РАСЧЁТ ====================
+async function compute() {
+    if (!gammaData.length) {
+        showToast('⚠️ Сначала загрузите файл "Гамма"', 'warning');
+        return;
+    }
+    
+    const loading = document.getElementById('loadingIndicator');
+    loading.classList.add('active');
+    document.getElementById('loadingText').textContent = `Обработка ${gammaData.length} товаров...`;
+
+    await new Promise(r => setTimeout(r, 50));
+    buildMaps();
+
+    const results = [];
+    for (const item of gammaData) {
+        const row = calculateRow(item);
+        if (row) results.push(row);
+    }
+
+    cachedData.fullData = results;
+    cachedData.filteredData = [...results];
+    filteredResult = [...results];
+
+    loading.classList.remove('active');
+    document.getElementById('statsInfo').textContent = `📊 Всего: ${results.length} товаров | Изменено: ${editedRows.size}`;
+    applyFilters();
+    showToast(`✅ Рассчитано ${results.length} товаров`, 'success');
+}
+
+// ==================== ФИЛЬТРАЦИЯ ====================
+function applyFilters() {
+    if (!cachedData.fullData.length) {
+        renderTable([]);
+        return;
+    }
+
+    const store = document.getElementById('storeFilter').value;
+    const dept = document.getElementById('departmentFilter').value;
+    const subdeptSelect = document.getElementById('subdepartmentFilter');
+    const selectedSubdepts = Array.from(subdeptSelect.selectedOptions).map(opt => opt.value);
+    const type = document.getElementById('typeFilter').value;
+    const top = document.getElementById('topFilter').value;
+    const stockMin = parseInt(document.getElementById('stockMinInput').value) || 0;
+    const stockMax = parseInt(document.getElementById('stockMaxInput').value) || 30;
+    const transitMin = parseInt(document.getElementById('transitMinInput').value) || 0;
+    const transitMax = parseInt(document.getElementById('transitMaxInput').value) || 30;
+    const search = document.getElementById('articleSearchInput').value.trim();
+
+    let result = [...cachedData.fullData];
+
+    if (store !== 'all') result = result.filter(r => String(r['№ магазина'] || '') === store);
+    if (dept !== 'all') result = result.filter(r => String(r['Подотдел'] || '') === dept);
+    
+    if (!selectedSubdepts.includes('all') && selectedSubdepts.length > 0) {
+        result = result.filter(r => selectedSubdepts.includes(String(r['Подотдел'] || '')));
+    }
+    
+    if (type !== 'all') {
+        const subdeptFilter = selectedSubdepts.includes('all') ? 'all' : selectedSubdepts[0];
+        if (subdeptFilter === 'all') {
+            showToast('⚠️ Для фильтрации по типу сначала выберите подотдел', 'warning', 3000);
+        } else {
+            result = result.filter(r => String(r['ТИП'] || '') === type);
+        }
+    }
+    if (top !== 'all') {
+        result = result.filter(r => {
+            const v = String(r['ТОП'] || '').replace(/\.00$/, '');
+            return v === top;
+        });
+    }
+
+    result = result.filter(r => {
+        const d = toNumber(r['Запас, дн.'], 999);
+        return d >= stockMin && d <= stockMax;
+    });
+
+    result = result.filter(r => {
+        const d = toNumber(r['В пути, дн.'], 0);
+        return d >= transitMin && d <= transitMax;
+    });
+
+    if (search) {
+        const arts = search.split(/[,\s\n]+/).filter(a => a.trim());
+        result = result.filter(r => arts.some(a => String(r['Артикул'] || '').includes(a.trim())));
+    }
+
+    if (activeQuickFilter === 'uto') {
+        result = result.filter(r => toNumber(r['УТО, руб.'], 0) > 0);
+    } else if (activeQuickFilter === 'best') {
+        result = result.filter(r => r['BEST гамма'] || r['BEST NEXT']);
+    } else if (activeQuickFilter === 'min') {
+        const tomorrow = getTomorrowDay();
+        result = result.filter(r => String(r['Дни выхода заказа поставщика'] || '').trim() === tomorrow);
+    }
+
+    filteredResult = result;
+    cachedData.filteredData = result;
+    renderTable(result);
+    document.getElementById('statsInfo').textContent = `📊 Всего: ${cachedData.fullData.length} | Отфильтровано: ${result.length} | Изменено: ${editedRows.size}`;
+    updateRowCounter(result.length);
+}
+
+function updateRowCounter(total) {
+    const shown = showAllRows ? total : Math.min(total, DISPLAY_LIMIT);
+    document.getElementById('rowCounter').textContent = `Показано: ${shown} из ${total}`;
+    document.getElementById('showAllBtn').textContent = showAllRows ? '📋 Свернуть' : '📋 Показать все';
+}
+
+// ==================== ОТРИСОВКА ТАБЛИЦЫ ====================
+function renderTable(data) {
+    const thead = document.getElementById('tableHeader');
+    const tbody = document.getElementById('masterTbody');
+    if (!thead || !tbody) return;
+
+    const cols = ['№ магазина', 'Артикул', 'Наименование', 'Подотдел', 'ТИП', 'Запас, дн.', 'В пути, дн.', 'УТО, руб.', 'Статус стока', 'СХЗ', 'Вид минимума', 'Кол-во проектов', 'Дни выхода заказа поставщика', 'ТОП'];
+    thead.innerHTML = '';
+    const trHead = document.createElement('tr');
+    for (const col of cols) {
+        const th = document.createElement('th');
+        th.textContent = col;
+        if (col === 'Вид минимума' || col === 'Кол-во проектов') th.style.background = '#fff8e1';
+        trHead.appendChild(th);
+    }
+    thead.appendChild(trHead);
+
+    if (!data || !data.length) {
+        tbody.innerHTML = `<tr><td colspan="${cols.length}" style="text-align:center;padding:30px;">
+            <div class="empty-message"><span class="icon">📭</span>
+            <div class="title">Нет данных</div>
+            <div class="desc">Загрузите отчёты и нажмите "ВЫЧИСЛИТЬ"</div></div></td></tr>`;
+        return;
+    }
+
+    let displayData = data;
+    if (!showAllRows && data.length > DISPLAY_LIMIT) {
+        displayData = data.slice(0, DISPLAY_LIMIT);
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    for (const row of displayData) {
+        const tr = document.createElement('tr');
+        const key = `${row['№ магазина']}|${row['Артикул']}`;
+        const edited = editedRows.get(key);
+        const isEdited = edited && (edited.видМинимума || edited.колВоПроектов);
+        if (isEdited) tr.classList.add('edited-row');
+
+        const hasUto = toNumber(row['УТО, руб.'], 0) > 0;
+        const hasBest = row['BEST гамма'] || row['BEST NEXT'];
+        const tomorrow = getTomorrowDay();
+        const hasMin = String(row['Дни выхода заказа поставщика'] || '').trim() === tomorrow;
+
+        tr.addEventListener('dblclick', () => openMagPortal(row['Артикул']));
+        tr.style.cursor = 'pointer';
+        tr.title = 'Двойной клик → MagPortal';
+
+        for (const col of cols) {
+            const td = document.createElement('td');
+
+            if (col === 'Артикул') {
+                const hasHistory = salesHistoryMap.has(String(row['Артикул'] || '').trim());
+                td.innerHTML = `
+                    <span style="font-weight:600;cursor:pointer;" ondblclick="openMagPortal('${row['Артикул']}')">${row['Артикул'] || ''}</span>
+                    <button class="magportal-btn" onclick="openMagPortal('${row['Артикул']}')">🏪</button>
+                    ${hasHistory ? `<span style="font-size:0.45rem;color:#43a047;margin-left:2px;">📊</span>` : ''}
+                `;
+            } else if (col === 'Вид минимума') {
+                const sel = document.createElement('select');
+                const opts = ['', '401', '441', '500', '902'];
+                const labels = ['--', '401 − Новый товар', '441 − ПМ', '500 − Амбиция проекта', '902 − B2B'];
+                for (let i = 0; i < opts.length; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = opts[i];
+                    opt.textContent = labels[i];
+                    if (edited?.видМинимума === opts[i]) opt.selected = true;
+                    sel.appendChild(opt);
+                }
+                sel.addEventListener('change', function() {
+                    const val = this.value;
+                    const k = `${row['№ магазина']}|${row['Артикул']}`;
+                    if (!editedRows.has(k)) editedRows.set(k, { видМинимума: '', колВоПроектов: '' });
+                    editedRows.get(k).видМинимума = val;
+                    applyFilters();
+                    updateEditedCount();
+                });
+                td.appendChild(sel);
+                td.classList.add('editable');
+            } else if (col === 'Кол-во проектов') {
+                const inp = document.createElement('input');
+                inp.type = 'number';
+                inp.min = '0';
+                inp.step = '1';
+                inp.value = edited?.колВоПроектов || '';
+                inp.style.width = '100%';
+                inp.style.padding = '1px 4px';
+                inp.style.border = '1px solid var(--input-border)';
+                inp.style.borderRadius = '4px';
+                inp.style.fontSize = '0.6rem';
+                inp.addEventListener('change', function() {
+                    const val = this.value;
+                    const k = `${row['№ магазина']}|${row['Артикул']}`;
+                    if (!editedRows.has(k)) editedRows.set(k, { видМинимума: '', колВоПроектов: '' });
+                    editedRows.get(k).колВоПроектов = val;
+                    applyFilters();
+                    updateEditedCount();
+                });
+                td.appendChild(inp);
+                td.classList.add('editable');
+            } else if (col === 'Запас, дн.') {
+                const d = toNumber(row[col], 999);
+                td.textContent = d === 999 ? '∞' : d;
+                if (d < 7) td.classList.add('stock-critical');
+                else if (d < 14) td.classList.add('stock-warning');
+                else if (d < 999) td.classList.add('stock-normal');
+            } else if (col === 'УТО, руб.') {
+                const v = toNumber(row[col], 0);
+                td.textContent = v;
+                if (v > 0) td.classList.add('uto-highlight');
+            } else if (col === 'Дни выхода заказа поставщика') {
+                const v = String(row[col] || '').trim();
+                td.textContent = v;
+                if (v === tomorrow) td.classList.add('min-highlight');
+            } else if (col === 'Статус стока') {
+                const v = row[col] || '';
+                td.textContent = v;
+                if (v === 'Критический') td.style.color = '#e53935';
+                else if (v === 'Внимание') td.style.color = '#fb8c00';
+                else if (v === 'Норма') td.style.color = '#43a047';
+            } else {
+                td.textContent = row[col] !== undefined && row[col] !== null ? row[col] : '';
+            }
+            tr.appendChild(td);
+        }
+        fragment.appendChild(tr);
+    }
+
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+    updateRowCounter(data.length);
+}
+
+function updateEditedCount() {
+    document.getElementById('editedCount').textContent = editedRows.size;
+}
+
+// ==================== БЫСТРЫЕ ФИЛЬТРЫ ====================
+function setQuickFilter(filter) {
+    activeQuickFilter = filter;
+    document.querySelectorAll('.quick-actions .btn-secondary').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+        btn.style.background = btn.dataset.filter === filter ? 'var(--primary)' : '';
+        btn.style.color = btn.dataset.filter === filter ? 'white' : '';
+    });
+    applyFilters();
+}
+
+// ==================== ЭКСПОРТ ====================
+async function exportChanges() {
+    if (editedRows.size === 0) {
+        showToast('Нет изменений для экспорта', 'warning');
+        return;
+    }
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('MIN_Custom');
+    ws.addRow(['Магазин', 'Артикул', 'Тип', 'Количество', 'Дата начала', 'Дата окончания', 'Комментарии']);
+
+    for (const [key, data] of editedRows) {
+        const [store, art] = key.split('|');
+        const type = data.видМинимума || '0';
+        const qty = data.колВоПроектов || '0';
+        const today = new Date();
+        const start = formatDateDDMMYYYY(today);
+        const end = getEndDate(type);
+        ws.addRow([store, art, type, qty, start, end, 'ручная корректировка']);
+    }
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `min_custom_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast(`✅ Выгружено ${editedRows.size} изменений`, 'success');
+}
+
+async function exportAll() {
+    const data = filteredResult.length ? filteredResult : cachedData.fullData;
+    if (!data.length) {
+        showToast('Нет данных для экспорта', 'warning');
+        return;
+    }
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Прогноз');
+    const cols = ['№ магазина', 'Артикул', 'Наименование', 'Подотдел', 'ТИП', 'Запас, дн.', 'В пути, дн.', 'УТО, руб.', 'Статус стока', 'СХЗ', 'Вид минимума', 'Кол-во проектов', 'Дни выхода заказа поставщика', 'ТОП'];
+    ws.addRow(cols);
+
+    for (const row of data) {
+        const r = [];
+        for (const col of cols) {
+            let val = row[col] ?? '';
+            if (col === 'Вид минимума') {
+                const key = `${row['№ магазина']}|${row['Артикул']}`;
+                val = editedRows.get(key)?.видМинимума || '';
+            } else if (col === 'Кол-во проектов') {
+                const key = `${row['№ магазина']}|${row['Артикул']}`;
+                val = editedRows.get(key)?.колВоПроектов || '';
+            }
+            r.push(val);
+        }
+        ws.addRow(r);
+    }
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `prognoz_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast(`✅ Выгружено ${data.length} товаров`, 'success');
+}
+
+function resetChanges() {
+    if (editedRows.size === 0) {
+        showToast('Нет изменений для сброса', 'info');
+        return;
+    }
+    if (confirm(`Сбросить ${editedRows.size} изменений?`)) {
+        editedRows.clear();
+        updateEditedCount();
+        applyFilters();
+        showToast('✅ Все изменения сброшены', 'success');
+    }
+}
+
+// ==================== ПРОГНОЗ "АЛМАЗ" ====================
+function getDeliveryInfo(supplierCode) {
+    if (!supplierCode) return { daysOrder: '', deliveryDays: 7, scheme: '' };
+    
+    const info = deliveryInfoMap.get(supplierCode);
+    if (info) {
+        return {
+            daysOrder: postavkiMap.get(supplierCode) || '',
+            deliveryDays: info.deliveryDays || 7,
+            scheme: info.scheme || ''
+        };
+    }
+    
+    for (const item of postavkiData) {
+        const code = String(item['Поставщик'] || item['№ поставщика'] || '').trim();
+        if (code === supplierCode) {
+            const days = toNumber(item['Срок поставки в магазин'] || item['Срок поставки'] || 7);
+            return {
+                daysOrder: String(item['Дни заказа'] || item['Дни выхода заказа'] || '').trim(),
+                deliveryDays: Math.max(days, 1),
+                scheme: String(item['Схема поставки'] || '').trim()
+            };
+        }
+    }
+    return { daysOrder: '', deliveryDays: 7, scheme: '' };
+}
+
+function calculateSeasonality(history) {
+    const monthKeys = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+    let hasData = false;
+    const monthly = {};
+    let total = 0;
+    for (let i = 0; i < 12; i++) {
+        const val = toNumber(history[`${monthKeys[i]} продажи`] || 0);
+        monthly[i] = val;
+        total += val;
+        if (val > 0) hasData = true;
+    }
+    if (!hasData) {
+        const annual = toNumber(history['Продано шт. Г-1'], 0);
+        const base = annual / 12;
+        const factors = [0.7, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.2, 1.1, 1.0, 0.9, 0.8];
+        for (let i = 0; i < 12; i++) monthly[i] = base * factors[i];
+        total = annual;
+    }
+    const avg = total / 12;
+    const coeff = {};
+    for (let i = 0; i < 12; i++) coeff[i] = avg > 0 ? monthly[i] / avg : 1;
+    return coeff;
+}
+
+function getWeeklySalesHistory(row) {
+    const salesWeekly = toNumber(row['Отгружено в сред. За 7 дн'], 0);
+    const history = salesHistoryMap.get(String(row['Артикул'] || '').trim());
+    
+    const result = {
+        labels: [],
+        sales: [],
+        forecast: []
+    };
+    
+    if (history) {
+        const annualSales = toNumber(history['Продано шт. Г-1'], 0);
+        const weeklyAvg = annualSales / 52;
+        const seasonality = calculateSeasonality(history);
+        const month = new Date().getMonth();
+        const seasonFactor = seasonality[month] || 1;
+        
+        for (let i = 8; i >= 1; i--) {
+            const label = `H-${i}`;
+            result.labels.push(label);
+            const base = weeklyAvg * seasonFactor;
+            const variation = 0.7 + (Math.random() * 0.6);
+            result.sales.push(Math.round(base * variation));
+        }
+    } else if (salesWeekly > 0) {
+        for (let i = 8; i >= 1; i--) {
+            result.labels.push(`H-${i}`);
+            const variation = 0.7 + (Math.random() * 0.6);
+            result.sales.push(Math.round(salesWeekly * variation));
+        }
+    } else {
+        for (let i = 8; i >= 1; i--) {
+            result.labels.push(`H-${i}`);
+            result.sales.push(0);
+        }
+    }
+    
+    const forecastWeekly = toNumber(row['Прогноз Almaz 42 дня'], 0) / 6 || salesWeekly || 1;
+    for (let i = 0; i <= 7; i++) {
+        const label = i === 0 ? 'H' : `H+${i}`;
+        result.labels.push(label);
+        const factor = 1 + (i * 0.02);
+        result.forecast.push(Math.round(forecastWeekly * factor));
+    }
+    
+    return result;
+}
+
+function calcAlmazForecast(row) {
+    const art = String(row['Артикул'] || '').trim();
+    const store = row['№ магазина'] || '';
+    const supplier = row['Номер поставщика'] || '';
+    const history = salesHistoryMap.get(art);
+
+    const currentStock = toNumber(row['Запас, шт.'], 0);
+    const salesWeekly = toNumber(row['Отгружено в сред. За 7 дн'], 0);
+    const salesDaily = salesWeekly / 7;
+    const stockDays = toNumber(row['Запас, дн.'], 999);
+    const capacity = toNumber(row['Вместимость'], 0);
+    const packSize = Math.max(toNumber(row['Размер упаковки'], 1), 1);
+    const almazForecast42 = toNumber(row['Прогноз Almaz 42 дня'], 0);
+    const szh = toNumber(row['СХЗ'], 0);
+    const vPutishSht = toNumber(row['В пути, шт.'], 0);
+
+    const minAmbitsiya = toNumber(row['min 500 Проект'], 0);
+    const minAuto = toNumber(row['Авто min'], 0);
+    const min441 = toNumber(row['min 441 ПМ'], 0);
+    const min401 = toNumber(row['min 401 NEW'], 0);
+    const min902 = toNumber(row['min 902 B2B'], 0);
+    
+    const minTypes = {
+        '500 Проект': minAmbitsiya,
+        'Авто min': minAuto,
+        '441 ПМ': min441,
+        '401 NEW': min401,
+        '902 B2B': min902
+    };
+    
+    let maxMin = 0, maxMinType = '';
+    for (const [type, val] of Object.entries(minTypes)) {
+        if (val > maxMin) {
+            maxMin = val;
+            maxMinType = type;
+        }
+    }
+    
+    const safetyStock = Math.max(szh, maxMin);
+    const deliveryInfo = getDeliveryInfo(supplier);
+    let deliveryDays = deliveryInfo.deliveryDays || 7;
+    const scheme = deliveryInfo.scheme || '';
+    
+    if (scheme === 'BBXD' || scheme === 'XDOCK' || scheme === 'STOCK') {
+        deliveryDays = deliveryDays + 5;
+    }
+
+    const totalPeriod = deliveryDays + 5;
+
+    let predictedDaily = salesDaily;
+    let confidence = 'low';
+    let abcClass = 'C', xyzClass = 'Z';
+    let trend = 'stable';
+    let seasonalityFactor = manualSeasonality;
+    let lastYearSales = 0, lastYearGmv = 0;
+
+    if (history) {
+        lastYearSales = toNumber(history['Продано шт. Г-1'], 0);
+        lastYearGmv = toNumber(history['GMV Г-1'], 0);
+        const checks = toNumber(history['Кол-во чеков Г-1'], 0);
+
+        if (lastYearGmv > 1000000) abcClass = 'A';
+        else if (lastYearGmv > 500000) abcClass = 'B';
+        else abcClass = 'C';
+
+        const stableFactor = lastYearSales > 0 ? checks / lastYearSales : 0;
+        if (stableFactor > 0.8) xyzClass = 'X';
+        else if (stableFactor > 0.5) xyzClass = 'Y';
+        else xyzClass = 'Z';
+
+        const avgDailyLY = lastYearSales / 365;
+        if (avgDailyLY > 0 && salesDaily > 0) {
+            const ratio = salesDaily / avgDailyLY;
+            if (ratio > 1.5) trend = 'growing';
+            else if (ratio < 0.5) trend = 'declining';
+            else trend = 'stable';
+        }
+
+        const seasonality = calculateSeasonality(history);
+        const month = new Date().getMonth();
+        const histSeasonality = Math.max(0.5, Math.min(2, seasonality[month] || 1));
+        
+        const finalSeasonality = manualSeasonality !== 1.0 ? manualSeasonality : histSeasonality;
+
+        const basePrediction = avgDailyLY * 0.6 + salesDaily * 0.4;
+        predictedDaily = basePrediction * finalSeasonality;
+        
+        if (almazForecast42 > 0) {
+            const almazDaily = almazForecast42 / 42;
+            predictedDaily = (predictedDaily + almazDaily) / 2;
+        }
+        
+        confidence = 'high';
+    } else if (almazForecast42 > 0) {
+        predictedDaily = almazForecast42 / 42;
+        confidence = 'medium';
+    } else if (salesDaily > 0) {
+        predictedDaily = salesDaily;
+        confidence = 'low';
+    } else {
+        predictedDaily = 0;
+    }
+
+    if (trend === 'growing') predictedDaily *= 1.15;
+    else if (trend === 'declining') predictedDaily *= 0.85;
+    predictedDaily = Math.max(predictedDaily, 0.1);
+
+    const effectiveStock = currentStock + vPutishSht;
+    
+    const periodNeed = predictedDaily * totalPeriod;
+    let recommendedOrder = Math.max(0, Math.ceil((periodNeed + safetyStock - effectiveStock) / packSize) * packSize);
+    
+    if (capacity > 0) {
+        const maxOrder = Math.floor(capacity * 1.5 / packSize) * packSize;
+        recommendedOrder = Math.min(recommendedOrder, maxOrder);
+    }
+    
+    if (stockDays > 30 && salesDaily < 0.1) {
+        recommendedOrder = 0;
+    }
+
+    let daysUntilOut = 999;
+    if (predictedDaily > 0 && currentStock > 0) {
+        daysUntilOut = Math.min(Math.floor((currentStock + vPutishSht) / predictedDaily), 90);
+    }
+
+    let urgency = 'normal';
+    if (daysUntilOut < 3) urgency = 'critical';
+    else if (daysUntilOut < 7) urgency = 'high';
+    else if (daysUntilOut < 14) urgency = 'medium';
+
+    let recommendation = '✅ В норме';
+    if (urgency === 'critical') recommendation = '🚨 СРОЧНЫЙ ЗАКАЗ!';
+    else if (urgency === 'high' && toNumber(row['УТО, руб.'], 0) > 1000) recommendation = '⚡ КРИТИЧЕСКИ! Высокий УТО';
+    else if (urgency === 'high') recommendation = '📋 Срочный заказ';
+    else if (urgency === 'medium') recommendation = '📋 Плановый заказ';
+
+    return {
+        article: art,
+        store,
+        name: row['Наименование'] || '',
+        currentStock,
+        vPutishSht,
+        effectiveStock,
+        salesDaily: Math.round(salesDaily * 10) / 10,
+        stockDays,
+        capacity,
+        packSize,
+        safetyStock,
+        maxMin,
+        maxMinType,
+        szh,
+        deliveryDays,
+        scheme,
+        totalPeriod,
+        predictedDaily: Math.round(predictedDaily * 10) / 10,
+        periodNeed: Math.round(periodNeed),
+        recommendedOrder: Math.round(recommendedOrder),
+        daysUntilOut,
+        urgency,
+        recommendation,
+        confidence,
+        abcClass,
+        xyzClass,
+        trend,
+        seasonalityFactor: Math.round(seasonalityFactor * 10) / 10,
+        lastYearSales: Math.round(lastYearSales),
+        lastYearGmv: Math.round(lastYearGmv),
+        hasBest: (row['BEST гамма'] && row['BEST гамма'] !== '') || (row['BEST NEXT'] && row['BEST NEXT'] !== ''),
+        utoRub: toNumber(row['УТО, руб.'], 0),
+        percentZapasa: toNumber(row['Наполненность полки'], 0),
+        daysOrder: deliveryInfo.daysOrder,
+        almazForecast42: Math.round(almazForecast42),
+        weeklyHistory: getWeeklySalesHistory(row)
+    };
+}
+
+function generateForecast() {
+    const data = filteredResult.length ? filteredResult : cachedData.fullData;
+    if (!data.length) {
+        showToast('Нет данных для прогноза. Сначала выполните расчёт.', 'warning');
+        return;
+    }
+
+    forecastData = data.map(row => calcAlmazForecast(row));
+    const sorted = forecastData
+        .filter(f => f.daysUntilOut < 999 && f.daysUntilOut > 0)
+        .sort((a, b) => a.daysUntilOut - b.daysUntilOut)
+        .slice(0, 100);
+
+    let filteredForecasts = sorted;
+    if (currentForecastFilter === 'critical') {
+        filteredForecasts = sorted.filter(f => f.urgency === 'critical');
+    } else if (currentForecastFilter === 'warning') {
+        filteredForecasts = sorted.filter(f => f.urgency === 'high');
+    } else if (currentForecastFilter === 'info') {
+        filteredForecasts = sorted.filter(f => f.urgency === 'medium');
+    }
+
+    const critical = sorted.filter(f => f.urgency === 'critical');
+    const warning = sorted.filter(f => f.urgency === 'high');
+    const info = sorted.filter(f => f.urgency === 'medium');
+
+    document.getElementById('fcCritical').textContent = critical.length;
+    document.getElementById('fcWarning').textContent = warning.length;
+    document.getElementById('fcInfo').textContent = info.length;
+    document.getElementById('fcTotal').textContent = sorted.length;
+
+    const container = document.getElementById('forecastList');
+    if (filteredForecasts.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:16px;">📭 Нет товаров для прогноза</div>`;
+        return;
+    }
+
+    container.innerHTML = filteredForecasts.map((f, idx) => {
+        const urgencyClass = f.urgency === 'critical' ? 'badge-critical' :
+                            f.urgency === 'high' ? 'badge-high' :
+                            f.urgency === 'medium' ? 'badge-medium' : 'badge-low';
+        const daysClass = f.daysUntilOut < 3 ? 'critical' : f.daysUntilOut < 7 ? 'warning' : 'normal';
+        const hasHistory = f.confidence === 'high';
+
+        return `
+            <div class="forecast-card" style="border-left-color: ${f.daysUntilOut < 3 ? '#e53935' : f.daysUntilOut < 7 ? '#fb8c00' : '#43a047'};" onclick="showSeasonalityModal('${f.article}')">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:4px;">
+                    <div style="flex:1; min-width:150px;">
+                        <span class="article" onclick="event.stopPropagation();openMagPortal('${f.article}')" title="Кликните для перехода в MagPortal">${f.article}</span>
+                        <span style="font-size:0.55rem; color:var(--text-primary); margin-left:4px;">${f.name.substring(0, 30)}${f.name.length > 30 ? '...' : ''}</span>
+                        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;">
+                            <span style="font-size:0.5rem; color:var(--text-muted);">${f.store}</span>
+                            ${f.hasBest ? '⭐' : ''}
+                            ${f.utoRub > 0 ? '💰' : ''}
+                            ${hasHistory ? `<span style="font-size:0.4rem; color:#43a047;">📊</span>` : ''}
+                            <span style="font-size:0.4rem; color:var(--text-muted);">${f.abcClass}-${f.xyzClass}</span>
+                            ${f.trend !== 'stable' ? `<span style="font-size:0.4rem; ${f.trend === 'growing' ? 'color:#43a047;' : 'color:#e53935;'}">${f.trend === 'growing' ? '📈' : '📉'}</span>` : ''}
+                            <span style="font-size:0.4rem; color:#7b1fa2; cursor:pointer;" onclick="event.stopPropagation();showSeasonalityModal('${f.article}')">📈 график</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right; min-width:80px;">
+                        <span class="badge-priority ${urgencyClass}">${f.urgency.toUpperCase()}</span>
+                        <span class="${daysClass}" style="font-weight:700; margin-left:6px; font-size:0.65rem;">${f.daysUntilOut} дн</span>
+                    </div>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px; margin-top:4px; font-size:0.55rem; color:var(--text-muted);">
+                    <span>📦 ${f.currentStock} шт ${f.vPutishSht > 0 ? `(+${f.vPutishSht} в пути)` : ''}</span>
+                    <span>📈 ${f.salesDaily.toFixed(1)}/дн</span>
+                    <span>📊 ${f.percentZapasa}% полки</span>
+                    <span title="MAX MIN: ${f.maxMinType} = ${f.maxMin} шт, СХЗ: ${f.szh} шт">
+                        📋 MIN: ${f.maxMinType} ${f.maxMin} шт ${f.szh > 0 ? `(+СХЗ ${f.szh})` : ''}
+                    </span>
+                    <span title="Схема поставки: ${f.scheme || 'стандартная'}">🚚 ${f.deliveryDays} дн${f.scheme ? ` (${f.scheme})` : ''}</span>
+                </div>
+                
+                <div class="forecast-detail">
+                    <span class="tag">📊 Прогноз: ${f.predictedDaily.toFixed(1)} шт/дн</span>
+                    <span class="tag">🎯 Сезонность: ${f.seasonalityFactor.toFixed(1)}x</span>
+                    ${f.almazForecast42 > 0 ? `<span class="tag">🔮 Almaz 42д: ${f.almazForecast42} шт</span>` : ''}
+                    <span class="tag">📦 Период: ${f.totalPeriod} дн</span>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                    <span style="font-size:0.55rem; font-weight:600;">💡 ${f.recommendation}</span>
+                    <div style="display:flex; gap:4px;">
+                        <button class="order-list-btn" onclick="event.stopPropagation();addToOrder('${f.article}', ${Math.max(f.recommendedOrder, 0)})">
+                            📦 Заказать ${Math.max(f.recommendedOrder, 0)} шт
+                        </button>
+                        <button onclick="event.stopPropagation();openMagPortal('${f.article}')" class="magportal-btn" style="font-size:0.5rem; padding:1px 6px;">🏪</button>
+                        <button onclick="event.stopPropagation();showSeasonalityModal('${f.article}')" class="magportal-btn" style="font-size:0.5rem; padding:1px 6px; background:rgba(123,31,162,0.12); border-color:#7b1fa2; color:#7b1fa2;">📈</button>
+                    </div>
+                </div>
+                ${f.daysOrder ? `<div style="font-size:0.4rem; color:var(--text-muted); margin-top:2px;">📅 Дни заказа: ${f.daysOrder}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function addToOrder(article, quantity) {
+    orderList.push({ article, quantity });
+    document.getElementById('orderCount').textContent = orderList.length;
+    showToast(`✅ ${article} добавлен в корзину (${quantity} шт)`, 'success', 1500);
+}
+
+function exportOrderList() {
+    if (!orderList.length) {
+        showToast('📭 Корзина заказов пуста', 'warning');
+        return;
+    }
+
+    const wb = XLSX.utils.book_new();
+    const wsData = [['#', 'Артикул', 'Количество', 'Магазин', 'Приоритет', 'Дата']];
+    const store = document.getElementById('storeFilter').value;
+    const today = new Date().toISOString().split('T')[0];
+
+    orderList.forEach((item, idx) => {
+        wsData.push([idx + 1, item.article, item.quantity, store !== 'all' ? store : 'все', 'Срочно', today]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Заказы');
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }];
+
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `заказы_${today}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    showToast(`✅ Выгружено ${orderList.length} позиций для заказа`, 'success');
+    orderList.length = 0;
+    document.getElementById('orderCount').textContent = 0;
+}
+
+// ==================== СЕЗОННОСТЬ - МОДАЛЬНОЕ ОКНО ====================
+function showSeasonalityModal(article) {
+    const modal = document.getElementById('seasonalityModal');
+    if (!modal) return;
+    
+    const forecast = forecastData.find(f => f.article === article);
+    if (!forecast) {
+        showToast('❌ Данные для артикула не найдены', 'warning');
+        return;
+    }
+    
+    document.getElementById('seasonalityArticleName').textContent = `${forecast.article} - ${forecast.name.substring(0, 40)}`;
+    
+    modal.classList.add('show');
+    
+    setTimeout(() => {
+        renderSeasonalityChart(forecast);
+    }, 100);
+}
+
+function closeSeasonalityModal() {
+    const modal = document.getElementById('seasonalityModal');
+    modal.classList.remove('show');
+    if (seasonalityChartInstance) {
+        seasonalityChartInstance.destroy();
+        seasonalityChartInstance = null;
+    }
+}
+
+function renderSeasonalityChart(forecast) {
+    const ctx = document.getElementById('seasonalityChart').getContext('2d');
+    
+    if (seasonalityChartInstance) {
+        seasonalityChartInstance.destroy();
+    }
+    
+    const data = forecast.weeklyHistory;
+    const labels = data.labels;
+    const historyCount = 8;
+    
+    const colors = labels.map((label, i) => {
+        if (i < historyCount) {
+            return 'rgba(26, 35, 126, 0.8)';
+        } else {
+            return 'rgba(255, 140, 0, 0.9)';
+        }
+    });
+    
+    const borderColors = labels.map((label, i) => {
+        if (i < historyCount) {
+            return '#1a237e';
+        } else {
+            return '#FF8C00';
+        }
+    });
+    
+    const allData = [...data.sales, ...data.forecast];
+    
+    seasonalityChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Продажи / Прогноз',
+                data: allData,
+                backgroundColor: colors,
+                borderColor: borderColors,
+                borderWidth: 2,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { size: 10 },
+                        generateLabels: function(chart) {
+                            return [
+                                {
+                                    text: '📊 История продаж (H-8 ... H-1)',
+                                    fillStyle: 'rgba(26, 35, 126, 0.8)',
+                                    strokeStyle: '#1a237e'
+                                },
+                                {
+                                    text: '🔮 Прогноз (H ... H+7)',
+                                    fillStyle: 'rgba(255, 140, 0, 0.8)',
+                                    strokeStyle: '#FF8C00'
+                                }
+                            ];
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed.y} шт`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { font: { size: 8 } },
+                    title: {
+                        display: true,
+                        text: 'Продажи, шт',
+                        font: { size: 9 }
+                    }
+                },
+                x: {
+                    ticks: { font: { size: 8 } },
+                    title: {
+                        display: true,
+                        text: 'Недели',
+                        font: { size: 9 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ==================== HELP ====================
+function showHelp() {
+    showToast(`
+📌 PROGNOZ — управление резервами
+
+🔹 Загрузите отчёты из папки или по одному
+🔹 Нажмите "ВЫЧИСЛИТЬ" для расчёта
+🔹 Фильтры: магазин, отдел, подотдел (множественный), ТИП, ТОП
+🔹 Быстрые фильтры: УТО, Бест, Мины
+🔹 Двойной клик по строке → MagPortal
+🔹 Редактируйте "Вид минимума" и "Кол-во проектов"
+🔹 Экспорт изменений (MIN Custom) или всех данных
+
+📊 ПРОГНОЗ "АЛМАЗ":
+Формула: Заказ = (Прогноз × Период) + MIN − (Текущий запас + В пути)
+
+Где:
+• Прогноз = (60% история + 40% текущие) × Сезонность
+• Период = Срок поставки + 5 дней
+• MIN = Максимум из (СХЗ, 401, 441, 500, 902, Авто min)
+• Сезонность = коэффициент 0.5-2 (настраивается вручную)
+• Тренд: рост (+15%) или падение (-15%)
+• В пути — товары в пути учитываются в эффективном запасе
+
+📈 График: клик по карточке или кнопке 📈 → график продаж и прогноза
+📊 ABC-XYZ: A/B/C по GMV, X/Y/Z по стабильности продаж
+
+⚡ Автофильтр: запас до 30 дн, в пути до 30 дн, TOP 1
+    `, 'info', 8000);
+}
+
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Отчёты
+    const reportsContainer = document.getElementById('reportItems');
+    for (const name of reportNames) {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:4px 6px; border-bottom:1px solid var(--border-light); font-size:0.65rem;';
+        div.innerHTML = `
+            <span>${name}</span>
+            <div>
+                <span class="upload-status" id="status-${name.replace(/\s/g, '')}">⏳</span>
+                <button class="btn-secondary" style="padding:1px 10px;font-size:0.55rem;" onclick="loadExcelFile('${name}', window['${name.replace(/[^\w]/g, '')}Data'])">📎</button>
+            </div>
+        `;
+        reportsContainer.appendChild(div);
+    }
+
+    document.getElementById('toggleReportsBtn').addEventListener('click', function() {
+        const list = document.getElementById('reportsList');
+        const isOpen = list.style.maxHeight !== '0px';
+        list.style.maxHeight = isOpen ? '0' : '300px';
+        this.textContent = isOpen ? '📂 Загрузить отдельные отчёты ▼' : '📂 Загрузить отдельные отчёты ▲';
+    });
+
+    document.getElementById('autoLoadBtn').addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.webkitdirectory = true;
+        input.directory = true;
+        input.multiple = true;
+        input.onchange = (e) => autoLoadFromFolder(e.target.files);
+        input.click();
+    });
+
+    // Фильтры
+    ['storeFilter', 'departmentFilter', 'typeFilter', 'topFilter'].forEach(id => {
+        document.getElementById(id).addEventListener('change', applyFilters);
+    });
+    document.getElementById('subdepartmentFilter').addEventListener('change', applyFilters);
+    ['stockMinInput', 'stockMaxInput', 'transitMinInput', 'transitMaxInput'].forEach(id => {
+        document.getElementById(id).addEventListener('input', applyFilters);
+    });
+    document.getElementById('articleSearchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyFilters();
+    });
+    document.getElementById('applySearchBtn').addEventListener('click', applyFilters);
+    document.getElementById('clearSearchBtn').addEventListener('click', () => {
+        document.getElementById('articleSearchInput').value = '';
+        applyFilters();
+    });
+
+    // Быстрые фильтры
+    document.querySelectorAll('.quick-actions .btn-secondary').forEach(btn => {
+        btn.addEventListener('click', () => setQuickFilter(btn.dataset.filter));
+    });
+
+    // Кнопки
+    document.getElementById('computeBtn').addEventListener('click', compute);
+    document.getElementById('exportChangesBtn').addEventListener('click', exportChanges);
+    document.getElementById('exportAllBtn').addEventListener('click', exportAll);
+    document.getElementById('resetChangesBtn').addEventListener('click', resetChanges);
+
+    // История продаж
+    document.getElementById('loadHistoryBtn').addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xlsx,.xls';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const result = await loadExcelFromFile(file, 'Продажи Г-1', salesHistoryData);
+            if (result) {
+                buildMaps();
+                showToast(`✅ Загружено ${salesHistoryData.length} артикулов с историей продаж`, 'success');
+                generateForecast();
+            }
+        };
+        input.click();
+    });
+
+    // Прогноз
+    document.getElementById('genForecastBtn').addEventListener('click', generateForecast);
+    document.getElementById('exportOrderBtn').addEventListener('click', exportOrderList);
+
+    // Сезонность - автоматический пересчёт
+    const slider = document.getElementById('seasonalitySlider');
+    const valueDisplay = document.getElementById('seasonalityValue');
+    slider.addEventListener('input', function() {
+        manualSeasonality = parseFloat(this.value);
+        valueDisplay.textContent = manualSeasonality.toFixed(1);
+        if (forecastData.length > 0) {
+            generateForecast();
+        }
+    });
+    document.getElementById('resetSeasonalityBtn').addEventListener('click', function() {
+        slider.value = '1.0';
+        manualSeasonality = 1.0;
+        valueDisplay.textContent = '1.0';
+        if (forecastData.length > 0) {
+            generateForecast();
+        }
+        showToast('✅ Коэффициент сезонности сброшен до 1.0, прогноз пересчитан', 'success');
+    });
+
+    // Фильтры по плашкам
+    document.querySelectorAll('.forecast-stat-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            currentForecastFilter = filter;
+            
+            document.querySelectorAll('.forecast-stat-card').forEach(c => {
+                c.style.opacity = '0.6';
+                c.style.transform = 'scale(0.97)';
+            });
+            this.style.opacity = '1';
+            this.style.transform = 'scale(1)';
+            
+            generateForecast();
+            showToast(`🔍 Фильтр: ${this.querySelector('.label').textContent}`, 'info', 1500);
+        });
+    });
+
+    document.querySelectorAll('.forecast-stat-card').forEach(card => {
+        card.addEventListener('dblclick', function() {
+            currentForecastFilter = 'all';
+            document.querySelectorAll('.forecast-stat-card').forEach(c => {
+                c.style.opacity = '1';
+                c.style.transform = 'scale(1)';
+            });
+            generateForecast();
+            showToast('📋 Показаны все позиции', 'info', 1500);
+        });
+    });
+
+    // Показать все / свернуть
+    document.getElementById('showAllBtn').addEventListener('click', function() {
+        showAllRows = !showAllRows;
+        applyFilters();
+    });
+
+    // Помощь по прогнозу
+    document.getElementById('forecastHelpBtn').addEventListener('click', function(e) {
+        const tooltip = document.getElementById('forecastHelpTooltip');
+        if (tooltip) { tooltip.remove(); return; }
+        const div = document.createElement('div');
+        div.id = 'forecastHelpTooltip';
+        div.style.cssText = `
+            position: fixed;
+            background: var(--bg-panel);
+            border: 2px solid #FF8C00;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            z-index: 9999;
+            max-width: 450px;
+            font-size: 0.7rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        `;
+        const rect = e.target.getBoundingClientRect();
+        let left = rect.left - 200, top = rect.bottom + 10;
+        if (left + 450 > window.innerWidth) left = window.innerWidth - 460;
+        if (left < 10) left = 10;
+        if (top + 400 > window.innerHeight) top = rect.top - 400;
+        if (top < 10) top = 10;
+        div.style.left = left + 'px';
+        div.style.top = top + 'px';
+        div.innerHTML = `
+            <button onclick="this.parentElement.remove()" style="float:right;background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-muted);">✕</button>
+            <h4 style="color:#FF8C00;margin-bottom:8px;">🧮 Как рассчитывается прогноз</h4>
+            <p><strong>Формула:</strong> Заказ = (Прогноз × Период) + MIN − (Текущий запас + В пути)</p>
+            <hr style="margin:6px 0;border-color:var(--border-light);">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; font-size:0.6rem;">
+                <div><strong>Прогноз:</strong></div>
+                <div>= (60% история + 40% текущие) × Сезонность</div>
+                <div><strong>Период:</strong></div>
+                <div>= Срок поставки + 5 дней</div>
+                <div><strong>MIN:</strong></div>
+                <div>= Максимум из (СХЗ, 401, 441, 500, 902, Авто min)</div>
+                <div><strong>В пути:</strong></div>
+                <div>Учитывается в эффективном запасе</div>
+                <div><strong>Сезонность:</strong></div>
+                <div>Коэффициент 0.5-2 (настраивается вручную)</div>
+                <div><strong>Тренд:</strong></div>
+                <div>Рост (+15%) / Падение (-15%)</div>
+            </div>
+            <hr style="margin:6px 0;border-color:var(--border-light);">
+            <div style="font-size:0.55rem; color:var(--text-muted);">
+                📊 <strong>ABC-XYZ:</strong> A/B/C по GMV, X/Y/Z по стабильности
+                <br>🔮 <strong>Almaz 42 дня:</strong> учитывается при наличии
+                <br>📦 <strong>СХЗ:</strong> страховой запас из отчёта
+                <br>🚚 <strong>Схема поставки:</strong> BBXD/XDOCK/STOCK +5 дней
+                <br>📈 <strong>График:</strong> клик по карточке или кнопке 📈
+            </div>
+        `;
+        document.body.appendChild(div);
+    });
+    document.addEventListener('click', function(e) {
+        const el = document.getElementById('forecastHelpTooltip');
+        if (el && !el.contains(e.target) && e.target.id !== 'forecastHelpBtn') el.remove();
+    });
+
+    // Закрытие модалки
+    document.getElementById('seasonalityModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSeasonalityModal();
+        }
+    });
+
+    // Начальное состояние
+    updateEditedCount();
+    renderTable([]);
+    updateRowCounter(0);
+    document.getElementById('stockRangeLabel').textContent = '0-30';
+    document.getElementById('transitRangeLabel').textContent = '0-30';
+
+    console.log('📊 PROGNOZ v5.0 готов!');
+    console.log('✅ Множественный выбор подотделов (Ctrl/Cmd)');
+    console.log('✅ Учёт товаров в пути в прогнозе');
+    console.log('✅ Автоматический пересчёт заказа при изменении сезонности');
+    console.log('✅ График продаж и прогноза (кнопка 📈 в карточке)');
+    console.log('✅ Оптимизированная загрузка больших файлов (до 150к строк)');
+    console.log('📊 Ограничение таблицы до 200 строк для производительности');
+});
+</script>
+</body>
+</html>
