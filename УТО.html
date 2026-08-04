@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>УТО → ТОП2 (только без запаса)</title>
+    <title>УТО → ТОП2 (без запаса, множественный выбор)</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -56,7 +56,7 @@
             border-top: none;
         }
         .flex-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
-        .left-col { flex: 1; min-width: 220px; max-width: 280px; background: #faf7fc; padding: 12px 16px; border-radius: 12px; border: 1px solid #ddd0e8; }
+        .left-col { flex: 1; min-width: 220px; max-width: 320px; background: #faf7fc; padding: 12px 16px; border-radius: 12px; border: 1px solid #ddd0e8; }
         .right-col { flex: 3; min-width: 400px; }
         .section-title { font-weight: 600; font-size: 0.8rem; color: #4a148c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .file-upload-area { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
@@ -65,6 +65,7 @@
         .file-upload-row input[type="file"] { font-size: 0.65rem; flex: 1; }
         .status-badge { font-size: 0.6rem; background: #e8e0ee; padding: 1px 10px; border-radius: 30px; color: #4a148c; }
         .status-badge.loaded { background: #c8e6c9; color: #1b5e20; }
+
         .filter-group { margin: 6px 0; }
         .filter-group label { font-weight: 600; font-size: 0.7rem; color: #4a148c; display: block; margin-bottom: 2px; }
         .filter-group select, .filter-group input {
@@ -81,6 +82,49 @@
             outline: none;
             box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
         }
+
+        /* Множественный выбор с галочками */
+        .multi-select {
+            max-height: 100px;
+            overflow-y: auto;
+            border: 1px solid #d0c0d8;
+            border-radius: 8px;
+            padding: 4px 8px;
+            background: white;
+            font-size: 0.65rem;
+        }
+        .multi-select::-webkit-scrollbar { width: 4px; }
+        .multi-select::-webkit-scrollbar-thumb { background: #7b1fa2; border-radius: 4px; }
+        .multi-select .item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .multi-select .item:hover { background: #f0e8f5; }
+        .multi-select .item input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: #7b1fa2;
+            cursor: pointer;
+        }
+        .multi-select .item label {
+            font-size: 0.6rem;
+            cursor: pointer;
+            color: #1e1e1e;
+            flex: 1;
+        }
+        .multi-select .item .count {
+            font-size: 0.5rem;
+            color: #7a6a80;
+            background: #e8e0ee;
+            padding: 0 6px;
+            border-radius: 10px;
+        }
+
         .filter-checkbox {
             display: flex;
             align-items: center;
@@ -95,6 +139,7 @@
             accent-color: #7b1fa2;
             cursor: pointer;
         }
+
         .quick-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px 0; }
         .quick-actions .btn {
             padding: 3px 12px;
@@ -135,7 +180,6 @@
         .highlight-uto { background: #f3e5f5 !important; border-left: 4px solid #7b1fa2; }
         .row-overdue { background: #ffebee !important; border-left: 4px solid #c62828; }
         .row-transit { background: #e3f2fd !important; border-left: 4px solid #1565c0; }
-        .row-has-stock { opacity: 0.5; background: #f5f5f5 !important; }
         .badge {
             display: inline-block;
             font-size: 0.5rem;
@@ -151,7 +195,6 @@
         .badge-overdue { background: #c62828; color: white; }
         .badge-ontime { background: #2e7d32; color: white; }
         .badge-transit { background: #1565c0; color: white; }
-        .badge-stock { background: #00838f; color: white; }
         .badge-no-stock { background: #e65100; color: white; }
         .btn-small {
             padding: 1px 10px;
@@ -266,6 +309,22 @@
         .conditions-box ul li { margin: 1px 0; }
         .conditions-box .ok { color: #2e7d32; font-weight: 700; }
         .conditions-box .bad { color: #c62828; font-weight: 700; }
+
+        .select-all-btn {
+            font-size: 0.55rem;
+            padding: 1px 8px;
+            border: 1px solid #7b1fa2;
+            border-radius: 12px;
+            background: transparent;
+            color: #7b1fa2;
+            cursor: pointer;
+            transition: 0.15s;
+            margin: 2px 0;
+        }
+        .select-all-btn:hover {
+            background: #7b1fa2;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -285,44 +344,21 @@
         <div id="instructionBlock" class="instruction-block" style="display:none;">
             <details open>
                 <summary>📖 Инструкция по работе</summary>
-                
-                <div class="warning-box">
-                    ⚠️ <strong>ТОП2 ТОЛЬКО при выполнении ВСЕХ условий:</strong>
-                </div>
+                <div class="warning-box">⚠️ <strong>ТОП2 ТОЛЬКО при выполнении ВСЕХ условий:</strong></div>
                 <div class="conditions-box">
                     <ul>
                         <li>✅ <span class="ok">Товар в пути</span> (Сумма В пути, шт. > 0)</li>
                         <li>✅ <span class="ok">Нет запаса</span> (Сумма Кол-во в запасе = 0)</li>
-                        <li>✅ <span class="ok">TOP ЦО ≠ 1</span> (не исключаем)</li>
-                        <li>✅ <span class="ok">Есть УТО</span> (запись в отчёте УТО)</li>
+                        <li>✅ <span class="ok">TOP ЦО ≠ 1</span></li>
+                        <li>✅ <span class="ok">Есть УТО</span></li>
                     </ul>
                 </div>
-                
-                <div class="formula-box">
-                    📅 <strong>План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней</strong>
-                </div>
-
-                <strong>📥 1. Загрузка отчётов</strong>
+                <div class="formula-box">📅 План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней</div>
+                <strong>📥 Загрузка отчётов</strong>
                 <ul>
                     <li><strong>Гамма:</strong> № магазина, Артикул, Подотдел, Топ, TOP ЦО, № Поставщика, Сумма В пути, шт., Сумма Кол-во в запасе</li>
                     <li><strong>УТО:</strong> ЛМ-код, Уп.GMV руб, Кол-во дней в перебое</li>
                     <li><strong>Детали поставки:</strong> Магазин, Поставщик, Срок поставки в магазин (дней)</li>
-                </ul>
-
-                <strong>🧮 2. Пример расчёта</strong>
-                <div class="example-box">
-                    <table>
-                        <tr><th>Артикул</th><th>В пути</th><th>Запас</th><th>Перебой</th><th>Срок пост</th><th>План снятия</th><th>Результат</th></tr>
-                        <tr><td>12727434</td><td>50 ✅</td><td>99 ❌</td><td>13</td><td>20</td><td><strong>12 дней</strong></td><td>❌ Есть запас</td></tr>
-                        <tr><td>82704224</td><td>9 ✅</td><td>0 ✅</td><td>15</td><td>13</td><td><strong>3 дня</strong></td><td>✅ Применяем</td></tr>
-                    </table>
-                </div>
-
-                <strong>🔄 3. Как определяется снятие ТОП2</strong>
-                <ul>
-                    <li>✅ <strong>Товар приехал:</strong> Сумма В пути, шт. = 0</li>
-                    <li>✅ <strong>Появился запас:</strong> Сумма Кол-во в запасе > 0 (тогда снимаем)</li>
-                    <li>✅ <strong>Просрочка:</strong> Дата снятия прошла</li>
                 </ul>
             </details>
         </div>
@@ -343,8 +379,27 @@
                     </div>
 
                     <div class="section-title">🎯 Фильтры</div>
-                    <div class="filter-group"><label>Магазин</label><select id="storeFilter"><option value="all">Все</option></select></div>
-                    <div class="filter-group"><label>Подотдел</label><select id="subdepartmentFilter"><option value="all">Все</option></select></div>
+                    
+                    <!-- Множественный выбор магазинов -->
+                    <div class="filter-group">
+                        <label>🏬 Магазины</label>
+                        <div style="display:flex;gap:4px;margin-bottom:2px;">
+                            <button class="select-all-btn" id="selectAllStores">✅ Все</button>
+                            <button class="select-all-btn" id="clearAllStores">❌ Снять</button>
+                        </div>
+                        <div class="multi-select" id="storeMultiSelect"></div>
+                    </div>
+
+                    <!-- Множественный выбор подотделов -->
+                    <div class="filter-group">
+                        <label>📁 Подотделы</label>
+                        <div style="display:flex;gap:4px;margin-bottom:2px;">
+                            <button class="select-all-btn" id="selectAllSubdepts">✅ Все</button>
+                            <button class="select-all-btn" id="clearAllSubdepts">❌ Снять</button>
+                        </div>
+                        <div class="multi-select" id="subdeptMultiSelect"></div>
+                    </div>
+
                     <div class="filter-group"><label>ТОП</label><select id="topFilter"><option value="all">Все</option><option value="1">1</option><option value="2">2</option></select></div>
                     <div class="filter-group"><label>TOP ЦО</label><select id="topCoFilter"><option value="all">Все</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
                     
@@ -406,30 +461,17 @@
             </div>
             <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid #ddd0e8;border-radius:10px;">
                 <table class="history-table" id="historyTable">
-                    <thead>
-                        <tr>
-                            <th>Дата сессии</th>
-                            <th>Артикул</th>
-                            <th>Магазин</th>
-                            <th>Атрибут ТОП</th>
-                            <th>Тип</th>
-                            <th>Период действия</th>
-                            <th>Действие</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody">
-                        <tr><td colspan="7" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr>
-                    </tbody>
+                    <thead><tr><th>Дата сессии</th><th>Артикул</th><th>Магазин</th><th>Атрибут ТОП</th><th>Тип</th><th>Период действия</th><th>Действие</th></tr></thead>
+                    <tbody id="historyBody"><tr><td colspan="7" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr></tbody>
                 </table>
             </div>
-            <div style="margin-top:8px;font-size:0.6rem;color:#7a6a80;">
-                Всего применений: <span id="historyCount">0</span>
-            </div>
+            <div style="margin-top:8px;font-size:0.6rem;color:#7a6a80;">Всего применений: <span id="historyCount">0</span></div>
         </div>
 
         <div class="footer-note">
             ⚠️ <strong>Условия для ТОП2:</strong> в пути + нет запаса + TOP ЦО≠1 + УТО
             <br>🔄 Снятие: товар приехал (В пути=0) ИЛИ появился запас (Запас>0), либо просрочка
+            <br>📌 Множественный выбор магазинов и подотделов с галочками
         </div>
     </div>
 </div>
@@ -449,12 +491,12 @@
         history: [],
         appliedSet: new Set(),
         quickFilter: 'uto',
-        storeFilter: 'all',
-        subdepartmentFilter: 'all',
+        selectedStores: new Set(),
+        selectedSubdepts: new Set(),
         topFilter: 'all',
         topCoFilter: 'all',
         excludeTopCoOne: true,
-        excludeWithStock: true,  // Исключаем товары С запасом
+        excludeWithStock: true,
         exportSessions: [],
     };
 
@@ -581,6 +623,18 @@
             }
         }
 
+        // Собираем все магазины и подотделы
+        const allStores = new Set();
+        const allSubdepts = new Set();
+        for (const g of state.gamma) {
+            const store = extractStore(g['№ магазина']);
+            if (store) allStores.add(store);
+            const sub = toStr(g['Подотдел']);
+            if (sub) allSubdepts.add(sub);
+        }
+        buildMultiSelect('storeMultiSelect', allStores, state.selectedStores, 'storeFilter');
+        buildMultiSelect('subdeptMultiSelect', allSubdepts, state.selectedSubdepts, 'subdeptFilter');
+
         const merged = [];
         let excludedByTopCo = 0;
         let excludedNotInTransit = 0;
@@ -592,6 +646,9 @@
             const store = extractStore(g['№ магазина']);
             if (!store || !article) continue;
 
+            // Фильтр по выбранным магазинам
+            if (state.selectedStores.size > 0 && !state.selectedStores.has(store)) continue;
+
             const topInStore = toStr(g['Топ в магазине']).replace(/\.00$/, '');
             const topCo = toStr(g['TOP ЦО']).replace(/\.00$/, '');
             if (state.excludeTopCoOne && topCo === '1') { excludedByTopCo++; continue; }
@@ -600,11 +657,14 @@
             if (!inTransit) { excludedNotInTransit++; continue; }
 
             const stock = toNum(g['Сумма Кол-во в запасе']);
-            // ====== ИСКЛЮЧАЕМ ТОВАРЫ С ЗАПАСОМ (Запас > 0), ОСТАВЛЯЕМ БЕЗ ЗАПАСА ======
             if (state.excludeWithStock && stock > 0) { excludedWithStock++; continue; }
 
             const name = toStr(g['Наименование']);
             const subdept = toStr(g['Подотдел']);
+            
+            // Фильтр по выбранным подотделам
+            if (state.selectedSubdepts.size > 0 && !state.selectedSubdepts.has(subdept)) continue;
+
             const supplierCode = toStr(g['№ Поставщика']);
             const utoInfo = utoMap.get(article) || { rub: 0, days: 0 };
 
@@ -658,7 +718,6 @@
                 }
             }
 
-            // ====== ЛОГИКА СНЯТИЯ ======
             const isApplied = state.appliedSet.has(`${store}|${article}`);
             let shouldRemove = false;
             let removeReasonText = '';
@@ -668,7 +727,6 @@
                 const notInTransit = !inTransit;
                 const isDateOverdue = isOverdue;
 
-                // Снимаем, если товар приехал ИЛИ появился запас ИЛИ просрочка
                 if (notInTransit || hasStock) {
                     shouldRemove = true;
                     if (notInTransit && hasStock) removeReasonText = '✅ Товар приехал и есть на полке';
@@ -703,21 +761,56 @@
         const msg = [];
         if (excludedByTopCo > 0) msg.push(`${excludedByTopCo} TOP ЦО=1`);
         if (excludedNotInTransit > 0) msg.push(`${excludedNotInTransit} не в пути`);
-        if (excludedWithStock > 0) msg.push(`${excludedWithStock} с запасом (исключены)`);
-        showToast(`Сведено ${merged.length} артикулов (только без запаса)${msg.length ? ' (искл: '+msg.join(', ')+')' : ''}`, 'success');
+        if (excludedWithStock > 0) msg.push(`${excludedWithStock} с запасом`);
+        showToast(`Сведено ${merged.length} артикулов${msg.length ? ' (искл: '+msg.join(', ')+')' : ''}`, 'success');
         applyFilters();
-        updateStoreFilter();
-        updateSubdepartmentFilter();
         updateRowCounter();
     }
 
     // ============================================================
-    // 4. Фильтрация и отображение
+    // 4. Построение мультиселекта
+    // ============================================================
+    function buildMultiSelect(containerId, items, selectedSet, filterType) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        const sorted = Array.from(items).sort();
+        for (const item of sorted) {
+            const div = document.createElement('div');
+            div.className = 'item';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = selectedSet.has(item);
+            cb.value = item;
+            cb.addEventListener('change', function() {
+                if (this.checked) selectedSet.add(this.value);
+                else selectedSet.delete(this.value);
+                applyFilters();
+            });
+            const label = document.createElement('label');
+            label.textContent = item;
+            div.appendChild(cb);
+            div.appendChild(label);
+            container.appendChild(div);
+        }
+        if (sorted.length === 0) {
+            container.innerHTML = '<div style="color:#9e9e9e;font-size:0.6rem;padding:4px;">Нет данных</div>';
+        }
+    }
+
+    // ============================================================
+    // 5. Фильтрация и отображение
     // ============================================================
     function applyFilters() {
         let data = [...state.merged];
-        if (state.storeFilter !== 'all') data = data.filter(r => r.store === state.storeFilter);
-        if (state.subdepartmentFilter !== 'all') data = data.filter(r => r.subdepartment === state.subdepartmentFilter);
+
+        // Фильтр по магазинам (уже применён при сведении, но дублируем)
+        if (state.selectedStores.size > 0) {
+            data = data.filter(r => state.selectedStores.has(r.store));
+        }
+        if (state.selectedSubdepts.size > 0) {
+            data = data.filter(r => state.selectedSubdepts.has(r.subdepartment));
+        }
         if (state.topFilter !== 'all') data = data.filter(r => r.top === state.topFilter);
         if (state.topCoFilter !== 'all') data = data.filter(r => r.topCo === state.topCoFilter);
         if (state.excludeTopCoOne) data = data.filter(r => r.topCo !== '1');
@@ -740,7 +833,7 @@
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
         if (!data.length) {
-            tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:15px;color:#9e9e9e;">Нет записей (все товары с запасом исключены)</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:15px;color:#9e9e9e;">Нет записей</td></tr>`;
             return;
         }
         let html = '';
@@ -758,7 +851,7 @@
             
             const appliedBadge = isApplied ? '<span class="badge badge-applied">✅</span>' : '';
             const transitBadge = row.inTransit ? '<span class="badge badge-transit">🚚</span>' : '';
-            const stockBadge = row.stock === 0 ? '<span class="badge badge-no-stock">0</span>' : `<span class="badge badge-stock">${row.stock}</span>`;
+            const stockBadge = row.stock === 0 ? '<span class="badge badge-no-stock">0</span>' : `<span class="badge" style="background:#00838f;">${row.stock}</span>`;
             
             let statusBadge = '';
             if (isOverdue) {
@@ -826,7 +919,7 @@
     }
 
     function updateRowCounter() {
-        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей (без запаса)`;
+        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей`;
     }
 
     function updateFilterStatus() {
@@ -841,35 +934,18 @@
         const excludeMsg = [];
         if (state.excludeTopCoOne) excludeMsg.push('TOP ЦО≠1');
         if (state.excludeWithStock) excludeMsg.push('без запаса');
-        document.getElementById('filterStatus').textContent = (map[state.quickFilter] || 'УТО') + (excludeMsg.length ? ' ('+excludeMsg.join(', ')+')' : '');
-    }
-
-    function updateStoreFilter() {
-        const sel = document.getElementById('storeFilter');
-        const stores = new Set();
-        for (const r of state.merged) if (r.store) stores.add(r.store);
-        const current = sel.value;
-        sel.innerHTML = '<option value="all">Все</option>';
-        for (const s of Array.from(stores).sort()) sel.innerHTML += `<option value="${s}">${s}</option>`;
-        if (current && stores.has(current)) sel.value = current;
-        else sel.value = 'all';
-        state.storeFilter = sel.value;
-    }
-
-    function updateSubdepartmentFilter() {
-        const sel = document.getElementById('subdepartmentFilter');
-        const subdepts = new Set();
-        for (const r of state.merged) if (r.subdepartment) subdepts.add(r.subdepartment);
-        const current = sel.value;
-        sel.innerHTML = '<option value="all">Все</option>';
-        for (const s of Array.from(subdepts).sort()) sel.innerHTML += `<option value="${s}">${s}</option>`;
-        if (current && subdepts.has(current)) sel.value = current;
-        else sel.value = 'all';
-        state.subdepartmentFilter = sel.value;
+        const storeCount = state.selectedStores.size;
+        const subCount = state.selectedSubdepts.size;
+        let filterInfo = '';
+        if (storeCount > 0) filterInfo += `${storeCount} магазинов`;
+        if (subCount > 0) filterInfo += (filterInfo ? ', ' : '') + `${subCount} подотделов`;
+        document.getElementById('filterStatus').textContent = (map[state.quickFilter] || 'УТО') + 
+            (excludeMsg.length ? ' ('+excludeMsg.join(', ')+')' : '') +
+            (filterInfo ? ' | '+filterInfo : '');
     }
 
     // ============================================================
-    // 5. История
+    // 6. История
     // ============================================================
     function renderHistory() {
         const tbody = document.getElementById('historyBody');
@@ -933,7 +1009,7 @@
     }
 
     // ============================================================
-    // 6. Экспорт
+    // 7. Экспорт
     // ============================================================
     function exportTemplate(onlyApplied = false, topAttribute = 'ТОП2') {
         let data = [];
@@ -1072,7 +1148,7 @@
     }
 
     // ============================================================
-    // 7. Инициализация
+    // 8. Инициализация
     // ============================================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1089,6 +1165,34 @@
         instructionVisible = !instructionVisible;
         block.style.display = instructionVisible ? 'block' : 'none';
         this.textContent = instructionVisible ? '📖 Скрыть' : '📖';
+    });
+
+    // Кнопки "Выбрать все" / "Снять все" для магазинов
+    document.getElementById('selectAllStores').addEventListener('click', function() {
+        const container = document.getElementById('storeMultiSelect');
+        const cbs = container.querySelectorAll('input[type="checkbox"]');
+        cbs.forEach(cb => { cb.checked = true; state.selectedStores.add(cb.value); });
+        applyFilters();
+    });
+    document.getElementById('clearAllStores').addEventListener('click', function() {
+        const container = document.getElementById('storeMultiSelect');
+        const cbs = container.querySelectorAll('input[type="checkbox"]');
+        cbs.forEach(cb => { cb.checked = false; state.selectedStores.delete(cb.value); });
+        applyFilters();
+    });
+
+    // Кнопки "Выбрать все" / "Снять все" для подотделов
+    document.getElementById('selectAllSubdepts').addEventListener('click', function() {
+        const container = document.getElementById('subdeptMultiSelect');
+        const cbs = container.querySelectorAll('input[type="checkbox"]');
+        cbs.forEach(cb => { cb.checked = true; state.selectedSubdepts.add(cb.value); });
+        applyFilters();
+    });
+    document.getElementById('clearAllSubdepts').addEventListener('click', function() {
+        const container = document.getElementById('subdeptMultiSelect');
+        const cbs = container.querySelectorAll('input[type="checkbox"]');
+        cbs.forEach(cb => { cb.checked = false; state.selectedSubdepts.delete(cb.value); });
+        applyFilters();
     });
 
     document.getElementById('computeBtn').addEventListener('click', mergeReports);
@@ -1109,7 +1213,7 @@
                 added++;
             }
         }
-        if (added > 0) { saveHistory(); showToast(`✅ Применён ТОП2 к ${added} артикулам (без запаса)`, 'success'); }
+        if (added > 0) { saveHistory(); showToast(`✅ Применён ТОП2 к ${added} артикулам`, 'success'); }
         else showToast('Все уже в истории', 'info');
         exportTemplate(true, 'ТОП2');
         applyFilters();
@@ -1117,8 +1221,6 @@
     });
     document.getElementById('suggestRemoveBtn').addEventListener('click', suggestRemoveTop2);
 
-    document.getElementById('storeFilter').addEventListener('change', function() { state.storeFilter = this.value; applyFilters(); });
-    document.getElementById('subdepartmentFilter').addEventListener('change', function() { state.subdepartmentFilter = this.value; applyFilters(); });
     document.getElementById('topFilter').addEventListener('change', function() { state.topFilter = this.value; applyFilters(); });
     document.getElementById('topCoFilter').addEventListener('change', function() { state.topCoFilter = this.value; applyFilters(); });
     document.getElementById('excludeTopCoOne').addEventListener('change', function() {
@@ -1186,7 +1288,7 @@
         }
     }
 
-    console.log('📦 УТО→ТОП2 (без запаса) загружен.');
+    console.log('📦 УТО→ТОП2 (без запаса, множественный выбор) загружен.');
     console.log('📌 Условия: в пути + запас=0 + TOP ЦО≠1 + УТО');
 
     applyFilters();
