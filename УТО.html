@@ -83,7 +83,6 @@
             box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
         }
 
-        /* Множественный выбор с галочками */
         .multi-select {
             max-height: 100px;
             overflow-y: auto;
@@ -254,6 +253,7 @@
         .history-group { background: #f8f4fc; font-weight: 700; color: #4a148c; }
         #rowCounter { font-size: 0.6rem; color: #7a6a80; }
 
+        /* ===== ИНСТРУКЦИЯ (расширенная) ===== */
         .instruction-block {
             background: #f8f4fc;
             border: 1px solid #d0c0d8;
@@ -263,10 +263,15 @@
             font-size: 0.7rem;
             color: #4a148c;
         }
-        .instruction-block summary { font-weight: 700; cursor: pointer; font-size: 0.75rem; color: #4a148c; }
+        .instruction-block summary {
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #4a148c;
+        }
         .instruction-block ul { padding-left: 18px; margin: 4px 0; }
         .instruction-block ul li { margin: 2px 0; }
-        .formula-box {
+        .instruction-block .formula-box {
             background: #e8f5e9;
             border: 1px solid #a5d6a7;
             border-radius: 6px;
@@ -276,7 +281,7 @@
             font-size: 0.7rem;
             color: #1b5e20;
         }
-        .warning-box {
+        .instruction-block .warning-box {
             background: #fff3e0;
             border: 1px solid #ffcc80;
             border-radius: 6px;
@@ -285,7 +290,7 @@
             font-size: 0.65rem;
             color: #e65100;
         }
-        .example-box {
+        .instruction-block .example-box {
             background: #e3f2fd;
             border: 1px solid #90caf9;
             border-radius: 6px;
@@ -294,10 +299,10 @@
             font-size: 0.65rem;
             color: #0d47a1;
         }
-        .example-box table { font-size: 0.6rem; width: 100%; border-collapse: collapse; }
-        .example-box table td { padding: 2px 6px; border: 1px solid #bbdefb; }
-        .example-box table th { padding: 2px 6px; border: 1px solid #bbdefb; background: #bbdefb; font-weight: 700; }
-        .conditions-box {
+        .instruction-block .example-box table { font-size: 0.6rem; width: 100%; border-collapse: collapse; }
+        .instruction-block .example-box table td { padding: 2px 6px; border: 1px solid #bbdefb; }
+        .instruction-block .example-box table th { padding: 2px 6px; border: 1px solid #bbdefb; background: #bbdefb; font-weight: 700; }
+        .instruction-block .conditions-box {
             background: #e8f5e9;
             border: 1px solid #a5d6a7;
             border-radius: 6px;
@@ -305,10 +310,10 @@
             margin: 4px 0;
             font-size: 0.65rem;
         }
-        .conditions-box ul { margin: 2px 0; padding-left: 16px; }
-        .conditions-box ul li { margin: 1px 0; }
-        .conditions-box .ok { color: #2e7d32; font-weight: 700; }
-        .conditions-box .bad { color: #c62828; font-weight: 700; }
+        .instruction-block .conditions-box ul { margin: 2px 0; padding-left: 16px; }
+        .instruction-block .conditions-box ul li { margin: 1px 0; }
+        .instruction-block .conditions-box .ok { color: #2e7d32; font-weight: 700; }
+        .instruction-block .conditions-box .bad { color: #c62828; font-weight: 700; }
 
         .select-all-btn {
             font-size: 0.55rem;
@@ -341,24 +346,83 @@
     </header>
 
     <div class="panel">
+        <!-- ===== ИНСТРУКЦИЯ (полная версия) ===== -->
         <div id="instructionBlock" class="instruction-block" style="display:none;">
             <details open>
-                <summary>📖 Инструкция по работе</summary>
-                <div class="warning-box">⚠️ <strong>ТОП2 ТОЛЬКО при выполнении ВСЕХ условий:</strong></div>
+                <summary>📖 Инструкция по работе с инструментом</summary>
+                
+                <div class="warning-box">
+                    ⚠️ <strong>ТОП2 присваивается ТОЛЬКО при выполнении ВСЕХ условий:</strong>
+                </div>
                 <div class="conditions-box">
                     <ul>
                         <li>✅ <span class="ok">Товар в пути</span> (Сумма В пути, шт. > 0)</li>
-                        <li>✅ <span class="ok">Нет запаса</span> (Сумма Кол-во в запасе = 0)</li>
-                        <li>✅ <span class="ok">TOP ЦО ≠ 1</span></li>
-                        <li>✅ <span class="ok">Есть УТО</span></li>
+                        <li>✅ <span class="ok">Нет запаса</span> (Сумма Кол-во в запасе = 0) — товара нет на полке</li>
+                        <li>✅ <span class="ok">TOP ЦО ≠ 1</span> (TOP ЦО=1 уже имеет приоритет)</li>
+                        <li>✅ <span class="ok">Есть УТО</span> (запись в отчёте УТО)</li>
                     </ul>
                 </div>
-                <div class="formula-box">📅 План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней</div>
-                <strong>📥 Загрузка отчётов</strong>
+
+                <div class="formula-box">
+                    📅 <strong>Формула расчёта снятия ТОП2:</strong><br>
+                    План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней
+                </div>
+
+                <strong>📥 1. Загрузка отчётов</strong>
                 <ul>
                     <li><strong>Гамма:</strong> № магазина, Артикул, Подотдел, Топ, TOP ЦО, № Поставщика, Сумма В пути, шт., Сумма Кол-во в запасе</li>
-                    <li><strong>УТО:</strong> ЛМ-код, Уп.GMV руб, Кол-во дней в перебое</li>
-                    <li><strong>Детали поставки:</strong> Магазин, Поставщик, Срок поставки в магазин (дней)</li>
+                    <li><strong>УТО:</strong> ЛМ-код, Уп.GMV руб, Кол-во дней в перебое за 30 дней</li>
+                    <li><strong>Детали поставки:</strong> Магазин, Поставщик, Срок поставки в магазин (число дней)</li>
+                    <li>Первые 2 строки в файлах игнорируются</li>
+                </ul>
+
+                <strong>🧮 2. Как работает расчёт (примеры)</strong>
+                <div class="example-box">
+                    <table>
+                        <tr><th>Артикул</th><th>В пути</th><th>Запас</th><th>Перебой</th><th>Срок пост</th><th>План снятия</th><th>Результат</th></tr>
+                        <tr><td>12727434</td><td>50 ✅</td><td>99 ❌</td><td>13</td><td>20</td><td><strong>12 дней</strong></td><td>❌ Есть запас (не применяем)</td></tr>
+                        <tr><td>82704224</td><td>9 ✅</td><td>0 ✅</td><td>15</td><td>13</td><td><strong>(13−15)+5 = 3 дня</strong></td><td>✅ Применяем ТОП2</td></tr>
+                        <tr><td>11677009</td><td>10 ✅</td><td>0 ✅</td><td>5</td><td>20</td><td><strong>(20−5)+5 = 20 дней</strong></td><td>✅ Применяем ТОП2</td></tr>
+                    </table>
+                </div>
+                <ul>
+                    <li><strong>Пример 1 (12727434):</strong> есть запас 99 шт → ❌ не применяем</li>
+                    <li><strong>Пример 2 (82704224):</strong> перебой 15 дней > срока 13 дней → план снятия 3 дня</li>
+                    <li><strong>Пример 3 (11677009):</strong> срок 20, перебой 5 → план снятия 20 дней</li>
+                </ul>
+
+                <strong>🔄 3. Как определяется снятие ТОП2</strong>
+                <ul>
+                    <li>✅ <strong>Товар приехал:</strong> Сумма В пути, шт. = 0</li>
+                    <li>✅ <strong>Появился запас:</strong> Сумма Кол-во в запасе > 0 (тогда снимаем)</li>
+                    <li>✅ <strong>Просрочка:</strong> Дата снятия прошла</li>
+                </ul>
+
+                <strong>🎯 4. Фильтры</strong>
+                <ul>
+                    <li><strong>Магазины и подотделы:</strong> множественный выбор с галочками</li>
+                    <li><strong>TOP ЦО = 1:</strong> исключаются (галочка)</li>
+                    <li><strong>С запасом:</strong> исключаются (галочка) — оставляем только без запаса</li>
+                    <li><strong>Быстрые фильтры:</strong> УТО, ТОП1, ТОП2, Применён, Снять, В пути</li>
+                </ul>
+
+                <strong>📌 5. Применение ТОП2</strong>
+                <ul>
+                    <li>Нажмите <strong>"📌 Применить ТОП2"</strong> — система назначит ТОП2 всем артикулам в текущем фильтре</li>
+                    <li>Или вручную: кнопка <strong>"✅"</strong> напротив артикула</li>
+                </ul>
+
+                <strong>📤 6. Снятие ТОП2</strong>
+                <ul>
+                    <li>Переключитесь на фильтр <strong>"⏳ Снять"</strong></li>
+                    <li>Нажмите <strong>"💡 Снять ТОП2"</strong> — получите список причин для снятия</li>
+                    <li>Или нажмите <strong>"🔄 ТОП1"</strong> — выгрузите шаблон с ТОП1 для загрузки в систему</li>
+                </ul>
+
+                <strong>📜 7. История</strong>
+                <ul>
+                    <li>Хранит все выгрузки ТОП2 с датой и периодом действия</li>
+                    <li>Можно выгрузить в Excel или сбросить</li>
                 </ul>
             </details>
         </div>
@@ -380,7 +444,6 @@
 
                     <div class="section-title">🎯 Фильтры</div>
                     
-                    <!-- Множественный выбор магазинов -->
                     <div class="filter-group">
                         <label>🏬 Магазины</label>
                         <div style="display:flex;gap:4px;margin-bottom:2px;">
@@ -390,7 +453,6 @@
                         <div class="multi-select" id="storeMultiSelect"></div>
                     </div>
 
-                    <!-- Множественный выбор подотделов -->
                     <div class="filter-group">
                         <label>📁 Подотделы</label>
                         <div style="display:flex;gap:4px;margin-bottom:2px;">
@@ -472,6 +534,7 @@
             ⚠️ <strong>Условия для ТОП2:</strong> в пути + нет запаса + TOP ЦО≠1 + УТО
             <br>🔄 Снятие: товар приехал (В пути=0) ИЛИ появился запас (Запас>0), либо просрочка
             <br>📌 Множественный выбор магазинов и подотделов с галочками
+            <br>📖 Нажмите «📖» в шапке для полной инструкции с примерами
         </div>
     </div>
 </div>
@@ -804,7 +867,6 @@
     function applyFilters() {
         let data = [...state.merged];
 
-        // Фильтр по магазинам (уже применён при сведении, но дублируем)
         if (state.selectedStores.size > 0) {
             data = data.filter(r => state.selectedStores.has(r.store));
         }
@@ -1167,7 +1229,6 @@
         this.textContent = instructionVisible ? '📖 Скрыть' : '📖';
     });
 
-    // Кнопки "Выбрать все" / "Снять все" для магазинов
     document.getElementById('selectAllStores').addEventListener('click', function() {
         const container = document.getElementById('storeMultiSelect');
         const cbs = container.querySelectorAll('input[type="checkbox"]');
@@ -1181,7 +1242,6 @@
         applyFilters();
     });
 
-    // Кнопки "Выбрать все" / "Снять все" для подотделов
     document.getElementById('selectAllSubdepts').addEventListener('click', function() {
         const container = document.getElementById('subdeptMultiSelect');
         const cbs = container.querySelectorAll('input[type="checkbox"]');
@@ -1290,6 +1350,7 @@
 
     console.log('📦 УТО→ТОП2 (без запаса, множественный выбор) загружен.');
     console.log('📌 Условия: в пути + запас=0 + TOP ЦО≠1 + УТО');
+    console.log('📖 Нажмите «📖» для инструкции с примерами');
 
     applyFilters();
     renderHistory();
