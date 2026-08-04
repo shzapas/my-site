@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>УТО → ТОП2 Инструмент</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
+        body { background: #f5f0f5; padding: 16px 20px; color: #1e1e1e; }
+        .app-container { max-width: 100%; margin: 0 auto; }
+
+        .header {
+            background: linear-gradient(135deg, #6a1b9a 0%, #9c4dcc 100%);
+            border-radius: 16px 16px 0 0;
+            padding: 12px 24px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 4px solid #4a148c;
+        }
+        .header h1 { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .header h1 small { font-size: 0.65rem; background: rgba(255,255,255,0.2); padding: 2px 14px; border-radius: 40px; font-weight: 400; }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            background: white;
+            color: #4a148c;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .btn-primary { background: #4a148c; color: white; }
+        .btn-primary:hover { background: #6a1b9a; transform: scale(1.02); }
+        .btn-success { background: #2e7d32; color: white; }
+        .btn-success:hover { background: #1b5e20; }
+        .btn-warning { background: #f57f17; color: white; }
+        .btn-warning:hover { background: #e65100; }
+        .btn-danger { background: #c62828; color: white; }
+        .btn-danger:hover { background: #b71c1c; }
+        .btn-info { background: #1565c0; color: white; }
+        .btn-info:hover { background: #0d47a1; }
+        .panel {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            border: 1px solid #e0d0e8;
+            border-top: none;
+        }
+        .flex-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+        .left-col { flex: 1; min-width: 220px; max-width: 280px; background: #faf7fc; padding: 12px 16px; border-radius: 12px; border: 1px solid #ddd0e8; }
+        .right-col { flex: 3; min-width: 400px; }
+        .section-title { font-weight: 600; font-size: 0.8rem; color: #4a148c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .file-upload-area { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .file-upload-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .file-upload-row label { font-size: 0.7rem; font-weight: 500; min-width: 90px; }
+        .file-upload-row input[type="file"] { font-size: 0.65rem; flex: 1; }
+        .status-badge { font-size: 0.6rem; background: #e8e0ee; padding: 1px 10px; border-radius: 30px; color: #4a148c; }
+        .status-badge.loaded { background: #c8e6c9; color: #1b5e20; }
+        .filter-group { margin: 6px 0; }
+        .filter-group label { font-weight: 600; font-size: 0.7rem; color: #4a148c; display: block; margin-bottom: 2px; }
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 4px 10px;
+            border-radius: 30px;
+            border: 1px solid #d0c0d8;
+            background: white;
+            font-size: 0.7rem;
+            transition: 0.2s;
+        }
+        .filter-group select:focus, .filter-group input:focus {
+            border-color: #7b1fa2;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
+        }
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            color: #4a148c;
+            margin: 3px 0;
+        }
+        .filter-checkbox input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: #7b1fa2;
+            cursor: pointer;
+        }
+        .quick-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px 0; }
+        .quick-actions .btn {
+            padding: 3px 12px;
+            font-size: 0.65rem;
+            background: #f0e8f5;
+            color: #4a148c;
+            border: 1px solid #d0c0d8;
+        }
+        .quick-actions .btn.active { background: #7b1fa2; color: white; border-color: #4a148c; }
+        .quick-actions .btn.danger-outline { border-color: #c62828; color: #c62828; }
+        .quick-actions .btn.danger-outline.active { background: #c62828; color: white; }
+
+        .table-wrap {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd0e8;
+            border-radius: 12px;
+            background: white;
+            margin-top: 6px;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 700px; }
+        th {
+            background: #f0e8f5;
+            color: #4a148c;
+            font-weight: 700;
+            padding: 5px 4px;
+            border-bottom: 2px solid #d0c0d8;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            white-space: nowrap;
+            text-align: left;
+            font-size: 0.55rem;
+        }
+        td { padding: 4px 4px; border-bottom: 1px solid #eee8f0; vertical-align: middle; }
+        tr:hover td { background: #f8f4fc; }
+        .highlight-uto { background: #f3e5f5 !important; border-left: 4px solid #7b1fa2; }
+        .row-overdue { background: #ffebee !important; border-left: 4px solid #c62828; }
+        .row-transit { background: #e3f2fd !important; border-left: 4px solid #1565c0; }
+        .badge {
+            display: inline-block;
+            font-size: 0.5rem;
+            font-weight: 700;
+            padding: 0 8px;
+            border-radius: 30px;
+            background: #7b1fa2;
+            color: white;
+        }
+        .badge-top2 { background: #f57f17; color: white; }
+        .badge-top1 { background: #2e7d32; color: white; }
+        .badge-applied { background: #1b5e20; color: white; }
+        .badge-overdue { background: #c62828; color: white; }
+        .badge-ontime { background: #2e7d32; color: white; }
+        .badge-transit { background: #1565c0; color: white; }
+        .badge-stock { background: #00838f; color: white; }
+        .btn-small {
+            padding: 1px 10px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #7b1fa2;
+            color: white;
+            transition: 0.15s;
+        }
+        .btn-small:hover { background: #4a148c; }
+        .btn-small.danger { background: #c62828; }
+        .btn-small.danger:hover { background: #b71c1c; }
+        .btn-small.success { background: #2e7d32; }
+        .btn-small.success:hover { background: #1b5e20; }
+        .footer-note { font-size: 0.6rem; color: #7a6a80; margin-top: 10px; border-top: 1px solid #e0d0e8; padding-top: 10px; text-align: center; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e1e1e;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            font-size: 0.8rem;
+            z-index: 999;
+            max-width: 400px;
+            border-left: 5px solid #7b1fa2;
+        }
+        .toast.success { border-left-color: #2e7d32; }
+        .toast.error { border-left-color: #c62828; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 10px; border-bottom: 2px solid #ddd0e8; padding-bottom: 4px; }
+        .tab-btn {
+            padding: 4px 16px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 20px 20px 0 0;
+            color: #7a6a80;
+            transition: 0.2s;
+        }
+        .tab-btn:hover { background: #f0e8f5; color: #4a148c; }
+        .tab-btn.active { color: #4a148c; background: #f0e8f5; border-bottom: 3px solid #7b1fa2; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .history-table { font-size: 0.6rem; width: 100%; border-collapse: collapse; }
+        .history-table th { background: #f0e8f5; padding: 4px 6px; text-align: left; font-size: 0.55rem; }
+        .history-table td { padding: 3px 6px; border-bottom: 1px solid #eee8f0; }
+        .history-group { background: #f8f4fc; font-weight: 700; color: #4a148c; }
+        #rowCounter { font-size: 0.6rem; color: #7a6a80; }
+
+        .instruction-block {
+            background: #f8f4fc;
+            border: 1px solid #d0c0d8;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            font-size: 0.7rem;
+            color: #4a148c;
+        }
+        .instruction-block summary { font-weight: 700; cursor: pointer; font-size: 0.75rem; color: #4a148c; }
+        .instruction-block ul { padding-left: 18px; margin: 4px 0; }
+        .instruction-block ul li { margin: 2px 0; }
+        .formula-box {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin: 4px 0;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #1b5e20;
+        }
+        .warning-box {
+            background: #fff3e0;
+            border: 1px solid #ffcc80;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin: 4px 0;
+            font-size: 0.65rem;
+            color: #e65100;
+        }
+        .example-box {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin: 4px 0;
+            font-size: 0.65rem;
+            color: #0d47a1;
+        }
+        .example-box table { font-size: 0.6rem; width: 100%; border-collapse: collapse; }
+        .example-box table td { padding: 2px 6px; border: 1px solid #bbdefb; }
+        .example-box table th { padding: 2px 6px; border: 1px solid #bbdefb; background: #bbdefb; font-weight: 700; }
+        .remove-reason { font-size: 0.55rem; color: #c62828; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="header">
+        <h1>🧩 ТОП-2 <small>УТО → в пути</small></h1>
+        <div class="header-actions">
+            <button class="btn btn-primary" id="computeBtn">🚀 Свести</button>
+            <button class="btn btn-success" id="exportTemplateBtn">📤 ТОП2</button>
+            <button class="btn btn-danger" id="exportRemoveBtn">🔄 ТОП1</button>
+            <button class="btn btn-info" id="toggleInstructionBtn">📖</button>
+        </div>
+    </header>
+
+    <div class="panel">
+        <div id="instructionBlock" class="instruction-block" style="display:none;">
+            <details open>
+                <summary>📖 Инструкция по работе</summary>
+                
+                <div class="warning-box">
+                    ⚠️ <strong>ТОП2 ТОЛЬКО для товаров В ПУТИ</strong> (Сумма В пути, шт. > 0)
+                </div>
+                
+                <div class="formula-box">
+                    📅 <strong>План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней</strong>
+                </div>
+
+                <strong>📥 1. Загрузка отчётов</strong>
+                <ul>
+                    <li><strong>Гамма:</strong> № магазина, Артикул, Подотдел, Топ, TOP ЦО, № Поставщика, Сумма В пути, шт., Сумма Кол-во в запасе</li>
+                    <li><strong>УТО:</strong> ЛМ-код, Уп.GMV руб, Кол-во дней в перебое</li>
+                    <li><strong>Детали поставки:</strong> Магазин, Поставщик, Срок поставки в магазин (дней)</li>
+                </ul>
+
+                <strong>🧮 2. Пример расчёта</strong>
+                <div class="example-box">
+                    <table>
+                        <tr><th>Артикул</th><th>Магазин</th><th>В пути</th><th>Дней перебой</th><th>Срок поставки</th><th>План снятия</th></tr>
+                        <tr><td>12727434</td><td>8</td><td>50 шт</td><td>13 дн</td><td>20 дн</td><td><strong>(20−13)+5 = 12 дней</strong></td></tr>
+                        <tr><td>12727442</td><td>8</td><td>80 шт</td><td>5 дн</td><td>20 дн</td><td><strong>(20−5)+5 = 20 дней</strong></td></tr>
+                    </table>
+                </div>
+
+                <strong>🔄 3. Как определяется снятие ТОП2</strong>
+                <ul>
+                    <li>✅ <strong>Товар приехал:</strong> Сумма В пути, шт. = 0</li>
+                    <li>✅ <strong>Сток появился:</strong> Сумма Кол-во в запасе > 0</li>
+                    <li>✅ <strong>Просрочка:</strong> Дата снятия прошла</li>
+                    <li>✅ <strong>Нет заказа:</strong> Нет данных о поставке</li>
+                </ul>
+                <div style="font-size:0.6rem;color:#1565c0;margin:4px 0;">
+                    💡 Товар снимается с ТОП2, когда он уже приехал и есть на полке
+                </div>
+
+                <strong>📌 4. Применение ТОП2</strong>
+                <ul>
+                    <li>Отфильтруйте нужные артикулы</li>
+                    <li>Нажмите <strong>"📌 Применить ТОП2"</strong></li>
+                    <li>Или вручную: кнопка <strong>"✅"</strong> напротив артикула</li>
+                </ul>
+
+                <strong>📤 5. Снятие ТОП2</strong>
+                <ul>
+                    <li>Переключитесь на фильтр <strong>"⏳ Пора снимать"</strong></li>
+                    <li>Нажмите <strong>"🔄 Снять ТОП2 → ТОП1"</strong></li>
+                    <li>Получите шаблон с атрибутом ТОП1 для загрузки в систему</li>
+                </ul>
+            </details>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="main">📋 Основная</button>
+            <button class="tab-btn" data-tab="history">📜 История</button>
+        </div>
+
+        <div class="tab-content active" id="tab-main">
+            <div class="flex-row">
+                <div class="left-col">
+                    <div class="section-title">📂 Загрузка</div>
+                    <div class="file-upload-area">
+                        <div class="file-upload-row"><label>📋 Гамма</label><input type="file" id="gammaFile" accept=".xlsx,.xls"><span class="status-badge" id="gammaStatus">нет</span></div>
+                        <div class="file-upload-row"><label>📊 УТО</label><input type="file" id="utoFile" accept=".xlsx,.xls"><span class="status-badge" id="utoStatus">нет</span></div>
+                        <div class="file-upload-row"><label>🚚 Поставки</label><input type="file" id="postavkiFile" accept=".xlsx,.xls"><span class="status-badge" id="postavkiStatus">нет</span></div>
+                    </div>
+
+                    <div class="section-title">🎯 Фильтры</div>
+                    <div class="filter-group"><label>Магазин</label><select id="storeFilter"><option value="all">Все</option></select></div>
+                    <div class="filter-group"><label>Подотдел</label><select id="subdepartmentFilter"><option value="all">Все</option></select></div>
+                    <div class="filter-group"><label>ТОП</label><select id="topFilter"><option value="all">Все</option><option value="1">1</option><option value="2">2</option></select></div>
+                    <div class="filter-group"><label>TOP ЦО</label><select id="topCoFilter"><option value="all">Все</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
+                    <div class="filter-checkbox" style="background:#ffebee;padding:4px 8px;border-radius:6px;border:1px solid #ef9a9a;">
+                        <input type="checkbox" id="excludeTopCoOne" checked>
+                        <label for="excludeTopCoOne" style="font-weight:700;color:#c62828;font-size:0.65rem;">Исключить TOP ЦО=1</label>
+                    </div>
+
+                    <div class="quick-actions">
+                        <button class="btn active" data-quick="uto">📊 УТО</button>
+                        <button class="btn" data-quick="top1">⭐ 1</button>
+                        <button class="btn" data-quick="top2">🔶 2</button>
+                        <button class="btn" data-quick="applied">✅ Прим</button>
+                        <button class="btn danger-outline" data-quick="overdue">⏳ Снять</button>
+                        <button class="btn" data-quick="transit">🚚 В пути</button>
+                    </div>
+                    <div style="font-size:0.55rem;color:#7a6a80;margin-top:3px;" id="filterStatus">УТО (TOP ЦО≠1)</div>
+
+                    <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;">
+                        <button class="btn btn-primary" id="applyTemplateBtn" style="width:100%;padding:5px;font-size:0.7rem;">📌 Применить ТОП2</button>
+                        <button class="btn btn-danger" id="suggestRemoveBtn" style="width:100%;padding:5px;font-size:0.7rem;">💡 Снять ТОП2</button>
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
+                        <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📋 Сводка (только в пути)</span>
+                        <span id="rowCounter" style="font-size:0.6rem;color:#7a6a80;">0 записей</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table id="resultTable">
+                            <thead>
+                                <tr>
+                                    <th>№ маг</th><th>Артикул</th><th>Наименование</th><th>Подотдел</th>
+                                    <th>ТОП</th><th>TOP ЦО</th><th>УТО руб</th><th>Дней перебой</th>
+                                    <th>В пути</th><th>Запас</th><th>Срок пост</th><th>План снятия</th><th>Статус</th><th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr><td colspan="14" style="text-align:center;padding:15px;color:#9e9e9e;font-size:0.7rem;">Загрузите отчёты и нажмите «Свести»</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-history">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📜 История выгрузок</span>
+                <div style="display:flex;gap:6px;">
+                    <button class="btn btn-warning" id="exportHistoryBtn" style="padding:4px 12px;font-size:0.65rem;">📤 Выгрузить</button>
+                    <button class="btn btn-danger" id="resetHistoryBtn" style="padding:4px 12px;font-size:0.65rem;">🔄 Сброс</button>
+                </div>
+            </div>
+            <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid #ddd0e8;border-radius:10px;">
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Дата сессии</th>
+                            <th>Артикул</th>
+                            <th>Магазин</th>
+                            <th>Атрибут ТОП</th>
+                            <th>Тип</th>
+                            <th>Период действия</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr><td colspan="7" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:8px;font-size:0.6rem;color:#7a6a80;">
+                Всего применений: <span id="historyCount">0</span>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            ⚠️ ТОП2 ТОЛЬКО для товаров в пути! 
+            🔄 Снятие: товар приехал (В пути=0) И сток > 0, либо просрочка
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" style="position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;max-width:400px;"></div>
+
+<script>
+    // ============================================================
+    // 1. Состояние
+    // ============================================================
+    const state = {
+        gamma: [],
+        uto: [],
+        postavki: [],
+        merged: [],
+        filtered: [],
+        history: [],
+        appliedSet: new Set(),
+        quickFilter: 'uto',
+        storeFilter: 'all',
+        subdepartmentFilter: 'all',
+        topFilter: 'all',
+        topCoFilter: 'all',
+        excludeTopCoOne: true,
+        exportSessions: [],
+    };
+
+    function loadHistory() {
+        try {
+            const raw = localStorage.getItem('uto_top2_history_pro');
+            if (raw) {
+                const data = JSON.parse(raw);
+                state.history = data.history || [];
+                state.exportSessions = data.sessions || [];
+                state.appliedSet = new Set();
+                for (const h of state.history) {
+                    state.appliedSet.add(`${h.store}|${h.article}`);
+                }
+            }
+        } catch (e) {}
+    }
+    function saveHistory() {
+        try {
+            localStorage.setItem('uto_top2_history_pro', JSON.stringify({
+                history: state.history,
+                sessions: state.exportSessions,
+            }));
+        } catch (e) {}
+    }
+    loadHistory();
+
+    function toNum(v) { const n = parseFloat(String(v).replace(/,/g, '.').replace(/\s/g, '')); return isNaN(n) ? 0 : n; }
+    function toStr(v) { return v !== undefined && v !== null ? String(v).trim() : ''; }
+    function extractStore(s) { const m = String(s).match(/^(\d+)/); return m ? m[1] : String(s).trim(); }
+
+    function showToast(msg, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const div = document.createElement('div');
+        div.className = `toast ${type}`;
+        div.textContent = msg;
+        container.appendChild(div);
+        setTimeout(() => { if (div.parentNode) div.remove(); }, 3000);
+    }
+
+    // ============================================================
+    // 2. Загрузка файлов
+    // ============================================================
+    function loadFile(inputId, targetArray, statusId, label) {
+        const input = document.getElementById(inputId);
+        const status = document.getElementById(statusId);
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = new Uint8Array(ev.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                    const headers = raw[2] ? raw[2].map(h => toStr(h)) : [];
+                    const json = [];
+                    for (let i = 3; i < raw.length; i++) {
+                        const row = raw[i];
+                        if (!row || row.length === 0) continue;
+                        const obj = {};
+                        for (let j = 0; j < headers.length; j++) {
+                            const key = headers[j];
+                            if (key && key !== '') {
+                                obj[key] = row[j] !== undefined ? row[j] : '';
+                            }
+                        }
+                        if (Object.values(obj).some(v => v !== '' && v !== undefined && v !== null)) {
+                            json.push(obj);
+                        }
+                    }
+                    targetArray.length = 0;
+                    targetArray.push(...json);
+                    status.textContent = `✅ ${json.length}`;
+                    status.className = 'status-badge loaded';
+                    showToast(`${label}: ${json.length} строк`, 'success');
+                } catch (err) {
+                    status.textContent = '❌';
+                    status.className = 'status-badge';
+                    showToast(`Ошибка ${label}`, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    loadFile('gammaFile', state.gamma, 'gammaStatus', 'Гамма');
+    loadFile('utoFile', state.uto, 'utoStatus', 'УТО');
+    loadFile('postavkiFile', state.postavki, 'postavkiStatus', 'Поставки');
+
+    // ============================================================
+    // 3. Сведение отчётов
+    // ============================================================
+    function mergeReports() {
+        if (!state.gamma.length) { showToast('Загрузите Гамму', 'error'); return; }
+        if (!state.uto.length) { showToast('Загрузите УТО', 'error'); return; }
+        if (!state.postavki.length) { showToast('Загрузите Поставки', 'error'); return; }
+
+        const utoArticles = new Set();
+        const utoMap = new Map();
+        for (const row of state.uto) {
+            const lm = toStr(row['ЛМ-код']);
+            if (lm) {
+                utoArticles.add(lm);
+                utoMap.set(lm, {
+                    rub: toNum(row['Уп.GMV руб']),
+                    days: toNum(row['Кол-во дней в перебое за 30 дней']),
+                });
+            }
+        }
+
+        const postavkiMap = new Map();
+        for (const row of state.postavki) {
+            const store = extractStore(row['Магазин']);
+            const supplier = toStr(row['Поставщик']);
+            const key = `${store}|${supplier}`;
+            let srok = row['Срок поставки в магазин'] || row['Срок поставки в магазин ↪'] || '';
+            if (!postavkiMap.has(key)) {
+                postavkiMap.set(key, {
+                    срок: toStr(srok),
+                    дниЗаказа: toStr(row['Дни заказа']),
+                });
+            }
+        }
+
+        const merged = [];
+        let excludedByTopCo = 0;
+        let excludedNotInTransit = 0;
+
+        for (const g of state.gamma) {
+            const article = toStr(g['Артикул']);
+            if (!utoArticles.has(article)) continue;
+            const store = extractStore(g['№ магазина']);
+            if (!store || !article) continue;
+
+            const topInStore = toStr(g['Топ в магазине']).replace(/\.00$/, '');
+            const topCo = toStr(g['TOP ЦО']).replace(/\.00$/, '');
+            if (state.excludeTopCoOne && topCo === '1') { excludedByTopCo++; continue; }
+
+            const inTransit = toNum(g['Сумма В пути, шт.']) > 0;
+            if (!inTransit) { excludedNotInTransit++; continue; }
+
+            const name = toStr(g['Наименование']);
+            const subdept = toStr(g['Подотдел']);
+            const supplierCode = toStr(g['№ Поставщика']);
+            const utoInfo = utoMap.get(article) || { rub: 0, days: 0 };
+            const stock = toNum(g['Сумма Кол-во в запасе']);
+
+            let postSrok = '';
+            let postDni = '';
+            const postKey = `${store}|${supplierCode}`;
+            const postInfo = postavkiMap.get(postKey);
+            if (postInfo) {
+                postSrok = postInfo.срок || '';
+                postDni = postInfo.дниЗаказа || '';
+            }
+            if (!postSrok || postSrok === '') {
+                const gammaSrok = toStr(g['Срок поставки в магазин']);
+                if (gammaSrok && gammaSrok !== '') postSrok = gammaSrok;
+            }
+
+            let removalDate = null;
+            let removalDateStr = '';
+            let isOverdue = false;
+            let postSrokDisplay = postSrok || '—';
+            let periodDisplay = '';
+            let removeReason = '';
+
+            if (postSrok && postSrok !== '') {
+                const daysInUto = utoInfo.days || 0;
+                const daysNum = parseInt(postSrok);
+                if (!isNaN(daysNum) && daysNum > 0 && daysNum < 365) {
+                    const totalDays = Math.max(daysNum - daysInUto + 5, 1);
+                    periodDisplay = `${totalDays} дн.`;
+                    const d = new Date();
+                    d.setDate(d.getDate() + totalDays);
+                    removalDate = d;
+                    removalDateStr = d.toLocaleDateString('ru-RU');
+                    isOverdue = d < new Date();
+                    postSrokDisplay = `${daysNum} дн.`;
+                } else {
+                    const dateParts = postSrok.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+                    if (dateParts) {
+                        const d = new Date(`${dateParts[3]}-${dateParts[2]}-${dateParts[1]}`);
+                        if (!isNaN(d)) {
+                            d.setDate(d.getDate() + 5);
+                            removalDate = d;
+                            removalDateStr = d.toLocaleDateString('ru-RU');
+                            isOverdue = d < new Date();
+                            postSrokDisplay = postSrok;
+                            periodDisplay = `до ${removalDateStr}`;
+                        }
+                    } else {
+                        postSrokDisplay = postSrok;
+                    }
+                }
+            }
+
+            // ====== ЛОГИКА СНЯТИЯ ======
+            // Проверяем условия для снятия ТОП2 (если уже применён)
+            const isApplied = state.appliedSet.has(`${store}|${article}`);
+            let shouldRemove = false;
+            let removeReasonText = '';
+
+            if (isApplied) {
+                const hasStock = stock > 0;
+                const notInTransit = !inTransit;
+                const isDateOverdue = isOverdue;
+                const noOrder = !postSrok || postSrok === '';
+
+                // Проверяем все условия
+                if (notInTransit && hasStock) {
+                    shouldRemove = true;
+                    removeReasonText = '✅ Товар приехал и есть на полке';
+                } else if (isDateOverdue) {
+                    shouldRemove = true;
+                    removeReasonText = '⏳ Просрочен (дата снятия прошла)';
+                } else if (notInTransit && !hasStock) {
+                    shouldRemove = false;
+                    removeReasonText = '⏳ Товар приехал, но сток 0 (ждём поступления)';
+                }
+            }
+
+            const hasActiveOrder = (postSrok && postSrok !== '') || (postDni && postDni !== '');
+            const row = {
+                store, article, name, subdepartment: subdept,
+                top: topInStore, topCo: topCo,
+                utoRub: utoInfo.rub, utoDays: utoInfo.days,
+                inTransit, inTransitSht: toNum(g['Сумма В пути, шт.']),
+                stock: stock,
+                postavkaSrok: postSrokDisplay, postavkaDni: postDni || '',
+                hasActiveOrder, hasUto: true,
+                removalDate: removalDateStr || periodDisplay,
+                periodDisplay: periodDisplay,
+                isOverdue: isOverdue,
+                shouldRemove: shouldRemove,
+                removeReason: removeReasonText,
+                removalTimestamp: removalDate ? removalDate.getTime() : 0,
+            };
+            merged.push(row);
+        }
+
+        state.merged = merged;
+        const msg = [];
+        if (excludedByTopCo > 0) msg.push(`${excludedByTopCo} TOP ЦО=1`);
+        if (excludedNotInTransit > 0) msg.push(`${excludedNotInTransit} не в пути`);
+        showToast(`Сведено ${merged.length} артикулов${msg.length ? ' (искл: '+msg.join(', ')+')' : ''}`, 'success');
+        applyFilters();
+        updateStoreFilter();
+        updateSubdepartmentFilter();
+        updateRowCounter();
+    }
+
+    // ============================================================
+    // 4. Фильтрация и отображение
+    // ============================================================
+    function applyFilters() {
+        let data = [...state.merged];
+        if (state.storeFilter !== 'all') data = data.filter(r => r.store === state.storeFilter);
+        if (state.subdepartmentFilter !== 'all') data = data.filter(r => r.subdepartment === state.subdepartmentFilter);
+        if (state.topFilter !== 'all') data = data.filter(r => r.top === state.topFilter);
+        if (state.topCoFilter !== 'all') data = data.filter(r => r.topCo === state.topCoFilter);
+        if (state.excludeTopCoOne) data = data.filter(r => r.topCo !== '1');
+
+        if (state.quickFilter === 'top1') data = data.filter(r => r.top === '1');
+        else if (state.quickFilter === 'top2') data = data.filter(r => r.top === '2');
+        else if (state.quickFilter === 'applied') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`));
+        else if (state.quickFilter === 'overdue') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`) && r.shouldRemove);
+        else if (state.quickFilter === 'transit') data = data.filter(r => r.inTransit);
+        else data = data.filter(r => r.hasUto);
+
+        state.filtered = data;
+        renderTable(data);
+        updateRowCounter();
+        updateFilterStatus();
+        renderHistory();
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:15px;color:#9e9e9e;">Нет записей</td></tr>`;
+            return;
+        }
+        let html = '';
+        for (const row of data) {
+            const isApplied = state.appliedSet.has(`${row.store}|${row.article}`);
+            const isOverdue = row.shouldRemove && isApplied;
+            const trClass = row.hasUto ? 'highlight-uto' : '';
+            const overdueClass = isOverdue ? 'row-overdue' : '';
+            const transitClass = row.inTransit ? 'row-transit' : '';
+            
+            const topBadge = row.top === '2' ? '<span class="badge badge-top2">ТОП2</span>' : (row.top === '1' ? '<span class="badge badge-top1">ТОП1</span>' : row.top || '—');
+            let topCoBadge = '—';
+            if (row.topCo === '1') topCoBadge = '<span class="badge" style="background:#e65100;">1</span>';
+            else if (row.topCo) topCoBadge = `<span class="badge" style="background:#6a1b9a;">${row.topCo}</span>`;
+            
+            const appliedBadge = isApplied ? '<span class="badge badge-applied">✅</span>' : '';
+            const transitBadge = row.inTransit ? '<span class="badge badge-transit">🚚</span>' : '';
+            const stockBadge = row.stock > 0 ? `<span class="badge badge-stock">${row.stock}</span>` : '—';
+            
+            let statusBadge = '';
+            if (isOverdue) {
+                statusBadge = `<span class="badge badge-overdue">🔴 Снять</span>`;
+                if (row.removeReason) statusBadge += `<br><span style="font-size:0.45rem;color:#c62828;">${row.removeReason}</span>`;
+            } else if (isApplied && row.removalDate) {
+                statusBadge = `<span class="badge badge-ontime">🟢 до ${row.removalDate}</span>`;
+            } else if (isApplied) {
+                statusBadge = '<span class="badge badge-ontime">🟢 Активен</span>';
+            }
+
+            const actionBtn = isApplied ?
+                `<button class="btn-small danger" data-action="remove" data-store="${row.store}" data-art="${row.article}">✕</button>` :
+                `<button class="btn-small" data-action="apply" data-store="${row.store}" data-art="${row.article}">✅</button>`;
+
+            html += `<tr class="${trClass} ${overdueClass} ${transitClass}">
+                <td>${row.store}</td>
+                <td><strong>${row.article}</strong> ${appliedBadge}</td>
+                <td>${row.name.substring(0, 25)}</td>
+                <td>${row.subdepartment || '—'}</td>
+                <td>${topBadge}</td>
+                <td>${topCoBadge}</td>
+                <td>${row.utoRub > 0 ? row.utoRub.toFixed(0) : '—'}</td>
+                <td>${row.utoDays > 0 ? row.utoDays : '—'}</td>
+                <td>${row.inTransitSht > 0 ? row.inTransitSht + ' ' + transitBadge : '—'}</td>
+                <td>${stockBadge}</td>
+                <td>${row.postavkaSrok || '—'}</td>
+                <td>${row.removalDate || '—'}</td>
+                <td>${statusBadge}</td>
+                <td>${actionBtn}</td>
+            </tr>`;
+        }
+        tbody.innerHTML = html;
+
+        tbody.querySelectorAll('[data-action="apply"]').forEach(btn => {
+            btn.addEventListener('click', function() { applyTop2(this.dataset.store, this.dataset.art); });
+        });
+        tbody.querySelectorAll('[data-action="remove"]').forEach(btn => {
+            btn.addEventListener('click', function() { removeTop2(this.dataset.store, this.dataset.art); });
+        });
+    }
+
+    function applyTop2(store, article) {
+        const key = `${store}|${article}`;
+        if (state.appliedSet.has(key)) { showToast('Уже применён', 'info'); return; }
+        state.appliedSet.add(key);
+        state.history.push({ store, article, date: new Date().toISOString() });
+        saveHistory();
+        showToast(`✅ ТОП2 применён к ${article}`, 'success');
+        applyFilters();
+        renderHistory();
+    }
+
+    function removeTop2(store, article) {
+        const key = `${store}|${article}`;
+        if (!state.appliedSet.has(key)) return;
+        state.appliedSet.delete(key);
+        state.history = state.history.filter(h => !(h.store === store && h.article === article));
+        saveHistory();
+        showToast(`↩️ ТОП2 отменён для ${article}`, 'info');
+        applyFilters();
+        renderHistory();
+    }
+
+    function updateRowCounter() {
+        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей (всего УТО в пути: ${state.merged.length})`;
+    }
+
+    function updateFilterStatus() {
+        const map = {
+            'uto': '📊 УТО (в пути)',
+            'top1': '⭐ ТОП 1',
+            'top2': '🔶 ТОП 2',
+            'applied': '✅ Применён',
+            'overdue': '⏳ Снять',
+            'transit': '🚚 В пути',
+        };
+        const excludeMsg = state.excludeTopCoOne ? ' (TOP ЦО≠1)' : '';
+        document.getElementById('filterStatus').textContent = (map[state.quickFilter] || 'УТО (в пути)') + excludeMsg;
+    }
+
+    function updateStoreFilter() {
+        const sel = document.getElementById('storeFilter');
+        const stores = new Set();
+        for (const r of state.merged) if (r.store) stores.add(r.store);
+        const current = sel.value;
+        sel.innerHTML = '<option value="all">Все</option>';
+        for (const s of Array.from(stores).sort()) sel.innerHTML += `<option value="${s}">${s}</option>`;
+        if (current && stores.has(current)) sel.value = current;
+        else sel.value = 'all';
+        state.storeFilter = sel.value;
+    }
+
+    function updateSubdepartmentFilter() {
+        const sel = document.getElementById('subdepartmentFilter');
+        const subdepts = new Set();
+        for (const r of state.merged) if (r.subdepartment) subdepts.add(r.subdepartment);
+        const current = sel.value;
+        sel.innerHTML = '<option value="all">Все</option>';
+        for (const s of Array.from(subdepts).sort()) sel.innerHTML += `<option value="${s}">${s}</option>`;
+        if (current && subdepts.has(current)) sel.value = current;
+        else sel.value = 'all';
+        state.subdepartmentFilter = sel.value;
+    }
+
+    // ============================================================
+    // 5. История с периодом действия
+    // ============================================================
+    function renderHistory() {
+        const tbody = document.getElementById('historyBody');
+        const count = document.getElementById('historyCount');
+        
+        const sessions = state.exportSessions || [];
+        if (!sessions.length && !state.history.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr>`;
+            count.textContent = '0';
+            return;
+        }
+
+        let html = '';
+        const sortedSessions = [...sessions].reverse();
+        for (const session of sortedSessions) {
+            const details = session.details || [];
+            for (const d of details) {
+                const found = state.merged.find(r => r.store === d.store && r.article === d.article);
+                const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
+                html += `<tr>
+                    <td>${session.date}</td>
+                    <td>${d.article}</td>
+                    <td>${d.store}</td>
+                    <td><span class="badge badge-top2">ТОП2</span></td>
+                    <td>Выгрузка</td>
+                    <td>${period}</td>
+                    <td><button class="btn-small danger" data-action="remove-session" data-store="${d.store}" data-art="${d.article}">✕</button></td>
+                </tr>`;
+            }
+        }
+
+        const sessionArticles = new Set();
+        for (const s of sessions) {
+            for (const d of (s.details || [])) sessionArticles.add(`${d.store}|${d.article}`);
+        }
+        const orphanHistory = state.history.filter(h => !sessionArticles.has(`${h.store}|${h.article}`));
+        if (orphanHistory.length) {
+            html += `<tr class="history-group"><td colspan="7">📌 Отдельные применения</td></tr>`;
+            for (const h of orphanHistory.reverse()) {
+                const found = state.merged.find(r => r.store === h.store && r.article === h.article);
+                const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
+                const dateStr = h.date ? new Date(h.date).toLocaleString() : '—';
+                html += `<tr>
+                    <td>${dateStr}</td>
+                    <td>${h.article}</td>
+                    <td>${h.store}</td>
+                    <td><span class="badge badge-top2">ТОП2</span></td>
+                    <td>Ручное</td>
+                    <td>${period}</td>
+                    <td><button class="btn-small danger" data-action="remove-history" data-store="${h.store}" data-art="${h.article}">✕</button></td>
+                </tr>`;
+            }
+        }
+
+        tbody.innerHTML = html;
+        count.textContent = state.history.length;
+
+        tbody.querySelectorAll('[data-action="remove-history"], [data-action="remove-session"]').forEach(btn => {
+            btn.addEventListener('click', function() { removeTop2(this.dataset.store, this.dataset.art); });
+        });
+    }
+
+    // ============================================================
+    // 6. Экспорт
+    // ============================================================
+    function exportTemplate(onlyApplied = false, topAttribute = 'ТОП2') {
+        let data = [];
+        let sourceData = state.filtered.length ? state.filtered : state.merged;
+
+        if (onlyApplied) {
+            for (const row of sourceData) {
+                if (state.appliedSet.has(`${row.store}|${row.article}`)) {
+                    data.push({ store: row.store, article: row.article, top: topAttribute, name: row.name || '' });
+                }
+            }
+            if (!data.length) { showToast('Нет применённых ТОП2', 'warning'); return; }
+        } else {
+            const candidates = sourceData.filter(r => r.inTransit && r.hasActiveOrder);
+            const histSet = new Set(state.history.map(h => `${h.store}|${h.article}`));
+            for (const r of candidates) {
+                const key = `${r.store}|${r.article}`;
+                if (!histSet.has(key)) data.push({ store: r.store, article: r.article, top: topAttribute, name: r.name });
+            }
+            for (const h of state.history) {
+                if (!data.some(d => d.store === h.store && d.article === h.article)) {
+                    const found = sourceData.find(r => r.store === h.store && r.article === h.article);
+                    if (found) data.push({ store: h.store, article: h.article, top: topAttribute, name: found.name || '' });
+                }
+            }
+            if (!data.length) { showToast('Нет данных для шаблона', 'warning'); return; }
+        }
+
+        const wsData = [['Артикул', 'Номер магазина', 'Атрибут ТОП']];
+        for (const d of data) wsData.push([d.article, d.store, topAttribute]);
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'ТОП_шаблон');
+        const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([buf], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const date = new Date().toISOString().slice(0,10);
+        const suffix = topAttribute === 'ТОП2' ? 'ТОП2' : 'снятие_ТОП1';
+        link.download = `шаблон_${suffix}_${date}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        if (topAttribute === 'ТОП2') {
+            const stores = [...new Set(data.map(d => d.store))];
+            const session = {
+                date: new Date().toLocaleString(),
+                count: data.length,
+                stores: stores,
+                details: data.map(d => ({ store: d.store, article: d.article })),
+            };
+            state.exportSessions.push(session);
+            for (const d of data) {
+                const key = `${d.store}|${d.article}`;
+                if (!state.appliedSet.has(key)) {
+                    state.appliedSet.add(key);
+                    state.history.push({ store: d.store, article: d.article, date: new Date().toISOString() });
+                }
+            }
+            saveHistory();
+            renderHistory();
+        }
+        showToast(`✅ Выгружено ${data.length} строк`, 'success');
+    }
+
+    function exportRemoveTemplate() {
+        let sourceData = state.filtered.length ? state.filtered : state.merged;
+        const appliedItems = state.history.map(h => {
+            const found = sourceData.find(r => r.store === h.store && r.article === h.article);
+            return { ...h, data: found };
+        });
+        const toRemove = appliedItems.filter(item => {
+            if (!item.data) return true;
+            return item.data.shouldRemove;
+        });
+        if (!toRemove.length) { showToast('Нет артикулов для снятия', 'warning'); return; }
+
+        const wsData = [['Артикул', 'Номер магазина', 'Атрибут ТОП']];
+        for (const item of toRemove) wsData.push([item.article, item.store, 'ТОП1']);
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Снятие_ТОП2_в_ТОП1');
+        const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([buf], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const date = new Date().toISOString().slice(0,10);
+        link.download = `снятие_ТОП2_в_ТОП1_${date}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        for (const item of toRemove) {
+            state.appliedSet.delete(`${item.store}|${item.article}`);
+            state.history = state.history.filter(h => !(h.store === item.store && h.article === item.article));
+        }
+        saveHistory();
+        applyFilters();
+        renderHistory();
+        showToast(`✅ Снят ТОП2 с ${toRemove.length} артикулов`, 'success');
+    }
+
+    function suggestRemoveTop2() {
+        let sourceData = state.filtered.length ? state.filtered : state.merged;
+        const appliedItems = state.history.map(h => {
+            const found = sourceData.find(r => r.store === h.store && r.article === h.article);
+            return { ...h, data: found };
+        });
+        const toRemove = appliedItems.filter(item => {
+            if (!item.data) return true;
+            return item.data.shouldRemove;
+        });
+        if (!toRemove.length) { showToast('✅ Нет артикулов для снятия', 'success'); return; }
+
+        const wsData = [['Артикул', 'Номер магазина', 'Текущий ТОП', 'Причина снятия']];
+        for (const item of toRemove) {
+            let reason = '';
+            if (!item.data) reason = 'Артикул отсутствует';
+            else if (!item.data.inTransit && item.data.stock > 0) reason = 'Товар приехал и есть на полке';
+            else if (item.data.isOverdue) reason = `Просрочен (${item.data.removalDate})`;
+            else reason = item.data.removeReason || 'Условия выполнены';
+            wsData.push([item.article, item.store, 'ТОП2', reason]);
+        }
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Снятие_ТОП2');
+        const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([buf], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const date = new Date().toISOString().slice(0,10);
+        link.download = `Предложение_снятия_ТОП2_${date}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast(`💡 Предложено снять с ${toRemove.length} артикулов`, 'success');
+    }
+
+    // ============================================================
+    // 7. Инициализация
+    // ============================================================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+        });
+    });
+
+    let instructionVisible = false;
+    document.getElementById('toggleInstructionBtn').addEventListener('click', function() {
+        const block = document.getElementById('instructionBlock');
+        instructionVisible = !instructionVisible;
+        block.style.display = instructionVisible ? 'block' : 'none';
+        this.textContent = instructionVisible ? '📖 Скрыть' : '📖';
+    });
+
+    document.getElementById('computeBtn').addEventListener('click', mergeReports);
+    document.getElementById('exportTemplateBtn').addEventListener('click', () => exportTemplate(true, 'ТОП2'));
+    document.getElementById('exportRemoveBtn').addEventListener('click', exportRemoveTemplate);
+    document.getElementById('exportHistoryBtn').addEventListener('click', exportHistory);
+    document.getElementById('resetHistoryBtn').addEventListener('click', resetHistory);
+    
+    document.getElementById('applyTemplateBtn').addEventListener('click', function() {
+        const candidates = state.filtered.filter(r => r.inTransit && r.hasActiveOrder);
+        if (!candidates.length) { showToast('Нет товаров в пути с УТО', 'warning'); return; }
+        let added = 0;
+        for (const r of candidates) {
+            const key = `${r.store}|${r.article}`;
+            if (!state.appliedSet.has(key)) {
+                state.appliedSet.add(key);
+                state.history.push({ store: r.store, article: r.article, date: new Date().toISOString() });
+                added++;
+            }
+        }
+        if (added > 0) { saveHistory(); showToast(`✅ Применён ТОП2 к ${added} артикулам`, 'success'); }
+        else showToast('Все уже в истории', 'info');
+        exportTemplate(true, 'ТОП2');
+        applyFilters();
+        renderHistory();
+    });
+    document.getElementById('suggestRemoveBtn').addEventListener('click', suggestRemoveTop2);
+
+    document.getElementById('storeFilter').addEventListener('change', function() { state.storeFilter = this.value; applyFilters(); });
+    document.getElementById('subdepartmentFilter').addEventListener('change', function() { state.subdepartmentFilter = this.value; applyFilters(); });
+    document.getElementById('topFilter').addEventListener('change', function() { state.topFilter = this.value; applyFilters(); });
+    document.getElementById('topCoFilter').addEventListener('change', function() { state.topCoFilter = this.value; applyFilters(); });
+    document.getElementById('excludeTopCoOne').addEventListener('change', function() {
+        state.excludeTopCoOne = this.checked;
+        if (state.gamma.length && state.uto.length && state.postavki.length) mergeReports();
+        else applyFilters();
+    });
+
+    document.querySelectorAll('.quick-actions .btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.quick-actions .btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            state.quickFilter = this.dataset.quick;
+            applyFilters();
+        });
+    });
+
+    function exportHistory() {
+        if (!state.history.length && !state.exportSessions.length) { showToast('История пуста', 'warning'); return; }
+        const wsData = [['Дата сессии', 'Артикул', 'Номер магазина', 'Атрибут ТОП', 'Тип', 'Период действия']];
+        for (const session of state.exportSessions) {
+            for (const d of (session.details || [])) {
+                const found = state.merged.find(r => r.store === d.store && r.article === d.article);
+                const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
+                wsData.push([session.date, d.article, d.store, 'ТОП2', 'Выгрузка', period]);
+            }
+        }
+        for (const h of state.history) {
+            const inSession = state.exportSessions.some(s => s.details.some(d => d.article === h.article && d.store === h.store));
+            if (!inSession) {
+                const found = state.merged.find(r => r.store === h.store && r.article === h.article);
+                const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
+                wsData.push([h.date ? new Date(h.date).toLocaleString() : '', h.article, h.store, 'ТОП2', 'Ручное', period]);
+            }
+        }
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'История');
+        const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([buf], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const date = new Date().toISOString().slice(0,10);
+        link.download = `История_ТОП2_${date}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast(`✅ История выгружена`, 'success');
+    }
+
+    function resetHistory() {
+        if (!state.history.length && !state.exportSessions.length) { showToast('История пуста', 'info'); return; }
+        if (confirm('Удалить всю историю?')) {
+            state.history = [];
+            state.exportSessions = [];
+            state.appliedSet.clear();
+            saveHistory();
+            applyFilters();
+            renderHistory();
+            showToast('История сброшена', 'info');
+        }
+    }
+
+    console.log('📦 УТО→ТОП2 (финальный) загружен.');
+    console.log('📌 ТОП2 ТОЛЬКО если Сумма В пути, шт. > 0');
+    console.log('📌 Снятие: товар приехал (В пути=0) И сток > 0, либо просрочка');
+
+    applyFilters();
+    renderHistory();
+</script>
+
+</body>
+</html>
