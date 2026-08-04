@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>УТО → ТОП2 Инструмент</title>
+    <title>УТО → ТОП2 Инструмент (с запасом)</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -116,7 +116,7 @@
             background: white;
             margin-top: 6px;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 700px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 750px; }
         th {
             background: #f0e8f5;
             color: #4a148c;
@@ -135,6 +135,7 @@
         .highlight-uto { background: #f3e5f5 !important; border-left: 4px solid #7b1fa2; }
         .row-overdue { background: #ffebee !important; border-left: 4px solid #c62828; }
         .row-transit { background: #e3f2fd !important; border-left: 4px solid #1565c0; }
+        .row-no-stock { opacity: 0.6; background: #f5f5f5 !important; }
         .badge {
             display: inline-block;
             font-size: 0.5rem;
@@ -151,6 +152,7 @@
         .badge-ontime { background: #2e7d32; color: white; }
         .badge-transit { background: #1565c0; color: white; }
         .badge-stock { background: #00838f; color: white; }
+        .badge-no-stock { background: #757575; color: white; }
         .btn-small {
             padding: 1px 10px;
             border: none;
@@ -167,6 +169,7 @@
         .btn-small.danger:hover { background: #b71c1c; }
         .btn-small.success { background: #2e7d32; }
         .btn-small.success:hover { background: #1b5e20; }
+        .btn-small.disabled { background: #9e9e9e; cursor: not-allowed; opacity: 0.6; }
         .footer-note { font-size: 0.6rem; color: #7a6a80; margin-top: 10px; border-top: 1px solid #e0d0e8; padding-top: 10px; text-align: center; }
 
         .toast {
@@ -251,14 +254,25 @@
         .example-box table { font-size: 0.6rem; width: 100%; border-collapse: collapse; }
         .example-box table td { padding: 2px 6px; border: 1px solid #bbdefb; }
         .example-box table th { padding: 2px 6px; border: 1px solid #bbdefb; background: #bbdefb; font-weight: 700; }
-        .remove-reason { font-size: 0.55rem; color: #c62828; }
+        .conditions-box {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin: 4px 0;
+            font-size: 0.65rem;
+        }
+        .conditions-box ul { margin: 2px 0; padding-left: 16px; }
+        .conditions-box ul li { margin: 1px 0; }
+        .conditions-box .ok { color: #2e7d32; font-weight: 700; }
+        .conditions-box .bad { color: #c62828; font-weight: 700; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <header class="header">
-        <h1>🧩 ТОП-2 <small>УТО → в пути</small></h1>
+        <h1>🧩 ТОП-2 <small>УТО → в пути + запас</small></h1>
         <div class="header-actions">
             <button class="btn btn-primary" id="computeBtn">🚀 Свести</button>
             <button class="btn btn-success" id="exportTemplateBtn">📤 ТОП2</button>
@@ -273,7 +287,15 @@
                 <summary>📖 Инструкция по работе</summary>
                 
                 <div class="warning-box">
-                    ⚠️ <strong>ТОП2 ТОЛЬКО для товаров В ПУТИ</strong> (Сумма В пути, шт. > 0)
+                    ⚠️ <strong>ТОП2 ТОЛЬКО при выполнении ВСЕХ условий:</strong>
+                </div>
+                <div class="conditions-box">
+                    <ul>
+                        <li>✅ <span class="ok">Товар в пути</span> (Сумма В пути, шт. > 0)</li>
+                        <li>✅ <span class="ok">Есть запас</span> (Сумма Кол-во в запасе > 0)</li>
+                        <li>✅ <span class="ok">TOP ЦО ≠ 1</span> (не исключаем)</li>
+                        <li>✅ <span class="ok">Есть УТО</span> (запись в отчёте УТО)</li>
+                    </ul>
                 </div>
                 
                 <div class="formula-box">
@@ -290,9 +312,9 @@
                 <strong>🧮 2. Пример расчёта</strong>
                 <div class="example-box">
                     <table>
-                        <tr><th>Артикул</th><th>Магазин</th><th>В пути</th><th>Дней перебой</th><th>Срок поставки</th><th>План снятия</th></tr>
-                        <tr><td>12727434</td><td>8</td><td>50 шт</td><td>13 дн</td><td>20 дн</td><td><strong>(20−13)+5 = 12 дней</strong></td></tr>
-                        <tr><td>12727442</td><td>8</td><td>80 шт</td><td>5 дн</td><td>20 дн</td><td><strong>(20−5)+5 = 20 дней</strong></td></tr>
+                        <tr><th>Артикул</th><th>В пути</th><th>Запас</th><th>Перебой</th><th>Срок пост</th><th>План снятия</th><th>Результат</th></tr>
+                        <tr><td>12727434</td><td>50 ✅</td><td>99 ✅</td><td>13</td><td>20</td><td><strong>12 дней</strong></td><td>✅ Применяем</td></tr>
+                        <tr><td>82704224</td><td>9 ✅</td><td>— ❌</td><td>15</td><td>13</td><td><strong>3 дня</strong></td><td>❌ Нет запаса</td></tr>
                     </table>
                 </div>
 
@@ -301,24 +323,6 @@
                     <li>✅ <strong>Товар приехал:</strong> Сумма В пути, шт. = 0</li>
                     <li>✅ <strong>Сток появился:</strong> Сумма Кол-во в запасе > 0</li>
                     <li>✅ <strong>Просрочка:</strong> Дата снятия прошла</li>
-                    <li>✅ <strong>Нет заказа:</strong> Нет данных о поставке</li>
-                </ul>
-                <div style="font-size:0.6rem;color:#1565c0;margin:4px 0;">
-                    💡 Товар снимается с ТОП2, когда он уже приехал и есть на полке
-                </div>
-
-                <strong>📌 4. Применение ТОП2</strong>
-                <ul>
-                    <li>Отфильтруйте нужные артикулы</li>
-                    <li>Нажмите <strong>"📌 Применить ТОП2"</strong></li>
-                    <li>Или вручную: кнопка <strong>"✅"</strong> напротив артикула</li>
-                </ul>
-
-                <strong>📤 5. Снятие ТОП2</strong>
-                <ul>
-                    <li>Переключитесь на фильтр <strong>"⏳ Пора снимать"</strong></li>
-                    <li>Нажмите <strong>"🔄 Снять ТОП2 → ТОП1"</strong></li>
-                    <li>Получите шаблон с атрибутом ТОП1 для загрузки в систему</li>
                 </ul>
             </details>
         </div>
@@ -343,9 +347,14 @@
                     <div class="filter-group"><label>Подотдел</label><select id="subdepartmentFilter"><option value="all">Все</option></select></div>
                     <div class="filter-group"><label>ТОП</label><select id="topFilter"><option value="all">Все</option><option value="1">1</option><option value="2">2</option></select></div>
                     <div class="filter-group"><label>TOP ЦО</label><select id="topCoFilter"><option value="all">Все</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
+                    
                     <div class="filter-checkbox" style="background:#ffebee;padding:4px 8px;border-radius:6px;border:1px solid #ef9a9a;">
                         <input type="checkbox" id="excludeTopCoOne" checked>
                         <label for="excludeTopCoOne" style="font-weight:700;color:#c62828;font-size:0.65rem;">Исключить TOP ЦО=1</label>
+                    </div>
+                    <div class="filter-checkbox" style="background:#e8f5e9;padding:4px 8px;border-radius:6px;border:1px solid #a5d6a7;">
+                        <input type="checkbox" id="excludeNoStock" checked>
+                        <label for="excludeNoStock" style="font-weight:700;color:#2e7d32;font-size:0.65rem;">Исключать товары без запаса (Запас=0)</label>
                     </div>
 
                     <div class="quick-actions">
@@ -356,7 +365,7 @@
                         <button class="btn danger-outline" data-quick="overdue">⏳ Снять</button>
                         <button class="btn" data-quick="transit">🚚 В пути</button>
                     </div>
-                    <div style="font-size:0.55rem;color:#7a6a80;margin-top:3px;" id="filterStatus">УТО (TOP ЦО≠1)</div>
+                    <div style="font-size:0.55rem;color:#7a6a80;margin-top:3px;" id="filterStatus">УТО (TOP ЦО≠1, с запасом)</div>
 
                     <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;">
                         <button class="btn btn-primary" id="applyTemplateBtn" style="width:100%;padding:5px;font-size:0.7rem;">📌 Применить ТОП2</button>
@@ -366,7 +375,7 @@
 
                 <div class="right-col">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
-                        <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📋 Сводка (только в пути)</span>
+                        <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📋 Сводка (в пути + запас)</span>
                         <span id="rowCounter" style="font-size:0.6rem;color:#7a6a80;">0 записей</span>
                     </div>
                     <div class="table-wrap">
@@ -374,7 +383,7 @@
                             <thead>
                                 <tr>
                                     <th>№ маг</th><th>Артикул</th><th>Наименование</th><th>Подотдел</th>
-                                    <th>ТОП</th><th>TOP ЦО</th><th>УТО руб</th><th>Дней перебой</th>
+                                    <th>ТОП</th><th>TOP ЦО</th><th>УТО руб</th><th>Перебой</th>
                                     <th>В пути</th><th>Запас</th><th>Срок пост</th><th>План снятия</th><th>Статус</th><th>Действие</th>
                                 </tr>
                             </thead>
@@ -419,8 +428,8 @@
         </div>
 
         <div class="footer-note">
-            ⚠️ ТОП2 ТОЛЬКО для товаров в пути! 
-            🔄 Снятие: товар приехал (В пути=0) И сток > 0, либо просрочка
+            ⚠️ <strong>Условия для ТОП2:</strong> в пути + есть запас + TOP ЦО≠1 + УТО
+            <br>🔄 Снятие: товар приехал (В пути=0) И сток > 0, либо просрочка
         </div>
     </div>
 </div>
@@ -445,6 +454,7 @@
         topFilter: 'all',
         topCoFilter: 'all',
         excludeTopCoOne: true,
+        excludeNoStock: true,
         exportSessions: [],
     };
 
@@ -574,6 +584,7 @@
         const merged = [];
         let excludedByTopCo = 0;
         let excludedNotInTransit = 0;
+        let excludedNoStock = 0;
 
         for (const g of state.gamma) {
             const article = toStr(g['Артикул']);
@@ -588,11 +599,14 @@
             const inTransit = toNum(g['Сумма В пути, шт.']) > 0;
             if (!inTransit) { excludedNotInTransit++; continue; }
 
+            const stock = toNum(g['Сумма Кол-во в запасе']);
+            // ====== НОВОЕ УСЛОВИЕ: исключаем товары без запаса ======
+            if (state.excludeNoStock && stock === 0) { excludedNoStock++; continue; }
+
             const name = toStr(g['Наименование']);
             const subdept = toStr(g['Подотдел']);
             const supplierCode = toStr(g['№ Поставщика']);
             const utoInfo = utoMap.get(article) || { rub: 0, days: 0 };
-            const stock = toNum(g['Сумма Кол-во в запасе']);
 
             let postSrok = '';
             let postDni = '';
@@ -645,7 +659,6 @@
             }
 
             // ====== ЛОГИКА СНЯТИЯ ======
-            // Проверяем условия для снятия ТОП2 (если уже применён)
             const isApplied = state.appliedSet.has(`${store}|${article}`);
             let shouldRemove = false;
             let removeReasonText = '';
@@ -654,9 +667,7 @@
                 const hasStock = stock > 0;
                 const notInTransit = !inTransit;
                 const isDateOverdue = isOverdue;
-                const noOrder = !postSrok || postSrok === '';
 
-                // Проверяем все условия
                 if (notInTransit && hasStock) {
                     shouldRemove = true;
                     removeReasonText = '✅ Товар приехал и есть на полке';
@@ -692,6 +703,7 @@
         const msg = [];
         if (excludedByTopCo > 0) msg.push(`${excludedByTopCo} TOP ЦО=1`);
         if (excludedNotInTransit > 0) msg.push(`${excludedNotInTransit} не в пути`);
+        if (excludedNoStock > 0) msg.push(`${excludedNoStock} без запаса`);
         showToast(`Сведено ${merged.length} артикулов${msg.length ? ' (искл: '+msg.join(', ')+')' : ''}`, 'success');
         applyFilters();
         updateStoreFilter();
@@ -709,6 +721,7 @@
         if (state.topFilter !== 'all') data = data.filter(r => r.top === state.topFilter);
         if (state.topCoFilter !== 'all') data = data.filter(r => r.topCo === state.topCoFilter);
         if (state.excludeTopCoOne) data = data.filter(r => r.topCo !== '1');
+        if (state.excludeNoStock) data = data.filter(r => r.stock > 0);
 
         if (state.quickFilter === 'top1') data = data.filter(r => r.top === '1');
         else if (state.quickFilter === 'top2') data = data.filter(r => r.top === '2');
@@ -737,6 +750,7 @@
             const trClass = row.hasUto ? 'highlight-uto' : '';
             const overdueClass = isOverdue ? 'row-overdue' : '';
             const transitClass = row.inTransit ? 'row-transit' : '';
+            const noStockClass = row.stock === 0 ? 'row-no-stock' : '';
             
             const topBadge = row.top === '2' ? '<span class="badge badge-top2">ТОП2</span>' : (row.top === '1' ? '<span class="badge badge-top1">ТОП1</span>' : row.top || '—');
             let topCoBadge = '—';
@@ -745,7 +759,7 @@
             
             const appliedBadge = isApplied ? '<span class="badge badge-applied">✅</span>' : '';
             const transitBadge = row.inTransit ? '<span class="badge badge-transit">🚚</span>' : '';
-            const stockBadge = row.stock > 0 ? `<span class="badge badge-stock">${row.stock}</span>` : '—';
+            const stockBadge = row.stock > 0 ? `<span class="badge badge-stock">${row.stock}</span>` : '<span class="badge badge-no-stock">0</span>';
             
             let statusBadge = '';
             if (isOverdue) {
@@ -757,11 +771,13 @@
                 statusBadge = '<span class="badge badge-ontime">🟢 Активен</span>';
             }
 
+            const canApply = row.inTransit && row.stock > 0 && row.topCo !== '1';
             const actionBtn = isApplied ?
                 `<button class="btn-small danger" data-action="remove" data-store="${row.store}" data-art="${row.article}">✕</button>` :
-                `<button class="btn-small" data-action="apply" data-store="${row.store}" data-art="${row.article}">✅</button>`;
+                (canApply ? `<button class="btn-small" data-action="apply" data-store="${row.store}" data-art="${row.article}">✅</button>` :
+                `<button class="btn-small disabled" title="Условия не выполнены">⛔</button>`);
 
-            html += `<tr class="${trClass} ${overdueClass} ${transitClass}">
+            html += `<tr class="${trClass} ${overdueClass} ${transitClass} ${noStockClass}">
                 <td>${row.store}</td>
                 <td><strong>${row.article}</strong> ${appliedBadge}</td>
                 <td>${row.name.substring(0, 25)}</td>
@@ -811,20 +827,22 @@
     }
 
     function updateRowCounter() {
-        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей (всего УТО в пути: ${state.merged.length})`;
+        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей (всего УТО в пути с запасом: ${state.merged.length})`;
     }
 
     function updateFilterStatus() {
         const map = {
-            'uto': '📊 УТО (в пути)',
+            'uto': '📊 УТО (в пути + запас)',
             'top1': '⭐ ТОП 1',
             'top2': '🔶 ТОП 2',
             'applied': '✅ Применён',
             'overdue': '⏳ Снять',
             'transit': '🚚 В пути',
         };
-        const excludeMsg = state.excludeTopCoOne ? ' (TOP ЦО≠1)' : '';
-        document.getElementById('filterStatus').textContent = (map[state.quickFilter] || 'УТО (в пути)') + excludeMsg;
+        const excludeMsg = [];
+        if (state.excludeTopCoOne) excludeMsg.push('TOP ЦО≠1');
+        if (state.excludeNoStock) excludeMsg.push('с запасом');
+        document.getElementById('filterStatus').textContent = (map[state.quickFilter] || 'УТО') + (excludeMsg.length ? ' ('+excludeMsg.join(', ')+')' : '');
     }
 
     function updateStoreFilter() {
@@ -852,7 +870,7 @@
     }
 
     // ============================================================
-    // 5. История с периодом действия
+    // 5. История
     // ============================================================
     function renderHistory() {
         const tbody = document.getElementById('historyBody');
@@ -930,7 +948,7 @@
             }
             if (!data.length) { showToast('Нет применённых ТОП2', 'warning'); return; }
         } else {
-            const candidates = sourceData.filter(r => r.inTransit && r.hasActiveOrder);
+            const candidates = sourceData.filter(r => r.inTransit && r.stock > 0 && r.hasActiveOrder);
             const histSet = new Set(state.history.map(h => `${h.store}|${h.article}`));
             for (const r of candidates) {
                 const key = `${r.store}|${r.article}`;
@@ -1080,8 +1098,8 @@
     document.getElementById('resetHistoryBtn').addEventListener('click', resetHistory);
     
     document.getElementById('applyTemplateBtn').addEventListener('click', function() {
-        const candidates = state.filtered.filter(r => r.inTransit && r.hasActiveOrder);
-        if (!candidates.length) { showToast('Нет товаров в пути с УТО', 'warning'); return; }
+        const candidates = state.filtered.filter(r => r.inTransit && r.stock > 0 && r.hasActiveOrder);
+        if (!candidates.length) { showToast('Нет товаров с УТО, в пути и с запасом', 'warning'); return; }
         let added = 0;
         for (const r of candidates) {
             const key = `${r.store}|${r.article}`;
@@ -1105,6 +1123,11 @@
     document.getElementById('topCoFilter').addEventListener('change', function() { state.topCoFilter = this.value; applyFilters(); });
     document.getElementById('excludeTopCoOne').addEventListener('change', function() {
         state.excludeTopCoOne = this.checked;
+        if (state.gamma.length && state.uto.length && state.postavki.length) mergeReports();
+        else applyFilters();
+    });
+    document.getElementById('excludeNoStock').addEventListener('change', function() {
+        state.excludeNoStock = this.checked;
         if (state.gamma.length && state.uto.length && state.postavki.length) mergeReports();
         else applyFilters();
     });
@@ -1163,8 +1186,8 @@
         }
     }
 
-    console.log('📦 УТО→ТОП2 (финальный) загружен.');
-    console.log('📌 ТОП2 ТОЛЬКО если Сумма В пути, шт. > 0');
+    console.log('📦 УТО→ТОП2 (с запасом) загружен.');
+    console.log('📌 Условия: в пути + запас > 0 + TOP ЦО≠1 + УТО');
     console.log('📌 Снятие: товар приехал (В пути=0) И сток > 0, либо просрочка');
 
     applyFilters();
