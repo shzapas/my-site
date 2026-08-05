@@ -5341,7 +5341,7 @@ function showSuggestionsModal(suggestions) {
     modal.style.display = 'flex';
     
     modal.innerHTML = `
-        <div class="modal-content" style="max-width:950px; padding:25px 30px;">
+        <div class="modal-content" style="max-width:1000px; padding:25px 30px;">
             <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
             
             <h2 style="color:#FF8C00; font-size:1.4rem; margin-bottom:4px;">
@@ -5358,6 +5358,7 @@ function showSuggestionsModal(suggestions) {
                             <th>#</th>
                             <th>Магазин</th>
                             <th>Артикул</th>
+                            <th>Наименование</th>
                             <th>Поле</th>
                             <th>Текущее</th>
                             <th>Рекомендуется</th>
@@ -5371,6 +5372,7 @@ function showSuggestionsModal(suggestions) {
                                 <td class="rank">${idx + 1}</td>
                                 <td>${s.store}</td>
                                 <td><strong onclick="openProductInMagPortal('${s.article}')" style="cursor:pointer;color:#FF8C00;">${s.article}</strong></td>
+                                <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${s.name || ''}">${s.name || '—'}</td>
                                 <td>${s.field}</td>
                                 <td style="color:#e53935;font-weight:600;">${s.current}</td>
                                 <td style="color:#2c5f2d;font-weight:600;">${s.recommended}</td>
