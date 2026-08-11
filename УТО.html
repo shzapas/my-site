@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>УТО → ТОП2 (с автосинхронизацией)</title>
+    <title>УТО → ТОП2 (с историей УТО)</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -108,7 +108,6 @@
         .badge-transit { background: #1565c0; color: white; }
         .badge-no-stock { background: #e65100; color: white; }
         .badge-archived { background: #757575; color: white; }
-        .badge-sync { background: #4a148c; color: white; }
         .btn-small { padding: 1px 10px; border: none; border-radius: 20px; font-size: 0.5rem; font-weight: 600; cursor: pointer; background: #7b1fa2; color: white; transition: 0.15s; }
         .btn-small:hover { background: #4a148c; }
         .btn-small.danger { background: #c62828; }
@@ -155,7 +154,7 @@
 
 <div class="app-container">
     <header class="header">
-        <h1>🧩 ТОП-2 <small>с автосинхронизацией</small></h1>
+        <h1>🧩 ТОП-2 <small>с историей УТО</small></h1>
         <div class="header-actions">
             <button class="btn btn-primary" id="computeBtn">🚀 Свести</button>
             <button class="btn btn-success" id="exportTemplateBtn">📤 ТОП2</button>
@@ -178,11 +177,12 @@
                     </ul>
                 </div>
                 <div class="formula-box">📅 План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней</div>
-                <strong>🔄 Автосинхронизация</strong>
+                <strong>💾 История УТО</strong>
                 <ul>
-                    <li>Система автоматически находит все артикулы с ТОП2 в магазине</li>
-                    <li>Добавляет их в историю, если их там нет</li>
-                    <li>Теперь вы будете видеть все артикулы с ТОП2 и отслеживать их</li>
+                    <li>Система сохраняет все артикулы, которые когда-либо попадали в УТО</li>
+                    <li>Даже если артикул пропал из нового отчёта УТО, он остаётся в истории</li>
+                    <li>Это позволяет не потерять артикулы, которые нужно снять с ТОП2</li>
+                    <li>Артикулы из истории УТО отображаются с пометкой 📜</li>
                 </ul>
             </details>
         </div>
@@ -298,9 +298,10 @@
         </div>
 
         <div class="footer-note">
-            ⚠️ <strong>Условия для ТОП2:</strong> в пути + нет запаса + TOP ЦО≠1 + УТО
-            <br>🔄 <strong>Автосинхронизация:</strong> все артикулы с ТОП2 из Гаммы автоматически добавляются в историю
+            ⚠️ <strong>Условия для ТОП2:</strong> в пути + нет запаса + TOP ЦО≠1 + УТО (или было в истории УТО)
             <br>🔄 Снятие: товар приехал (В пути=0) ИЛИ появился запас (Запас>0), либо просрочка
+            <br>💾 История УТО сохраняется — артикулы не теряются после обновления отчёта
+            <br>📌 Артикулы переводятся в ТОП2 ТОЛЬКО через этот инструмент
         </div>
     </div>
 </div>
@@ -317,7 +318,7 @@
         postavki: [],
         merged: [],
         filtered: [],
-        history: [],
+        history: [],          // Только артикулы, переведённые через инструмент
         appliedSet: new Set(),
         quickFilter: 'uto',
         selectedStores: new Set(),
@@ -328,7 +329,7 @@
         excludeWithStock: true,
         showArchived: true,
         exportSessions: [],
-        utoHistory: new Map(),
+        utoHistory: new Map(), // Все артикулы из УТО (история)
     };
 
     function loadHistory() {
@@ -428,7 +429,7 @@
     loadFile('postavkiFile', state.postavki, 'postavkiStatus', 'Поставки');
 
     // ============================================================
-    // 3. Сведение отчётов с автосинхронизацией
+    // 3. Сведение отчётов с сохранением истории УТО
     // ============================================================
     function mergeReports() {
         if (!state.gamma.length) { showToast('Загрузите Гамму', 'error'); return; }
@@ -466,31 +467,7 @@
                 }
             }
         }
-
-        // ====== АВТОСИНХРОНИЗАЦИЯ: добавляем все артикулы с ТОП2 в истории ======
-        let syncCount = 0;
-        for (const g of state.gamma) {
-            const topInStore = toStr(g['Топ в магазине']).replace(/\.00$/, '');
-            if (topInStore === '2') {
-                const store = extractStore(g['№ магазина']);
-                const article = toStr(g['Артикул']);
-                const key = `${store}|${article}`;
-                if (!state.appliedSet.has(key)) {
-                    state.appliedSet.add(key);
-                    state.history.push({
-                        store,
-                        article,
-                        date: new Date().toISOString(),
-                        source: 'auto_sync'
-                    });
-                    syncCount++;
-                }
-            }
-        }
-        if (syncCount > 0) {
-            saveHistory();
-            showToast(`🔄 Автосинхронизация: добавлено ${syncCount} артикулов с ТОП2 из Гаммы`, 'success');
-        }
+        saveHistory();
 
         const utoArticles = new Set();
         const utoMap = new Map();
@@ -505,6 +482,7 @@
             }
         }
 
+        // ====== ДОБАВЛЯЕМ АРТИКУЛЫ ИЗ ИСТОРИИ УТО ======
         for (const [key, data] of state.utoHistory) {
             const [store, article] = key.split('|');
             if (!utoArticles.has(article)) {
@@ -669,7 +647,8 @@
             merged.push(row);
         }
 
-        // ====== ДОБАВЛЯЕМ АРХИВНЫЕ АРТИКУЛЫ ======
+        // ====== ДОБАВЛЯЕМ АРХИВНЫЕ АРТИКУЛЫ ИЗ ИСТОРИИ ТОП2 ======
+        // Только те, которые были переведены через инструмент
         const historyKeys = new Set();
         for (const h of state.history) {
             const key = `${h.store}|${h.article}`;
@@ -730,8 +709,7 @@
         const archivedCount = merged.filter(r => r.isArchived).length;
         const historySize = state.utoHistory.size;
         if (archivedCount > 0) msg.push(`${archivedCount} в архиве`);
-        const syncMsg = syncCount > 0 ? ` (синхронизировано ${syncCount})` : '';
-        showToast(`Сведено ${merged.filter(r => !r.isArchived).length} активных + ${archivedCount} архивных. История УТО: ${historySize}${syncMsg}`, 'success');
+        showToast(`Сведено ${merged.filter(r => !r.isArchived).length} активных + ${archivedCount} архивных. История УТО: ${historySize} артикулов`, 'success');
         applyFilters();
         updateRowCounter();
         checkArchivedItems();
@@ -833,7 +811,7 @@
             const transitBadge = row.inTransit ? '<span class="badge badge-transit">🚚</span>' : '';
             const stockBadge = row.stock === 0 ? '<span class="badge badge-no-stock">0</span>' : `<span class="badge" style="background:#00838f;">${row.stock}</span>`;
             const archivedBadge = row.isArchived ? '<span class="badge badge-archived">📦</span>' : '';
-            const syncBadge = row.isFromHistory && !row.isArchived ? '<span class="badge badge-sync">🔄</span>' : '';
+            const historyBadge = row.isFromHistory ? '<span class="badge" style="background:#4a148c;">📜</span>' : '';
             
             let statusBadge = '';
             if (row.isArchived && isApplied) {
@@ -855,7 +833,7 @@
 
             html += `<tr class="${trClass} ${overdueClass} ${transitClass} ${archivedClass}">
                 <td>${row.store}</td>
-                <td><strong>${row.article}</strong> ${appliedBadge} ${archivedBadge} ${syncBadge}</td>
+                <td><strong>${row.article}</strong> ${appliedBadge} ${archivedBadge} ${historyBadge}</td>
                 <td>${row.name.substring(0, 25)}</td>
                 <td>${row.subdepartment || '—'}</td>
                 <td>${topBadge}</td>
@@ -1294,9 +1272,10 @@
         }
     }
 
-    console.log('📦 УТО→ТОП2 (с автосинхронизацией) загружен.');
-    console.log('📌 Условия: в пути + запас=0 + TOP ЦО≠1 + УТО');
-    console.log('🔄 Автосинхронизация: все артикулы с ТОП2 из Гаммы добавляются в историю');
+    console.log('📦 УТО→ТОП2 (с историей УТО) загружен.');
+    console.log('📌 Условия: в пути + запас=0 + TOP ЦО≠1 + УТО (или было в истории)');
+    console.log('💾 История УТО сохраняется и не теряется при обновлении отчёта');
+    console.log('📌 Артикулы переводятся в ТОП2 ТОЛЬКО через этот инструмент');
 
     applyFilters();
     renderHistory();
