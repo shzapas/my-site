@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>УТО → ТОП2 (без запаса, множественный выбор)</title>
+    <title>УТО → ТОП2 (с автосинхронизацией)</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
         body { background: #f5f0f5; padding: 16px 20px; color: #1e1e1e; }
         .app-container { max-width: 100%; margin: 0 auto; }
-
         .header {
             background: linear-gradient(135deg, #6a1b9a 0%, #9c4dcc 100%);
             border-radius: 16px 16px 0 0;
@@ -65,7 +64,6 @@
         .file-upload-row input[type="file"] { font-size: 0.65rem; flex: 1; }
         .status-badge { font-size: 0.6rem; background: #e8e0ee; padding: 1px 10px; border-radius: 30px; color: #4a148c; }
         .status-badge.loaded { background: #c8e6c9; color: #1b5e20; }
-
         .filter-group { margin: 6px 0; }
         .filter-group label { font-weight: 600; font-size: 0.7rem; color: #4a148c; display: block; margin-bottom: 2px; }
         .filter-group select, .filter-group input {
@@ -77,117 +75,31 @@
             font-size: 0.7rem;
             transition: 0.2s;
         }
-        .filter-group select:focus, .filter-group input:focus {
-            border-color: #7b1fa2;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
-        }
-
-        .multi-select {
-            max-height: 100px;
-            overflow-y: auto;
-            border: 1px solid #d0c0d8;
-            border-radius: 8px;
-            padding: 4px 8px;
-            background: white;
-            font-size: 0.65rem;
-        }
+        .filter-group select:focus, .filter-group input:focus { border-color: #7b1fa2; outline: none; box-shadow: 0 0 0 3px rgba(123,31,162,0.15); }
+        .multi-select { max-height: 100px; overflow-y: auto; border: 1px solid #d0c0d8; border-radius: 8px; padding: 4px 8px; background: white; font-size: 0.65rem; }
         .multi-select::-webkit-scrollbar { width: 4px; }
         .multi-select::-webkit-scrollbar-thumb { background: #7b1fa2; border-radius: 4px; }
-        .multi-select .item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 2px 4px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: 0.15s;
-        }
+        .multi-select .item { display: flex; align-items: center; gap: 6px; padding: 2px 4px; border-radius: 4px; cursor: pointer; transition: 0.15s; }
         .multi-select .item:hover { background: #f0e8f5; }
-        .multi-select .item input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            accent-color: #7b1fa2;
-            cursor: pointer;
-        }
-        .multi-select .item label {
-            font-size: 0.6rem;
-            cursor: pointer;
-            color: #1e1e1e;
-            flex: 1;
-        }
-        .multi-select .item .count {
-            font-size: 0.5rem;
-            color: #7a6a80;
-            background: #e8e0ee;
-            padding: 0 6px;
-            border-radius: 10px;
-        }
-
-        .filter-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.7rem;
-            color: #4a148c;
-            margin: 3px 0;
-        }
-        .filter-checkbox input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            accent-color: #7b1fa2;
-            cursor: pointer;
-        }
-
+        .multi-select .item input[type="checkbox"] { width: 14px; height: 14px; accent-color: #7b1fa2; cursor: pointer; }
+        .multi-select .item label { font-size: 0.6rem; cursor: pointer; color: #1e1e1e; flex: 1; }
+        .filter-checkbox { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: #4a148c; margin: 3px 0; }
+        .filter-checkbox input[type="checkbox"] { width: 14px; height: 14px; accent-color: #7b1fa2; cursor: pointer; }
         .quick-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px 0; }
-        .quick-actions .btn {
-            padding: 3px 12px;
-            font-size: 0.65rem;
-            background: #f0e8f5;
-            color: #4a148c;
-            border: 1px solid #d0c0d8;
-        }
+        .quick-actions .btn { padding: 3px 12px; font-size: 0.65rem; background: #f0e8f5; color: #4a148c; border: 1px solid #d0c0d8; }
         .quick-actions .btn.active { background: #7b1fa2; color: white; border-color: #4a148c; }
         .quick-actions .btn.danger-outline { border-color: #c62828; color: #c62828; }
         .quick-actions .btn.danger-outline.active { background: #c62828; color: white; }
-
-        .table-wrap {
-            overflow-x: auto;
-            max-height: 500px;
-            overflow-y: auto;
-            border: 1px solid #ddd0e8;
-            border-radius: 12px;
-            background: white;
-            margin-top: 6px;
-        }
+        .table-wrap { overflow-x: auto; max-height: 500px; overflow-y: auto; border: 1px solid #ddd0e8; border-radius: 12px; background: white; margin-top: 6px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 750px; }
-        th {
-            background: #f0e8f5;
-            color: #4a148c;
-            font-weight: 700;
-            padding: 5px 4px;
-            border-bottom: 2px solid #d0c0d8;
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            white-space: nowrap;
-            text-align: left;
-            font-size: 0.55rem;
-        }
+        th { background: #f0e8f5; color: #4a148c; font-weight: 700; padding: 5px 4px; border-bottom: 2px solid #d0c0d8; position: sticky; top: 0; z-index: 5; white-space: nowrap; text-align: left; font-size: 0.55rem; }
         td { padding: 4px 4px; border-bottom: 1px solid #eee8f0; vertical-align: middle; }
         tr:hover td { background: #f8f4fc; }
         .highlight-uto { background: #f3e5f5 !important; border-left: 4px solid #7b1fa2; }
         .row-overdue { background: #ffebee !important; border-left: 4px solid #c62828; }
         .row-transit { background: #e3f2fd !important; border-left: 4px solid #1565c0; }
-        .badge {
-            display: inline-block;
-            font-size: 0.5rem;
-            font-weight: 700;
-            padding: 0 8px;
-            border-radius: 30px;
-            background: #7b1fa2;
-            color: white;
-        }
+        .row-archived { opacity: 0.6; background: #f5f5f5 !important; border-left: 4px solid #757575; }
+        .badge { display: inline-block; font-size: 0.5rem; font-weight: 700; padding: 0 8px; border-radius: 30px; background: #7b1fa2; color: white; }
         .badge-top2 { background: #f57f17; color: white; }
         .badge-top1 { background: #2e7d32; color: white; }
         .badge-applied { background: #1b5e20; color: white; }
@@ -195,17 +107,9 @@
         .badge-ontime { background: #2e7d32; color: white; }
         .badge-transit { background: #1565c0; color: white; }
         .badge-no-stock { background: #e65100; color: white; }
-        .btn-small {
-            padding: 1px 10px;
-            border: none;
-            border-radius: 20px;
-            font-size: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: #7b1fa2;
-            color: white;
-            transition: 0.15s;
-        }
+        .badge-archived { background: #757575; color: white; }
+        .badge-sync { background: #4a148c; color: white; }
+        .btn-small { padding: 1px 10px; border: none; border-radius: 20px; font-size: 0.5rem; font-weight: 600; cursor: pointer; background: #7b1fa2; color: white; transition: 0.15s; }
         .btn-small:hover { background: #4a148c; }
         .btn-small.danger { background: #c62828; }
         .btn-small.danger:hover { background: #b71c1c; }
@@ -213,130 +117,45 @@
         .btn-small.success:hover { background: #1b5e20; }
         .btn-small.disabled { background: #9e9e9e; cursor: not-allowed; opacity: 0.6; }
         .footer-note { font-size: 0.6rem; color: #7a6a80; margin-top: 10px; border-top: 1px solid #e0d0e8; padding-top: 10px; text-align: center; }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1e1e1e;
-            color: white;
-            padding: 10px 18px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-            font-size: 0.8rem;
-            z-index: 999;
-            max-width: 400px;
-            border-left: 5px solid #7b1fa2;
-        }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #1e1e1e; color: white; padding: 10px 18px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); font-size: 0.8rem; z-index: 999; max-width: 400px; border-left: 5px solid #7b1fa2; }
         .toast.success { border-left-color: #2e7d32; }
         .toast.error { border-left-color: #c62828; }
         .tabs { display: flex; gap: 4px; margin-bottom: 10px; border-bottom: 2px solid #ddd0e8; padding-bottom: 4px; }
-        .tab-btn {
-            padding: 4px 16px;
-            border: none;
-            background: transparent;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            border-radius: 20px 20px 0 0;
-            color: #7a6a80;
-            transition: 0.2s;
-        }
+        .tab-btn { padding: 4px 16px; border: none; background: transparent; font-weight: 600; font-size: 0.7rem; cursor: pointer; border-radius: 20px 20px 0 0; color: #7a6a80; transition: 0.2s; }
         .tab-btn:hover { background: #f0e8f5; color: #4a148c; }
         .tab-btn.active { color: #4a148c; background: #f0e8f5; border-bottom: 3px solid #7b1fa2; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
         .history-table { font-size: 0.6rem; width: 100%; border-collapse: collapse; }
         .history-table th { background: #f0e8f5; padding: 4px 6px; text-align: left; font-size: 0.55rem; }
         .history-table td { padding: 3px 6px; border-bottom: 1px solid #eee8f0; }
         .history-group { background: #f8f4fc; font-weight: 700; color: #4a148c; }
         #rowCounter { font-size: 0.6rem; color: #7a6a80; }
-
-        /* ===== ИНСТРУКЦИЯ (расширенная) ===== */
-        .instruction-block {
-            background: #f8f4fc;
-            border: 1px solid #d0c0d8;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            font-size: 0.7rem;
-            color: #4a148c;
-        }
-        .instruction-block summary {
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 0.75rem;
-            color: #4a148c;
-        }
+        .instruction-block { background: #f8f4fc; border: 1px solid #d0c0d8; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; font-size: 0.7rem; color: #4a148c; }
+        .instruction-block summary { font-weight: 700; cursor: pointer; font-size: 0.75rem; color: #4a148c; }
         .instruction-block ul { padding-left: 18px; margin: 4px 0; }
-        .instruction-block ul li { margin: 2px 0; }
-        .instruction-block .formula-box {
-            background: #e8f5e9;
-            border: 1px solid #a5d6a7;
-            border-radius: 6px;
-            padding: 6px 12px;
-            margin: 4px 0;
-            font-family: monospace;
-            font-size: 0.7rem;
-            color: #1b5e20;
-        }
-        .instruction-block .warning-box {
-            background: #fff3e0;
-            border: 1px solid #ffcc80;
-            border-radius: 6px;
-            padding: 6px 12px;
-            margin: 4px 0;
-            font-size: 0.65rem;
-            color: #e65100;
-        }
-        .instruction-block .example-box {
-            background: #e3f2fd;
-            border: 1px solid #90caf9;
-            border-radius: 6px;
-            padding: 6px 12px;
-            margin: 4px 0;
-            font-size: 0.65rem;
-            color: #0d47a1;
-        }
+        .instruction-block .formula-box { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px; padding: 6px 12px; margin: 4px 0; font-family: monospace; font-size: 0.7rem; color: #1b5e20; }
+        .instruction-block .warning-box { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 6px; padding: 6px 12px; margin: 4px 0; font-size: 0.65rem; color: #e65100; }
+        .instruction-block .example-box { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 6px 12px; margin: 4px 0; font-size: 0.65rem; color: #0d47a1; }
         .instruction-block .example-box table { font-size: 0.6rem; width: 100%; border-collapse: collapse; }
         .instruction-block .example-box table td { padding: 2px 6px; border: 1px solid #bbdefb; }
         .instruction-block .example-box table th { padding: 2px 6px; border: 1px solid #bbdefb; background: #bbdefb; font-weight: 700; }
-        .instruction-block .conditions-box {
-            background: #e8f5e9;
-            border: 1px solid #a5d6a7;
-            border-radius: 6px;
-            padding: 6px 12px;
-            margin: 4px 0;
-            font-size: 0.65rem;
-        }
+        .instruction-block .conditions-box { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px; padding: 6px 12px; margin: 4px 0; font-size: 0.65rem; }
         .instruction-block .conditions-box ul { margin: 2px 0; padding-left: 16px; }
         .instruction-block .conditions-box ul li { margin: 1px 0; }
         .instruction-block .conditions-box .ok { color: #2e7d32; font-weight: 700; }
         .instruction-block .conditions-box .bad { color: #c62828; font-weight: 700; }
-
-        .select-all-btn {
-            font-size: 0.55rem;
-            padding: 1px 8px;
-            border: 1px solid #7b1fa2;
-            border-radius: 12px;
-            background: transparent;
-            color: #7b1fa2;
-            cursor: pointer;
-            transition: 0.15s;
-            margin: 2px 0;
-        }
-        .select-all-btn:hover {
-            background: #7b1fa2;
-            color: white;
-        }
+        .select-all-btn { font-size: 0.55rem; padding: 1px 8px; border: 1px solid #7b1fa2; border-radius: 12px; background: transparent; color: #7b1fa2; cursor: pointer; transition: 0.15s; margin: 2px 0; }
+        .select-all-btn:hover { background: #7b1fa2; color: white; }
+        .warning-banner { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: 0.65rem; color: #e65100; display: none; }
+        .warning-banner.show { display: block; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <header class="header">
-        <h1>🧩 ТОП-2 <small>УТО → в пути, без запаса</small></h1>
+        <h1>🧩 ТОП-2 <small>с автосинхронизацией</small></h1>
         <div class="header-actions">
             <button class="btn btn-primary" id="computeBtn">🚀 Свести</button>
             <button class="btn btn-success" id="exportTemplateBtn">📤 ТОП2</button>
@@ -346,85 +165,31 @@
     </header>
 
     <div class="panel">
-        <!-- ===== ИНСТРУКЦИЯ (полная версия) ===== -->
         <div id="instructionBlock" class="instruction-block" style="display:none;">
             <details open>
-                <summary>📖 Инструкция по работе с инструментом</summary>
-                
-                <div class="warning-box">
-                    ⚠️ <strong>ТОП2 присваивается ТОЛЬКО при выполнении ВСЕХ условий:</strong>
-                </div>
+                <summary>📖 Инструкция по работе</summary>
+                <div class="warning-box">⚠️ <strong>ТОП2 ТОЛЬКО при выполнении ВСЕХ условий:</strong></div>
                 <div class="conditions-box">
                     <ul>
                         <li>✅ <span class="ok">Товар в пути</span> (Сумма В пути, шт. > 0)</li>
-                        <li>✅ <span class="ok">Нет запаса</span> (Сумма Кол-во в запасе = 0) — товара нет на полке</li>
-                        <li>✅ <span class="ok">TOP ЦО ≠ 1</span> (TOP ЦО=1 уже имеет приоритет)</li>
-                        <li>✅ <span class="ok">Есть УТО</span> (запись в отчёте УТО)</li>
+                        <li>✅ <span class="ok">Нет запаса</span> (Сумма Кол-во в запасе = 0)</li>
+                        <li>✅ <span class="ok">TOP ЦО ≠ 1</span></li>
+                        <li>✅ <span class="ok">Есть УТО</span> (или было в истории УТО)</li>
                     </ul>
                 </div>
-
-                <div class="formula-box">
-                    📅 <strong>Формула расчёта снятия ТОП2:</strong><br>
-                    План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней
-                </div>
-
-                <strong>📥 1. Загрузка отчётов</strong>
+                <div class="formula-box">📅 План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней</div>
+                <strong>🔄 Автосинхронизация</strong>
                 <ul>
-                    <li><strong>Гамма:</strong> № магазина, Артикул, Подотдел, Топ, TOP ЦО, № Поставщика, Сумма В пути, шт., Сумма Кол-во в запасе</li>
-                    <li><strong>УТО:</strong> ЛМ-код, Уп.GMV руб, Кол-во дней в перебое за 30 дней</li>
-                    <li><strong>Детали поставки:</strong> Магазин, Поставщик, Срок поставки в магазин (число дней)</li>
-                    <li>Первые 2 строки в файлах игнорируются</li>
-                </ul>
-
-                <strong>🧮 2. Как работает расчёт (примеры)</strong>
-                <div class="example-box">
-                    <table>
-                        <tr><th>Артикул</th><th>В пути</th><th>Запас</th><th>Перебой</th><th>Срок пост</th><th>План снятия</th><th>Результат</th></tr>
-                        <tr><td>12727434</td><td>50 ✅</td><td>99 ❌</td><td>13</td><td>20</td><td><strong>12 дней</strong></td><td>❌ Есть запас (не применяем)</td></tr>
-                        <tr><td>82704224</td><td>9 ✅</td><td>0 ✅</td><td>15</td><td>13</td><td><strong>(13−15)+5 = 3 дня</strong></td><td>✅ Применяем ТОП2</td></tr>
-                        <tr><td>11677009</td><td>10 ✅</td><td>0 ✅</td><td>5</td><td>20</td><td><strong>(20−5)+5 = 20 дней</strong></td><td>✅ Применяем ТОП2</td></tr>
-                    </table>
-                </div>
-                <ul>
-                    <li><strong>Пример 1 (12727434):</strong> есть запас 99 шт → ❌ не применяем</li>
-                    <li><strong>Пример 2 (82704224):</strong> перебой 15 дней > срока 13 дней → план снятия 3 дня</li>
-                    <li><strong>Пример 3 (11677009):</strong> срок 20, перебой 5 → план снятия 20 дней</li>
-                </ul>
-
-                <strong>🔄 3. Как определяется снятие ТОП2</strong>
-                <ul>
-                    <li>✅ <strong>Товар приехал:</strong> Сумма В пути, шт. = 0</li>
-                    <li>✅ <strong>Появился запас:</strong> Сумма Кол-во в запасе > 0 (тогда снимаем)</li>
-                    <li>✅ <strong>Просрочка:</strong> Дата снятия прошла</li>
-                </ul>
-
-                <strong>🎯 4. Фильтры</strong>
-                <ul>
-                    <li><strong>Магазины и подотделы:</strong> множественный выбор с галочками</li>
-                    <li><strong>TOP ЦО = 1:</strong> исключаются (галочка)</li>
-                    <li><strong>С запасом:</strong> исключаются (галочка) — оставляем только без запаса</li>
-                    <li><strong>Быстрые фильтры:</strong> УТО, ТОП1, ТОП2, Применён, Снять, В пути</li>
-                </ul>
-
-                <strong>📌 5. Применение ТОП2</strong>
-                <ul>
-                    <li>Нажмите <strong>"📌 Применить ТОП2"</strong> — система назначит ТОП2 всем артикулам в текущем фильтре</li>
-                    <li>Или вручную: кнопка <strong>"✅"</strong> напротив артикула</li>
-                </ul>
-
-                <strong>📤 6. Снятие ТОП2</strong>
-                <ul>
-                    <li>Переключитесь на фильтр <strong>"⏳ Снять"</strong></li>
-                    <li>Нажмите <strong>"💡 Снять ТОП2"</strong> — получите список причин для снятия</li>
-                    <li>Или нажмите <strong>"🔄 ТОП1"</strong> — выгрузите шаблон с ТОП1 для загрузки в систему</li>
-                </ul>
-
-                <strong>📜 7. История</strong>
-                <ul>
-                    <li>Хранит все выгрузки ТОП2 с датой и периодом действия</li>
-                    <li>Можно выгрузить в Excel или сбросить</li>
+                    <li>Система автоматически находит все артикулы с ТОП2 в магазине</li>
+                    <li>Добавляет их в историю, если их там нет</li>
+                    <li>Теперь вы будете видеть все артикулы с ТОП2 и отслеживать их</li>
                 </ul>
             </details>
+        </div>
+
+        <div id="warningBanner" class="warning-banner">
+            ⚠️ <span id="warningText">Обнаружены артикулы, требующие снятия ТОП2!</span>
+            <button class="btn-small" style="margin-left:8px;" onclick="document.getElementById('warningBanner').classList.remove('show')">✕</button>
         </div>
 
         <div class="tabs">
@@ -443,7 +208,6 @@
                     </div>
 
                     <div class="section-title">🎯 Фильтры</div>
-                    
                     <div class="filter-group">
                         <label>🏬 Магазины</label>
                         <div style="display:flex;gap:4px;margin-bottom:2px;">
@@ -452,7 +216,6 @@
                         </div>
                         <div class="multi-select" id="storeMultiSelect"></div>
                     </div>
-
                     <div class="filter-group">
                         <label>📁 Подотделы</label>
                         <div style="display:flex;gap:4px;margin-bottom:2px;">
@@ -461,7 +224,6 @@
                         </div>
                         <div class="multi-select" id="subdeptMultiSelect"></div>
                     </div>
-
                     <div class="filter-group"><label>ТОП</label><select id="topFilter"><option value="all">Все</option><option value="1">1</option><option value="2">2</option></select></div>
                     <div class="filter-group"><label>TOP ЦО</label><select id="topCoFilter"><option value="all">Все</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
                     
@@ -473,6 +235,10 @@
                         <input type="checkbox" id="excludeWithStock" checked>
                         <label for="excludeWithStock" style="font-weight:700;color:#2e7d32;font-size:0.65rem;">Исключать товары С запасом (Запас>0)</label>
                     </div>
+                    <div class="filter-checkbox" style="background:#e3f2fd;padding:4px 8px;border-radius:6px;border:1px solid #90caf9;">
+                        <input type="checkbox" id="showArchived" checked>
+                        <label for="showArchived" style="font-weight:700;color:#1565c0;font-size:0.65rem;">Показывать архивные (из истории УТО)</label>
+                    </div>
 
                     <div class="quick-actions">
                         <button class="btn active" data-quick="uto">📊 УТО</button>
@@ -481,6 +247,7 @@
                         <button class="btn" data-quick="applied">✅ Прим</button>
                         <button class="btn danger-outline" data-quick="overdue">⏳ Снять</button>
                         <button class="btn" data-quick="transit">🚚 В пути</button>
+                        <button class="btn" data-quick="archived">📦 Архив</button>
                     </div>
                     <div style="font-size:0.55rem;color:#7a6a80;margin-top:3px;" id="filterStatus">УТО (TOP ЦО≠1, без запаса)</div>
 
@@ -492,7 +259,7 @@
 
                 <div class="right-col">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
-                        <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📋 Сводка (в пути + без запаса)</span>
+                        <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📋 Сводка</span>
                         <span id="rowCounter" style="font-size:0.6rem;color:#7a6a80;">0 записей</span>
                     </div>
                     <div class="table-wrap">
@@ -515,7 +282,7 @@
 
         <div class="tab-content" id="tab-history">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-                <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📜 История выгрузок</span>
+                <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📜 История выгрузок ТОП2</span>
                 <div style="display:flex;gap:6px;">
                     <button class="btn btn-warning" id="exportHistoryBtn" style="padding:4px 12px;font-size:0.65rem;">📤 Выгрузить</button>
                     <button class="btn btn-danger" id="resetHistoryBtn" style="padding:4px 12px;font-size:0.65rem;">🔄 Сброс</button>
@@ -523,8 +290,8 @@
             </div>
             <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid #ddd0e8;border-radius:10px;">
                 <table class="history-table" id="historyTable">
-                    <thead><tr><th>Дата сессии</th><th>Артикул</th><th>Магазин</th><th>Атрибут ТОП</th><th>Тип</th><th>Период действия</th><th>Действие</th></tr></thead>
-                    <tbody id="historyBody"><tr><td colspan="7" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr></tbody>
+                    <thead><tr><th>Дата сессии</th><th>Артикул</th><th>Магазин</th><th>Атрибут ТОП</th><th>Тип</th><th>Период действия</th><th>Статус</th><th>Действие</th></tr></thead>
+                    <tbody id="historyBody"><tr><td colspan="8" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr></tbody>
                 </table>
             </div>
             <div style="margin-top:8px;font-size:0.6rem;color:#7a6a80;">Всего применений: <span id="historyCount">0</span></div>
@@ -532,9 +299,8 @@
 
         <div class="footer-note">
             ⚠️ <strong>Условия для ТОП2:</strong> в пути + нет запаса + TOP ЦО≠1 + УТО
+            <br>🔄 <strong>Автосинхронизация:</strong> все артикулы с ТОП2 из Гаммы автоматически добавляются в историю
             <br>🔄 Снятие: товар приехал (В пути=0) ИЛИ появился запас (Запас>0), либо просрочка
-            <br>📌 Множественный выбор магазинов и подотделов с галочками
-            <br>📖 Нажмите «📖» в шапке для полной инструкции с примерами
         </div>
     </div>
 </div>
@@ -560,7 +326,9 @@
         topCoFilter: 'all',
         excludeTopCoOne: true,
         excludeWithStock: true,
+        showArchived: true,
         exportSessions: [],
+        utoHistory: new Map(),
     };
 
     function loadHistory() {
@@ -574,14 +342,22 @@
                 for (const h of state.history) {
                     state.appliedSet.add(`${h.store}|${h.article}`);
                 }
+                if (data.utoHistory) {
+                    state.utoHistory = new Map(Object.entries(data.utoHistory));
+                }
             }
         } catch (e) {}
     }
     function saveHistory() {
         try {
+            const utoHistoryObj = {};
+            for (const [key, value] of state.utoHistory) {
+                utoHistoryObj[key] = value;
+            }
             localStorage.setItem('uto_top2_history_pro', JSON.stringify({
                 history: state.history,
                 sessions: state.exportSessions,
+                utoHistory: utoHistoryObj,
             }));
         } catch (e) {}
     }
@@ -652,12 +428,69 @@
     loadFile('postavkiFile', state.postavki, 'postavkiStatus', 'Поставки');
 
     // ============================================================
-    // 3. Сведение отчётов
+    // 3. Сведение отчётов с автосинхронизацией
     // ============================================================
     function mergeReports() {
         if (!state.gamma.length) { showToast('Загрузите Гамму', 'error'); return; }
         if (!state.uto.length) { showToast('Загрузите УТО', 'error'); return; }
         if (!state.postavki.length) { showToast('Загрузите Поставки', 'error'); return; }
+
+        // ====== СОХРАНЯЕМ ИСТОРИЮ УТО ======
+        for (const row of state.uto) {
+            const lm = toStr(row['ЛМ-код']);
+            if (lm) {
+                let store = '';
+                for (const g of state.gamma) {
+                    if (toStr(g['Артикул']) === lm) {
+                        store = extractStore(g['№ магазина']);
+                        break;
+                    }
+                }
+                if (store) {
+                    const key = `${store}|${lm}`;
+                    if (!state.utoHistory.has(key)) {
+                        state.utoHistory.set(key, {
+                            article: lm,
+                            store: store,
+                            firstSeen: new Date().toISOString(),
+                            lastSeen: new Date().toISOString(),
+                            rub: toNum(row['Уп.GMV руб']),
+                            days: toNum(row['Кол-во дней в перебое за 30 дней']),
+                        });
+                    } else {
+                        const existing = state.utoHistory.get(key);
+                        existing.lastSeen = new Date().toISOString();
+                        existing.rub = toNum(row['Уп.GMV руб']);
+                        existing.days = toNum(row['Кол-во дней в перебое за 30 дней']);
+                    }
+                }
+            }
+        }
+
+        // ====== АВТОСИНХРОНИЗАЦИЯ: добавляем все артикулы с ТОП2 в истории ======
+        let syncCount = 0;
+        for (const g of state.gamma) {
+            const topInStore = toStr(g['Топ в магазине']).replace(/\.00$/, '');
+            if (topInStore === '2') {
+                const store = extractStore(g['№ магазина']);
+                const article = toStr(g['Артикул']);
+                const key = `${store}|${article}`;
+                if (!state.appliedSet.has(key)) {
+                    state.appliedSet.add(key);
+                    state.history.push({
+                        store,
+                        article,
+                        date: new Date().toISOString(),
+                        source: 'auto_sync'
+                    });
+                    syncCount++;
+                }
+            }
+        }
+        if (syncCount > 0) {
+            saveHistory();
+            showToast(`🔄 Автосинхронизация: добавлено ${syncCount} артикулов с ТОП2 из Гаммы`, 'success');
+        }
 
         const utoArticles = new Set();
         const utoMap = new Map();
@@ -669,6 +502,20 @@
                     rub: toNum(row['Уп.GMV руб']),
                     days: toNum(row['Кол-во дней в перебое за 30 дней']),
                 });
+            }
+        }
+
+        for (const [key, data] of state.utoHistory) {
+            const [store, article] = key.split('|');
+            if (!utoArticles.has(article)) {
+                utoArticles.add(article);
+                if (!utoMap.has(article)) {
+                    utoMap.set(article, {
+                        rub: data.rub || 0,
+                        days: data.days || 0,
+                        isFromHistory: true,
+                    });
+                }
             }
         }
 
@@ -686,7 +533,6 @@
             }
         }
 
-        // Собираем все магазины и подотделы
         const allStores = new Set();
         const allSubdepts = new Set();
         for (const g of state.gamma) {
@@ -695,13 +541,14 @@
             const sub = toStr(g['Подотдел']);
             if (sub) allSubdepts.add(sub);
         }
-        buildMultiSelect('storeMultiSelect', allStores, state.selectedStores, 'storeFilter');
-        buildMultiSelect('subdeptMultiSelect', allSubdepts, state.selectedSubdepts, 'subdeptFilter');
+        buildMultiSelect('storeMultiSelect', allStores, state.selectedStores);
+        buildMultiSelect('subdeptMultiSelect', allSubdepts, state.selectedSubdepts);
 
         const merged = [];
         let excludedByTopCo = 0;
         let excludedNotInTransit = 0;
         let excludedWithStock = 0;
+        const processedKeys = new Set();
 
         for (const g of state.gamma) {
             const article = toStr(g['Артикул']);
@@ -709,8 +556,12 @@
             const store = extractStore(g['№ магазина']);
             if (!store || !article) continue;
 
-            // Фильтр по выбранным магазинам
             if (state.selectedStores.size > 0 && !state.selectedStores.has(store)) continue;
+            const subdept = toStr(g['Подотдел']);
+            if (state.selectedSubdepts.size > 0 && !state.selectedSubdepts.has(subdept)) continue;
+
+            const key = `${store}|${article}`;
+            processedKeys.add(key);
 
             const topInStore = toStr(g['Топ в магазине']).replace(/\.00$/, '');
             const topCo = toStr(g['TOP ЦО']).replace(/\.00$/, '');
@@ -723,13 +574,9 @@
             if (state.excludeWithStock && stock > 0) { excludedWithStock++; continue; }
 
             const name = toStr(g['Наименование']);
-            const subdept = toStr(g['Подотдел']);
-            
-            // Фильтр по выбранным подотделам
-            if (state.selectedSubdepts.size > 0 && !state.selectedSubdepts.has(subdept)) continue;
-
             const supplierCode = toStr(g['№ Поставщика']);
-            const utoInfo = utoMap.get(article) || { rub: 0, days: 0 };
+            const utoInfo = utoMap.get(article) || { rub: 0, days: 0, isFromHistory: false };
+            const isFromHistory = utoInfo.isFromHistory || false;
 
             let postSrok = '';
             let postDni = '';
@@ -781,7 +628,7 @@
                 }
             }
 
-            const isApplied = state.appliedSet.has(`${store}|${article}`);
+            const isApplied = state.appliedSet.has(key);
             let shouldRemove = false;
             let removeReasonText = '';
 
@@ -805,7 +652,7 @@
             const row = {
                 store, article, name, subdepartment: subdept,
                 top: topInStore, topCo: topCo,
-                utoRub: utoInfo.rub, utoDays: utoInfo.days,
+                utoRub: utoInfo.rub || 0, utoDays: utoInfo.days || 0,
                 inTransit, inTransitSht: toNum(g['Сумма В пути, шт.']),
                 stock: stock,
                 postavkaSrok: postSrokDisplay, postavkaDni: postDni || '',
@@ -816,8 +663,63 @@
                 shouldRemove: shouldRemove,
                 removeReason: removeReasonText,
                 removalTimestamp: removalDate ? removalDate.getTime() : 0,
+                isArchived: false,
+                isFromHistory: isFromHistory,
             };
             merged.push(row);
+        }
+
+        // ====== ДОБАВЛЯЕМ АРХИВНЫЕ АРТИКУЛЫ ======
+        const historyKeys = new Set();
+        for (const h of state.history) {
+            const key = `${h.store}|${h.article}`;
+            if (!historyKeys.has(key)) {
+                historyKeys.add(key);
+                if (processedKeys.has(key)) continue;
+                
+                const gammaItem = state.gamma.find(g => 
+                    extractStore(g['№ магазина']) === h.store && 
+                    toStr(g['Артикул']) === h.article
+                );
+                if (gammaItem) {
+                    const store = h.store;
+                    const article = h.article;
+                    const name = toStr(gammaItem['Наименование']);
+                    const subdept = toStr(gammaItem['Подотдел']);
+                    const topInStore = toStr(gammaItem['Топ в магазине']).replace(/\.00$/, '');
+                    const topCo = toStr(gammaItem['TOP ЦО']).replace(/\.00$/, '');
+                    const stock = toNum(gammaItem['Сумма Кол-во в запасе']);
+                    const inTransit = toNum(gammaItem['Сумма В пути, шт.']) > 0;
+                    const inTransitSht = toNum(gammaItem['Сумма В пути, шт.']);
+                    
+                    let reason = 'Артикул больше не соответствует условиям';
+                    if (stock > 0) reason = 'Появился запас';
+                    else if (!inTransit) reason = 'Товар не в пути';
+                    else if (topCo === '1') reason = 'TOP ЦО = 1';
+                    
+                    const row = {
+                        store, article, name, subdepartment: subdept,
+                        top: topInStore, topCo: topCo,
+                        utoRub: 0, utoDays: 0,
+                        inTransit: inTransit,
+                        inTransitSht: inTransitSht,
+                        stock: stock,
+                        postavkaSrok: '—',
+                        postavkaDni: '',
+                        hasActiveOrder: false,
+                        hasUto: false,
+                        removalDate: '—',
+                        periodDisplay: '—',
+                        isOverdue: false,
+                        shouldRemove: true,
+                        removeReason: reason,
+                        removalTimestamp: 0,
+                        isArchived: true,
+                        isFromHistory: true,
+                    };
+                    merged.push(row);
+                }
+            }
         }
 
         state.merged = merged;
@@ -825,15 +727,32 @@
         if (excludedByTopCo > 0) msg.push(`${excludedByTopCo} TOP ЦО=1`);
         if (excludedNotInTransit > 0) msg.push(`${excludedNotInTransit} не в пути`);
         if (excludedWithStock > 0) msg.push(`${excludedWithStock} с запасом`);
-        showToast(`Сведено ${merged.length} артикулов${msg.length ? ' (искл: '+msg.join(', ')+')' : ''}`, 'success');
+        const archivedCount = merged.filter(r => r.isArchived).length;
+        const historySize = state.utoHistory.size;
+        if (archivedCount > 0) msg.push(`${archivedCount} в архиве`);
+        const syncMsg = syncCount > 0 ? ` (синхронизировано ${syncCount})` : '';
+        showToast(`Сведено ${merged.filter(r => !r.isArchived).length} активных + ${archivedCount} архивных. История УТО: ${historySize}${syncMsg}`, 'success');
         applyFilters();
         updateRowCounter();
+        checkArchivedItems();
+    }
+
+    function checkArchivedItems() {
+        const archived = state.merged.filter(r => r.isArchived && state.appliedSet.has(`${r.store}|${r.article}`));
+        const banner = document.getElementById('warningBanner');
+        const text = document.getElementById('warningText');
+        if (archived.length > 0) {
+            banner.classList.add('show');
+            text.textContent = `Обнаружено ${archived.length} артикулов, которые больше не соответствуют условиям и требуют снятия ТОП2!`;
+        } else {
+            banner.classList.remove('show');
+        }
     }
 
     // ============================================================
     // 4. Построение мультиселекта
     // ============================================================
-    function buildMultiSelect(containerId, items, selectedSet, filterType) {
+    function buildMultiSelect(containerId, items, selectedSet) {
         const container = document.getElementById(containerId);
         if (!container) return;
         container.innerHTML = '';
@@ -867,22 +786,20 @@
     function applyFilters() {
         let data = [...state.merged];
 
-        if (state.selectedStores.size > 0) {
-            data = data.filter(r => state.selectedStores.has(r.store));
-        }
-        if (state.selectedSubdepts.size > 0) {
-            data = data.filter(r => state.selectedSubdepts.has(r.subdepartment));
-        }
+        if (state.selectedStores.size > 0) data = data.filter(r => state.selectedStores.has(r.store));
+        if (state.selectedSubdepts.size > 0) data = data.filter(r => state.selectedSubdepts.has(r.subdepartment));
         if (state.topFilter !== 'all') data = data.filter(r => r.top === state.topFilter);
         if (state.topCoFilter !== 'all') data = data.filter(r => r.topCo === state.topCoFilter);
         if (state.excludeTopCoOne) data = data.filter(r => r.topCo !== '1');
         if (state.excludeWithStock) data = data.filter(r => r.stock === 0);
+        if (!state.showArchived) data = data.filter(r => !r.isArchived);
 
         if (state.quickFilter === 'top1') data = data.filter(r => r.top === '1');
         else if (state.quickFilter === 'top2') data = data.filter(r => r.top === '2');
         else if (state.quickFilter === 'applied') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`));
-        else if (state.quickFilter === 'overdue') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`) && r.shouldRemove);
+        else if (state.quickFilter === 'overdue') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`) && (r.shouldRemove || r.isArchived));
         else if (state.quickFilter === 'transit') data = data.filter(r => r.inTransit);
+        else if (state.quickFilter === 'archived') data = data.filter(r => r.isArchived);
         else data = data.filter(r => r.hasUto);
 
         state.filtered = data;
@@ -901,10 +818,11 @@
         let html = '';
         for (const row of data) {
             const isApplied = state.appliedSet.has(`${row.store}|${row.article}`);
-            const isOverdue = row.shouldRemove && isApplied;
+            const isOverdue = (row.shouldRemove || row.isArchived) && isApplied;
             const trClass = row.hasUto ? 'highlight-uto' : '';
             const overdueClass = isOverdue ? 'row-overdue' : '';
             const transitClass = row.inTransit ? 'row-transit' : '';
+            const archivedClass = row.isArchived ? 'row-archived' : '';
             
             const topBadge = row.top === '2' ? '<span class="badge badge-top2">ТОП2</span>' : (row.top === '1' ? '<span class="badge badge-top1">ТОП1</span>' : row.top || '—');
             let topCoBadge = '—';
@@ -914,9 +832,13 @@
             const appliedBadge = isApplied ? '<span class="badge badge-applied">✅</span>' : '';
             const transitBadge = row.inTransit ? '<span class="badge badge-transit">🚚</span>' : '';
             const stockBadge = row.stock === 0 ? '<span class="badge badge-no-stock">0</span>' : `<span class="badge" style="background:#00838f;">${row.stock}</span>`;
+            const archivedBadge = row.isArchived ? '<span class="badge badge-archived">📦</span>' : '';
+            const syncBadge = row.isFromHistory && !row.isArchived ? '<span class="badge badge-sync">🔄</span>' : '';
             
             let statusBadge = '';
-            if (isOverdue) {
+            if (row.isArchived && isApplied) {
+                statusBadge = `<span class="badge badge-overdue">🔴 Снять</span><br><span style="font-size:0.45rem;color:#757575;">${row.removeReason || 'В архиве'}</span>`;
+            } else if (isOverdue) {
                 statusBadge = `<span class="badge badge-overdue">🔴 Снять</span>`;
                 if (row.removeReason) statusBadge += `<br><span style="font-size:0.45rem;color:#c62828;">${row.removeReason}</span>`;
             } else if (isApplied && row.removalDate) {
@@ -925,15 +847,15 @@
                 statusBadge = '<span class="badge badge-ontime">🟢 Активен</span>';
             }
 
-            const canApply = row.inTransit && row.stock === 0 && row.topCo !== '1';
+            const canApply = !row.isArchived && row.inTransit && row.stock === 0 && row.topCo !== '1';
             const actionBtn = isApplied ?
                 `<button class="btn-small danger" data-action="remove" data-store="${row.store}" data-art="${row.article}">✕</button>` :
                 (canApply ? `<button class="btn-small" data-action="apply" data-store="${row.store}" data-art="${row.article}">✅</button>` :
                 `<button class="btn-small disabled" title="Условия не выполнены">⛔</button>`);
 
-            html += `<tr class="${trClass} ${overdueClass} ${transitClass}">
+            html += `<tr class="${trClass} ${overdueClass} ${transitClass} ${archivedClass}">
                 <td>${row.store}</td>
-                <td><strong>${row.article}</strong> ${appliedBadge}</td>
+                <td><strong>${row.article}</strong> ${appliedBadge} ${archivedBadge} ${syncBadge}</td>
                 <td>${row.name.substring(0, 25)}</td>
                 <td>${row.subdepartment || '—'}</td>
                 <td>${topBadge}</td>
@@ -967,6 +889,7 @@
         showToast(`✅ ТОП2 применён к ${article}`, 'success');
         applyFilters();
         renderHistory();
+        checkArchivedItems();
     }
 
     function removeTop2(store, article) {
@@ -978,10 +901,14 @@
         showToast(`↩️ ТОП2 отменён для ${article}`, 'info');
         applyFilters();
         renderHistory();
+        checkArchivedItems();
     }
 
     function updateRowCounter() {
-        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей`;
+        const active = state.filtered.filter(r => !r.isArchived).length;
+        const archived = state.filtered.filter(r => r.isArchived).length;
+        const historySize = state.utoHistory.size;
+        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей (активных: ${active}, архив: ${archived} | история УТО: ${historySize})`;
     }
 
     function updateFilterStatus() {
@@ -992,6 +919,7 @@
             'applied': '✅ Применён',
             'overdue': '⏳ Снять',
             'transit': '🚚 В пути',
+            'archived': '📦 Архив',
         };
         const excludeMsg = [];
         if (state.excludeTopCoOne) excludeMsg.push('TOP ЦО≠1');
@@ -1015,7 +943,7 @@
         
         const sessions = state.exportSessions || [];
         if (!sessions.length && !state.history.length) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr>`;
             count.textContent = '0';
             return;
         }
@@ -1027,6 +955,8 @@
             for (const d of details) {
                 const found = state.merged.find(r => r.store === d.store && r.article === d.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
+                const isActive = found && !found.isArchived && state.appliedSet.has(`${d.store}|${d.article}`);
+                const statusText = isActive ? '🟢 Активен' : (found && found.isArchived ? '📦 Архив' : '❌ Снят');
                 html += `<tr>
                     <td>${session.date}</td>
                     <td>${d.article}</td>
@@ -1034,6 +964,7 @@
                     <td><span class="badge badge-top2">ТОП2</span></td>
                     <td>Выгрузка</td>
                     <td>${period}</td>
+                    <td><span style="font-size:0.55rem;">${statusText}</span></td>
                     <td><button class="btn-small danger" data-action="remove-session" data-store="${d.store}" data-art="${d.article}">✕</button></td>
                 </tr>`;
             }
@@ -1045,10 +976,12 @@
         }
         const orphanHistory = state.history.filter(h => !sessionArticles.has(`${h.store}|${h.article}`));
         if (orphanHistory.length) {
-            html += `<tr class="history-group"><td colspan="7">📌 Отдельные применения</td></tr>`;
+            html += `<tr class="history-group"><td colspan="8">📌 Отдельные применения</td></tr>`;
             for (const h of orphanHistory.reverse()) {
                 const found = state.merged.find(r => r.store === h.store && r.article === h.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
+                const isActive = found && !found.isArchived && state.appliedSet.has(`${h.store}|${h.article}`);
+                const statusText = isActive ? '🟢 Активен' : (found && found.isArchived ? '📦 Архив' : '❌ Снят');
                 const dateStr = h.date ? new Date(h.date).toLocaleString() : '—';
                 html += `<tr>
                     <td>${dateStr}</td>
@@ -1057,6 +990,7 @@
                     <td><span class="badge badge-top2">ТОП2</span></td>
                     <td>Ручное</td>
                     <td>${period}</td>
+                    <td><span style="font-size:0.55rem;">${statusText}</span></td>
                     <td><button class="btn-small danger" data-action="remove-history" data-store="${h.store}" data-art="${h.article}">✕</button></td>
                 </tr>`;
             }
@@ -1079,13 +1013,13 @@
 
         if (onlyApplied) {
             for (const row of sourceData) {
-                if (state.appliedSet.has(`${row.store}|${row.article}`)) {
+                if (state.appliedSet.has(`${row.store}|${row.article}`) && !row.isArchived) {
                     data.push({ store: row.store, article: row.article, top: topAttribute, name: row.name || '' });
                 }
             }
             if (!data.length) { showToast('Нет применённых ТОП2', 'warning'); return; }
         } else {
-            const candidates = sourceData.filter(r => r.inTransit && r.stock === 0 && r.hasActiveOrder);
+            const candidates = sourceData.filter(r => !r.isArchived && r.inTransit && r.stock === 0 && r.hasActiveOrder);
             const histSet = new Set(state.history.map(h => `${h.store}|${h.article}`));
             for (const r of candidates) {
                 const key = `${r.store}|${r.article}`;
@@ -1094,7 +1028,7 @@
             for (const h of state.history) {
                 if (!data.some(d => d.store === h.store && d.article === h.article)) {
                     const found = sourceData.find(r => r.store === h.store && r.article === h.article);
-                    if (found) data.push({ store: h.store, article: h.article, top: topAttribute, name: found.name || '' });
+                    if (found && !found.isArchived) data.push({ store: h.store, article: h.article, top: topAttribute, name: found.name || '' });
                 }
             }
             if (!data.length) { showToast('Нет данных для шаблона', 'warning'); return; }
@@ -1145,7 +1079,7 @@
         });
         const toRemove = appliedItems.filter(item => {
             if (!item.data) return true;
-            return item.data.shouldRemove;
+            return item.data.shouldRemove || item.data.isArchived;
         });
         if (!toRemove.length) { showToast('Нет артикулов для снятия', 'warning'); return; }
 
@@ -1170,6 +1104,7 @@
         saveHistory();
         applyFilters();
         renderHistory();
+        checkArchivedItems();
         showToast(`✅ Снят ТОП2 с ${toRemove.length} артикулов`, 'success');
     }
 
@@ -1181,7 +1116,7 @@
         });
         const toRemove = appliedItems.filter(item => {
             if (!item.data) return true;
-            return item.data.shouldRemove;
+            return item.data.shouldRemove || item.data.isArchived;
         });
         if (!toRemove.length) { showToast('✅ Нет артикулов для снятия', 'success'); return; }
 
@@ -1189,6 +1124,7 @@
         for (const item of toRemove) {
             let reason = '';
             if (!item.data) reason = 'Артикул отсутствует';
+            else if (item.data.isArchived) reason = item.data.removeReason || 'В архиве';
             else if (!item.data.inTransit) reason = 'Товар приехал (В пути=0)';
             else if (item.data.stock > 0) reason = `Появился запас (${item.data.stock} шт)`;
             else if (item.data.isOverdue) reason = `Просрочен (${item.data.removalDate})`;
@@ -1262,7 +1198,7 @@
     document.getElementById('resetHistoryBtn').addEventListener('click', resetHistory);
     
     document.getElementById('applyTemplateBtn').addEventListener('click', function() {
-        const candidates = state.filtered.filter(r => r.inTransit && r.stock === 0 && r.hasActiveOrder);
+        const candidates = state.filtered.filter(r => !r.isArchived && r.inTransit && r.stock === 0 && r.hasActiveOrder);
         if (!candidates.length) { showToast('Нет товаров с УТО, в пути и без запаса', 'warning'); return; }
         let added = 0;
         for (const r of candidates) {
@@ -1278,6 +1214,7 @@
         exportTemplate(true, 'ТОП2');
         applyFilters();
         renderHistory();
+        checkArchivedItems();
     });
     document.getElementById('suggestRemoveBtn').addEventListener('click', suggestRemoveTop2);
 
@@ -1293,6 +1230,10 @@
         if (state.gamma.length && state.uto.length && state.postavki.length) mergeReports();
         else applyFilters();
     });
+    document.getElementById('showArchived').addEventListener('change', function() {
+        state.showArchived = this.checked;
+        applyFilters();
+    });
 
     document.querySelectorAll('.quick-actions .btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1305,12 +1246,14 @@
 
     function exportHistory() {
         if (!state.history.length && !state.exportSessions.length) { showToast('История пуста', 'warning'); return; }
-        const wsData = [['Дата сессии', 'Артикул', 'Номер магазина', 'Атрибут ТОП', 'Тип', 'Период действия']];
+        const wsData = [['Дата сессии', 'Артикул', 'Номер магазина', 'Атрибут ТОП', 'Тип', 'Период действия', 'Статус']];
         for (const session of state.exportSessions) {
             for (const d of (session.details || [])) {
                 const found = state.merged.find(r => r.store === d.store && r.article === d.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
-                wsData.push([session.date, d.article, d.store, 'ТОП2', 'Выгрузка', period]);
+                const isActive = found && !found.isArchived && state.appliedSet.has(`${d.store}|${d.article}`);
+                const statusText = isActive ? 'Активен' : (found && found.isArchived ? 'Архив' : 'Снят');
+                wsData.push([session.date, d.article, d.store, 'ТОП2', 'Выгрузка', period, statusText]);
             }
         }
         for (const h of state.history) {
@@ -1318,7 +1261,9 @@
             if (!inSession) {
                 const found = state.merged.find(r => r.store === h.store && r.article === h.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
-                wsData.push([h.date ? new Date(h.date).toLocaleString() : '', h.article, h.store, 'ТОП2', 'Ручное', period]);
+                const isActive = found && !found.isArchived && state.appliedSet.has(`${h.store}|${h.article}`);
+                const statusText = isActive ? 'Активен' : (found && found.isArchived ? 'Архив' : 'Снят');
+                wsData.push([h.date ? new Date(h.date).toLocaleString() : '', h.article, h.store, 'ТОП2', 'Ручное', period, statusText]);
             }
         }
         const wb = XLSX.utils.book_new();
@@ -1337,23 +1282,25 @@
 
     function resetHistory() {
         if (!state.history.length && !state.exportSessions.length) { showToast('История пуста', 'info'); return; }
-        if (confirm('Удалить всю историю?')) {
+        if (confirm('Удалить всю историю ТОП2?')) {
             state.history = [];
             state.exportSessions = [];
             state.appliedSet.clear();
             saveHistory();
             applyFilters();
             renderHistory();
-            showToast('История сброшена', 'info');
+            checkArchivedItems();
+            showToast('История ТОП2 сброшена (история УТО сохранена)', 'info');
         }
     }
 
-    console.log('📦 УТО→ТОП2 (без запаса, множественный выбор) загружен.');
+    console.log('📦 УТО→ТОП2 (с автосинхронизацией) загружен.');
     console.log('📌 Условия: в пути + запас=0 + TOP ЦО≠1 + УТО');
-    console.log('📖 Нажмите «📖» для инструкции с примерами');
+    console.log('🔄 Автосинхронизация: все артикулы с ТОП2 из Гаммы добавляются в историю');
 
     applyFilters();
     renderHistory();
+    checkArchivedItems();
 </script>
 
 </body>
