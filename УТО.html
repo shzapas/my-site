@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>УТО → ТОП2 (оптимизированный)</title>
+    <title>УТО → ТОП2 (с продлением)</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -46,6 +46,8 @@
         .btn-danger:hover { background: #b71c1c; }
         .btn-info { background: #1565c0; color: white; }
         .btn-info:hover { background: #0d47a1; }
+        .btn-extend { background: #f9a825; color: #1e1e1e; }
+        .btn-extend:hover { background: #f57f17; }
         .panel {
             background: white;
             border-radius: 0 0 16px 16px;
@@ -91,14 +93,15 @@
         .quick-actions .btn.danger-outline { border-color: #c62828; color: #c62828; }
         .quick-actions .btn.danger-outline.active { background: #c62828; color: white; }
         .table-wrap { overflow-x: auto; max-height: 500px; overflow-y: auto; border: 1px solid #ddd0e8; border-radius: 12px; background: white; margin-top: 6px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 750px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 800px; }
         th { background: #f0e8f5; color: #4a148c; font-weight: 700; padding: 5px 4px; border-bottom: 2px solid #d0c0d8; position: sticky; top: 0; z-index: 5; white-space: nowrap; text-align: left; font-size: 0.55rem; }
         td { padding: 4px 4px; border-bottom: 1px solid #eee8f0; vertical-align: middle; }
         tr:hover td { background: #f8f4fc; }
         .highlight-uto { background: #f3e5f5 !important; border-left: 4px solid #7b1fa2; }
         .row-overdue { background: #ffebee !important; border-left: 4px solid #c62828; }
         .row-transit { background: #e3f2fd !important; border-left: 4px solid #1565c0; }
-        .row-archived { opacity: 0.6; background: #f5f5f5 !important; border-left: 4px solid #757575; }
+        .row-removed { opacity: 0.5; background: #f5f5f5 !important; border-left: 4px solid #9e9e9e; text-decoration: line-through; }
+        .row-extended { background: #fff8e1 !important; border-left: 4px solid #f9a825; }
         .badge { display: inline-block; font-size: 0.5rem; font-weight: 700; padding: 0 8px; border-radius: 30px; background: #7b1fa2; color: white; }
         .badge-top2 { background: #f57f17; color: white; }
         .badge-top1 { background: #2e7d32; color: white; }
@@ -107,18 +110,23 @@
         .badge-ontime { background: #2e7d32; color: white; }
         .badge-transit { background: #1565c0; color: white; }
         .badge-no-stock { background: #e65100; color: white; }
-        .badge-archived { background: #757575; color: white; }
+        .badge-removed { background: #9e9e9e; color: white; }
+        .badge-extended { background: #f9a825; color: #1e1e1e; }
+        .badge-reason { background: #e65100; color: white; font-size: 0.45rem; padding: 1px 6px; }
         .btn-small { padding: 1px 10px; border: none; border-radius: 20px; font-size: 0.5rem; font-weight: 600; cursor: pointer; background: #7b1fa2; color: white; transition: 0.15s; }
         .btn-small:hover { background: #4a148c; }
         .btn-small.danger { background: #c62828; }
         .btn-small.danger:hover { background: #b71c1c; }
         .btn-small.success { background: #2e7d32; }
         .btn-small.success:hover { background: #1b5e20; }
+        .btn-small.extend { background: #f9a825; color: #1e1e1e; }
+        .btn-small.extend:hover { background: #f57f17; }
         .btn-small.disabled { background: #9e9e9e; cursor: not-allowed; opacity: 0.6; }
         .footer-note { font-size: 0.6rem; color: #7a6a80; margin-top: 10px; border-top: 1px solid #e0d0e8; padding-top: 10px; text-align: center; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #1e1e1e; color: white; padding: 10px 18px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); font-size: 0.8rem; z-index: 999; max-width: 400px; border-left: 5px solid #7b1fa2; }
         .toast.success { border-left-color: #2e7d32; }
         .toast.error { border-left-color: #c62828; }
+        .toast.warning { border-left-color: #f9a825; }
         .tabs { display: flex; gap: 4px; margin-bottom: 10px; border-bottom: 2px solid #ddd0e8; padding-bottom: 4px; }
         .tab-btn { padding: 4px 16px; border: none; background: transparent; font-weight: 600; font-size: 0.7rem; cursor: pointer; border-radius: 20px 20px 0 0; color: #7a6a80; transition: 0.2s; }
         .tab-btn:hover { background: #f0e8f5; color: #4a148c; }
@@ -153,11 +161,14 @@
         .loading-overlay .spinner { width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid #7b1fa2; border-radius: 50%; animation: spin 1s linear infinite; }
         .loading-overlay .text { color: white; font-size: 1rem; font-weight: 600; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .reason-tag { display: inline-block; font-size: 0.45rem; padding: 1px 6px; border-radius: 10px; margin: 1px 2px; font-weight: 600; }
+        .reason-tag.date { background: #ffcdd2; color: #c62828; }
+        .reason-tag.transit { background: #bbdefb; color: #0d47a1; }
+        .reason-tag.stock { background: #c8e6c9; color: #2e7d32; }
     </style>
 </head>
 <body>
 
-<!-- Оверлей загрузки -->
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <div class="text" id="loadingText">⏳ Обработка данных...</div>
@@ -165,7 +176,7 @@
 
 <div class="app-container">
     <header class="header">
-        <h1>🧩 ТОП-2 <small>с историей УТО</small></h1>
+        <h1>🧩 ТОП-2 <small>с продлением</small></h1>
         <div class="header-actions">
             <button class="btn btn-primary" id="computeBtn">🚀 Свести</button>
             <button class="btn btn-success" id="exportTemplateBtn">📤 ТОП2</button>
@@ -178,20 +189,27 @@
         <div id="instructionBlock" class="instruction-block" style="display:none;">
             <details open>
                 <summary>📖 Инструкция по работе</summary>
-                <div class="warning-box">⚠️ <strong>ТОП2 ТОЛЬКО при выполнении ВСЕХ условий:</strong></div>
+                <div class="warning-box">⚠️ <strong>ТОП2 применяется при выполнении условий:</strong></div>
                 <div class="conditions-box">
                     <ul>
                         <li>✅ <span class="ok">Товар в пути</span> (Сумма В пути, шт. > 0)</li>
                         <li>✅ <span class="ok">Нет запаса</span> (Сумма Кол-во в запасе = 0)</li>
                         <li>✅ <span class="ok">TOP ЦО ≠ 1</span></li>
-                        <li>✅ <span class="ok">Есть УТО</span> (или было в истории УТО)</li>
+                        <li>✅ <span class="ok">Есть УТО</span></li>
                     </ul>
                 </div>
                 <div class="formula-box">📅 План снятия = (Срок_поставки − Дни_в_перебое) + 5 дней</div>
-                <strong>💾 История УТО</strong>
+                <strong>🔄 Снятие ТОП2 происходит при ЛЮБОМ условии:</strong>
                 <ul>
-                    <li>Система сохраняет артикулы, которые были переведены в ТОП2</li>
-                    <li>Артикулы из истории УТО отображаются с пометкой 📜</li>
+                    <li>🔴 <span class="ok">Срок поставки истёк</span> (дата снятия прошла)</li>
+                    <li>🔵 <span class="ok">Товар приехал</span> (Сумма В пути, шт. = 0)</li>
+                    <li>🟢 <span class="ok">Появился запас</span> (Сумма Кол-во в запасе > 0)</li>
+                </ul>
+                <strong>⏳ Продление ТОП2</strong>
+                <ul>
+                    <li>Если выполнено одно из условий, но вы хотите оставить ТОП2</li>
+                    <li>Нажмите <strong>"⏳ +7 дней"</strong> — дата снятия продлится на 7 дней</li>
+                    <li>Продление сохраняется в истории</li>
                 </ul>
             </details>
         </div>
@@ -216,7 +234,7 @@
                         <div class="file-upload-row"><label>🚚 Поставки</label><input type="file" id="postavkiFile" accept=".xlsx,.xls"><span class="status-badge" id="postavkiStatus">нет</span></div>
                     </div>
 
-                    <div class="section-title">🎯 Фильтры</div>
+                    <div class="section-title" style="margin-top:12px;">🎯 Фильтры</div>
                     <div class="filter-group">
                         <label>🏬 Магазины</label>
                         <div style="display:flex;gap:4px;margin-bottom:2px;">
@@ -244,10 +262,6 @@
                         <input type="checkbox" id="excludeWithStock" checked>
                         <label for="excludeWithStock" style="font-weight:700;color:#2e7d32;font-size:0.65rem;">Исключать товары С запасом (Запас>0)</label>
                     </div>
-                    <div class="filter-checkbox" style="background:#e3f2fd;padding:4px 8px;border-radius:6px;border:1px solid #90caf9;">
-                        <input type="checkbox" id="showArchived" checked>
-                        <label for="showArchived" style="font-weight:700;color:#1565c0;font-size:0.65rem;">Показывать архивные</label>
-                    </div>
 
                     <div class="quick-actions">
                         <button class="btn active" data-quick="uto">📊 УТО</button>
@@ -256,7 +270,8 @@
                         <button class="btn" data-quick="applied">✅ Прим</button>
                         <button class="btn danger-outline" data-quick="overdue">⏳ Снять</button>
                         <button class="btn" data-quick="transit">🚚 В пути</button>
-                        <button class="btn" data-quick="archived">📦 Архив</button>
+                        <button class="btn" data-quick="removed">❌ Сняты</button>
+                        <button class="btn" data-quick="extended">⏳ Продлены</button>
                     </div>
                     <div style="font-size:0.55rem;color:#7a6a80;margin-top:3px;" id="filterStatus">УТО (TOP ЦО≠1, без запаса)</div>
 
@@ -291,7 +306,7 @@
 
         <div class="tab-content" id="tab-history">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-                <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📜 История выгрузок ТОП2</span>
+                <span style="font-weight:600;font-size:0.8rem;color:#4a148c;">📜 История</span>
                 <div style="display:flex;gap:6px;">
                     <button class="btn btn-warning" id="exportHistoryBtn" style="padding:4px 12px;font-size:0.65rem;">📤 Выгрузить</button>
                     <button class="btn btn-danger" id="resetHistoryBtn" style="padding:4px 12px;font-size:0.65rem;">🔄 Сброс</button>
@@ -299,7 +314,7 @@
             </div>
             <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid #ddd0e8;border-radius:10px;">
                 <table class="history-table" id="historyTable">
-                    <thead><tr><th>Дата сессии</th><th>Артикул</th><th>Магазин</th><th>Атрибут ТОП</th><th>Тип</th><th>Период действия</th><th>Статус</th><th>Действие</th></tr></thead>
+                    <thead><tr><th>Дата</th><th>Артикул</th><th>Магазин</th><th>Атрибут</th><th>Тип</th><th>Период</th><th>Статус</th><th>Действие</th></tr></thead>
                     <tbody id="historyBody"><tr><td colspan="8" style="text-align:center;padding:15px;color:#9e9e9e;">История пуста</td></tr></tbody>
                 </table>
             </div>
@@ -307,8 +322,9 @@
         </div>
 
         <div class="footer-note">
-            ⚠️ <strong>Условия для ТОП2:</strong> в пути + нет запаса + TOP ЦО≠1 + УТО<br>
-            💾 История сохраняется в браузере
+            ⚠️ <strong>ТОП2:</strong> в пути + нет запаса + TOP ЦО≠1 + УТО<br>
+            🔴 Снятие: срок истёк / товар приехал / появился запас<br>
+            ⏳ Продление: +7 дней к дате снятия
         </div>
     </div>
 </div>
@@ -317,7 +333,7 @@
 
 <script>
     // ============================================================
-    // 1. Состояние (оптимизированное)
+    // 1. Состояние
     // ============================================================
     const state = {
         gamma: [],
@@ -327,6 +343,8 @@
         filtered: [],
         history: [],
         appliedSet: new Set(),
+        removedSet: new Set(),
+        extendedSet: new Set(),
         quickFilter: 'uto',
         selectedStores: new Set(),
         selectedSubdepts: new Set(),
@@ -334,24 +352,23 @@
         topCoFilter: 'all',
         excludeTopCoOne: true,
         excludeWithStock: true,
-        showArchived: true,
         exportSessions: [],
-        // Ограничиваем историю УТО — только артикулы, переведённые в ТОП2
         utoHistory: new Map(),
     };
 
     function loadHistory() {
         try {
-            const raw = localStorage.getItem('uto_top2_history_opt');
+            const raw = localStorage.getItem('uto_top2_history_ext');
             if (raw) {
                 const data = JSON.parse(raw);
                 state.history = data.history || [];
                 state.exportSessions = data.sessions || [];
+                state.removedSet = new Set(data.removed || []);
+                state.extendedSet = new Set(data.extended || []);
                 state.appliedSet = new Set();
                 for (const h of state.history) {
                     state.appliedSet.add(`${h.store}|${h.article}`);
                 }
-                // Загружаем только историю ТОП2 (не всю УТО)
                 if (data.utoHistory) {
                     state.utoHistory = new Map(Object.entries(data.utoHistory));
                 }
@@ -362,17 +379,18 @@
     function saveHistory() {
         try {
             const utoHistoryObj = {};
-            // Сохраняем только артикулы из истории ТОП2
             for (const h of state.history) {
                 const key = `${h.store}|${h.article}`;
                 if (state.utoHistory.has(key)) {
                     utoHistoryObj[key] = state.utoHistory.get(key);
                 }
             }
-            localStorage.setItem('uto_top2_history_opt', JSON.stringify({
+            localStorage.setItem('uto_top2_history_ext', JSON.stringify({
                 history: state.history,
                 sessions: state.exportSessions,
                 utoHistory: utoHistoryObj,
+                removed: Array.from(state.removedSet),
+                extended: Array.from(state.extendedSet),
             }));
         } catch (e) { console.warn('Ошибка сохранения истории:', e); }
     }
@@ -391,8 +409,8 @@
         setTimeout(() => { if (div.parentNode) div.remove(); }, 3000);
     }
 
-    function showLoading(text = '⏳ Обработка данных...') {
-        document.getElementById('loadingText').textContent = text;
+    function showLoading(text) {
+        document.getElementById('loadingText').textContent = text || '⏳ Обработка данных...';
         document.getElementById('loadingOverlay').classList.add('show');
     }
     function hideLoading() {
@@ -418,23 +436,18 @@
                     const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
                     const headers = raw[2] ? raw[2].map(h => toStr(h)) : [];
                     const json = [];
-                    // Обрабатываем пачками для предотвращения зависания
-                    const batchSize = 1000;
-                    for (let i = 3; i < raw.length; i += batchSize) {
-                        const end = Math.min(i + batchSize, raw.length);
-                        for (let j = i; j < end; j++) {
-                            const row = raw[j];
-                            if (!row || row.length === 0) continue;
-                            const obj = {};
-                            for (let k = 0; k < headers.length; k++) {
-                                const key = headers[k];
-                                if (key && key !== '') {
-                                    obj[key] = row[k] !== undefined ? row[k] : '';
-                                }
+                    for (let i = 3; i < raw.length; i++) {
+                        const row = raw[i];
+                        if (!row || row.length === 0) continue;
+                        const obj = {};
+                        for (let j = 0; j < headers.length; j++) {
+                            const key = headers[j];
+                            if (key && key !== '') {
+                                obj[key] = row[j] !== undefined ? row[j] : '';
                             }
-                            if (Object.values(obj).some(v => v !== '' && v !== undefined && v !== null)) {
-                                json.push(obj);
-                            }
+                        }
+                        if (Object.values(obj).some(v => v !== '' && v !== undefined && v !== null)) {
+                            json.push(obj);
                         }
                     }
                     targetArray.length = 0;
@@ -447,7 +460,7 @@
                     status.textContent = '❌';
                     status.className = 'status-badge';
                     hideLoading();
-                    showToast(`Ошибка ${label}: ${err.message}`, 'error');
+                    showToast(`Ошибка ${label}`, 'error');
                     console.error(err);
                 }
             };
@@ -464,7 +477,7 @@
     loadFile('postavkiFile', state.postavki, 'postavkiStatus', 'Поставки');
 
     // ============================================================
-    // 3. Сведение отчётов с сохранением истории УТО
+    // 3. Сведение отчётов
     // ============================================================
     function mergeReports() {
         if (!state.gamma.length) { showToast('Загрузите Гамму', 'error'); return; }
@@ -473,15 +486,9 @@
 
         showLoading('🔄 Сведение данных...');
 
-        // Используем setTimeout для разгрузки UI
         setTimeout(() => {
             try {
-                // ====== СОХРАНЯЕМ ИСТОРИЮ УТО ТОЛЬКО ДЛЯ АРТИКУЛОВ ИЗ ИСТОРИИ ТОП2 ======
-                const historyKeys = new Set();
-                for (const h of state.history) {
-                    historyKeys.add(`${h.store}|${h.article}`);
-                }
-
+                // Сохраняем историю УТО
                 for (const row of state.uto) {
                     const lm = toStr(row['ЛМ-код']);
                     if (lm) {
@@ -494,23 +501,20 @@
                         }
                         if (store) {
                             const key = `${store}|${lm}`;
-                            // Сохраняем только если артикул уже в истории ТОП2
-                            if (historyKeys.has(key)) {
-                                if (!state.utoHistory.has(key)) {
-                                    state.utoHistory.set(key, {
-                                        article: lm,
-                                        store: store,
-                                        firstSeen: new Date().toISOString(),
-                                        lastSeen: new Date().toISOString(),
-                                        rub: toNum(row['Уп.GMV руб']),
-                                        days: toNum(row['Кол-во дней в перебое за 30 дней']),
-                                    });
-                                } else {
-                                    const existing = state.utoHistory.get(key);
-                                    existing.lastSeen = new Date().toISOString();
-                                    existing.rub = toNum(row['Уп.GMV руб']);
-                                    existing.days = toNum(row['Кол-во дней в перебое за 30 дней']);
-                                }
+                            if (!state.utoHistory.has(key)) {
+                                state.utoHistory.set(key, {
+                                    article: lm,
+                                    store: store,
+                                    firstSeen: new Date().toISOString(),
+                                    lastSeen: new Date().toISOString(),
+                                    rub: toNum(row['Уп.GMV руб']),
+                                    days: toNum(row['Кол-во дней в перебое за 30 дней']),
+                                });
+                            } else {
+                                const existing = state.utoHistory.get(key);
+                                existing.lastSeen = new Date().toISOString();
+                                existing.rub = toNum(row['Уп.GMV руб']);
+                                existing.days = toNum(row['Кол-во дней в перебое за 30 дней']);
                             }
                         }
                     }
@@ -530,7 +534,6 @@
                     }
                 }
 
-                // ====== ДОБАВЛЯЕМ АРТИКУЛЫ ИЗ ИСТОРИИ УТО ======
                 for (const [key, data] of state.utoHistory) {
                     const [store, article] = key.split('|');
                     if (!utoArticles.has(article)) {
@@ -576,33 +579,32 @@
                 let excludedWithStock = 0;
                 const processedKeys = new Set();
 
-                // Обрабатываем Гамму с ограничением по времени
-                let processed = 0;
-                const totalGamma = state.gamma.length;
-                
                 for (const g of state.gamma) {
-                    processed++;
                     const article = toStr(g['Артикул']);
-                    if (!utoArticles.has(article)) continue;
                     const store = extractStore(g['№ магазина']);
                     if (!store || !article) continue;
+                    const key = `${store}|${article}`;
+                    processedKeys.add(key);
+
+                    const isInHistory = state.appliedSet.has(key) || state.removedSet.has(key);
+                    if (!utoArticles.has(article) && !isInHistory) continue;
 
                     if (state.selectedStores.size > 0 && !state.selectedStores.has(store)) continue;
                     const subdept = toStr(g['Подотдел']);
                     if (state.selectedSubdepts.size > 0 && !state.selectedSubdepts.has(subdept)) continue;
-
-                    const key = `${store}|${article}`;
-                    processedKeys.add(key);
 
                     const topInStore = toStr(g['Топ в магазине']).replace(/\.00$/, '');
                     const topCo = toStr(g['TOP ЦО']).replace(/\.00$/, '');
                     if (state.excludeTopCoOne && topCo === '1') { excludedByTopCo++; continue; }
 
                     const inTransit = toNum(g['Сумма В пути, шт.']) > 0;
-                    if (!inTransit) { excludedNotInTransit++; continue; }
-
                     const stock = toNum(g['Сумма Кол-во в запасе']);
-                    if (state.excludeWithStock && stock > 0) { excludedWithStock++; continue; }
+                    const isInUto = utoArticles.has(article);
+                    
+                    if (isInUto) {
+                        if (!inTransit) { excludedNotInTransit++; continue; }
+                        if (state.excludeWithStock && stock > 0) { excludedWithStock++; continue; }
+                    }
 
                     const name = toStr(g['Наименование']);
                     const supplierCode = toStr(g['№ Поставщика']);
@@ -627,9 +629,9 @@
                     let isOverdue = false;
                     let postSrokDisplay = postSrok || '—';
                     let periodDisplay = '';
-                    let removeReason = '';
+                    let removeReasons = [];
 
-                    if (postSrok && postSrok !== '') {
+                    if (postSrok && postSrok !== '' && isInUto) {
                         const daysInUto = utoInfo.days || 0;
                         const daysNum = parseInt(postSrok);
                         if (!isNaN(daysNum) && daysNum > 0 && daysNum < 365) {
@@ -660,26 +662,40 @@
                     }
 
                     const isApplied = state.appliedSet.has(key);
+                    const isRemoved = state.removedSet.has(key);
+                    const isExtended = state.extendedSet.has(key);
+                    
+                    // Проверяем условия для снятия
                     let shouldRemove = false;
                     let removeReasonText = '';
+                    let removeReasonsList = [];
 
-                    if (isApplied) {
+                    if (isApplied && isInUto) {
                         const hasStock = stock > 0;
                         const notInTransit = !inTransit;
                         const isDateOverdue = isOverdue;
 
-                        if (notInTransit || hasStock) {
+                        // Собираем причины
+                        if (isDateOverdue) {
+                            removeReasonsList.push('📅 Срок истёк');
+                        }
+                        if (notInTransit) {
+                            removeReasonsList.push('🚚 Товар приехал');
+                        }
+                        if (hasStock) {
+                            removeReasonsList.push('📦 Есть запас');
+                        }
+
+                        // Если есть хотя бы одна причина — нужно снять (если не продлён)
+                        if (removeReasonsList.length > 0 && !isExtended) {
                             shouldRemove = true;
-                            if (notInTransit && hasStock) removeReasonText = '✅ Товар приехал и есть на полке';
-                            else if (notInTransit && !hasStock) removeReasonText = '✅ Товар приехал, но запаса нет';
-                            else if (hasStock && inTransit) removeReasonText = '✅ Появился запас (сток > 0)';
-                        } else if (isDateOverdue) {
-                            shouldRemove = true;
-                            removeReasonText = '⏳ Просрочен (дата снятия прошла)';
+                            removeReasonText = removeReasonsList.join(', ');
+                        } else if (removeReasonsList.length > 0 && isExtended) {
+                            shouldRemove = false;
+                            removeReasonText = '⏳ Продлён до ' + removalDateStr;
                         }
                     }
 
-                    const hasActiveOrder = (postSrok && postSrok !== '') || (postDni && postDni !== '');
                     const row = {
                         store, article, name, subdepartment: subdept,
                         top: topInStore, topCo: topCo,
@@ -687,79 +703,29 @@
                         inTransit, inTransitSht: toNum(g['Сумма В пути, шт.']),
                         stock: stock,
                         postavkaSrok: postSrokDisplay, postavkaDni: postDni || '',
-                        hasActiveOrder, hasUto: true,
-                        removalDate: removalDateStr || periodDisplay,
+                        hasActiveOrder: (postSrok && postSrok !== '') || (postDni && postDni !== ''),
+                        hasUto: isInUto,
+                        removalDate: removalDateStr || periodDisplay || '—',
                         periodDisplay: periodDisplay,
                         isOverdue: isOverdue,
                         shouldRemove: shouldRemove,
                         removeReason: removeReasonText,
+                        removeReasons: removeReasonsList,
+                        isExtended: isExtended,
                         removalTimestamp: removalDate ? removalDate.getTime() : 0,
-                        isArchived: false,
-                        isFromHistory: isFromHistory,
+                        isRemoved: isRemoved,
+                        isFromHistory: isFromHistory || !isInUto,
+                        status: '—',
                     };
                     merged.push(row);
                 }
 
-                // ====== ДОБАВЛЯЕМ АРХИВНЫЕ АРТИКУЛЫ ИЗ ИСТОРИИ ТОП2 ======
-                for (const h of state.history) {
-                    const key = `${h.store}|${h.article}`;
-                    if (processedKeys.has(key)) continue;
-                    
-                    const gammaItem = state.gamma.find(g => 
-                        extractStore(g['№ магазина']) === h.store && 
-                        toStr(g['Артикул']) === h.article
-                    );
-                    if (gammaItem) {
-                        const store = h.store;
-                        const article = h.article;
-                        const name = toStr(gammaItem['Наименование']);
-                        const subdept = toStr(gammaItem['Подотдел']);
-                        const topInStore = toStr(gammaItem['Топ в магазине']).replace(/\.00$/, '');
-                        const topCo = toStr(gammaItem['TOP ЦО']).replace(/\.00$/, '');
-                        const stock = toNum(gammaItem['Сумма Кол-во в запасе']);
-                        const inTransit = toNum(gammaItem['Сумма В пути, шт.']) > 0;
-                        const inTransitSht = toNum(gammaItem['Сумма В пути, шт.']);
-                        
-                        let reason = 'Артикул больше не соответствует условиям';
-                        if (stock > 0) reason = 'Появился запас';
-                        else if (!inTransit) reason = 'Товар не в пути';
-                        else if (topCo === '1') reason = 'TOP ЦО = 1';
-                        
-                        const row = {
-                            store, article, name, subdepartment: subdept,
-                            top: topInStore, topCo: topCo,
-                            utoRub: 0, utoDays: 0,
-                            inTransit: inTransit,
-                            inTransitSht: inTransitSht,
-                            stock: stock,
-                            postavkaSrok: '—',
-                            postavkaDni: '',
-                            hasActiveOrder: false,
-                            hasUto: false,
-                            removalDate: '—',
-                            periodDisplay: '—',
-                            isOverdue: false,
-                            shouldRemove: true,
-                            removeReason: reason,
-                            removalTimestamp: 0,
-                            isArchived: true,
-                            isFromHistory: true,
-                        };
-                        merged.push(row);
-                    }
-                }
-
                 state.merged = merged;
-                const msg = [];
-                if (excludedByTopCo > 0) msg.push(`${excludedByTopCo} TOP ЦО=1`);
-                if (excludedNotInTransit > 0) msg.push(`${excludedNotInTransit} не в пути`);
-                if (excludedWithStock > 0) msg.push(`${excludedWithStock} с запасом`);
-                const archivedCount = merged.filter(r => r.isArchived).length;
-                const historySize = state.utoHistory.size;
-                if (archivedCount > 0) msg.push(`${archivedCount} в архиве`);
+                const archivedCount = merged.filter(r => r.isRemoved).length;
+                const extendedCount = merged.filter(r => r.isExtended).length;
                 
                 hideLoading();
-                showToast(`Сведено ${merged.filter(r => !r.isArchived).length} активных + ${archivedCount} архивных. История УТО: ${historySize} артикулов`, 'success');
+                showToast(`Сведено ${merged.length} записей (сняты: ${archivedCount}, продлены: ${extendedCount})`, 'success');
                 applyFilters();
                 updateRowCounter();
                 checkArchivedItems();
@@ -772,12 +738,12 @@
     }
 
     function checkArchivedItems() {
-        const archived = state.merged.filter(r => r.isArchived && state.appliedSet.has(`${r.store}|${r.article}`));
+        const toRemove = state.merged.filter(r => r.shouldRemove && state.appliedSet.has(`${r.store}|${r.article}`));
         const banner = document.getElementById('warningBanner');
         const text = document.getElementById('warningText');
-        if (archived.length > 0) {
+        if (toRemove.length > 0) {
             banner.classList.add('show');
-            text.textContent = `Обнаружено ${archived.length} артикулов, требующих снятия ТОП2!`;
+            text.textContent = `Обнаружено ${toRemove.length} артикулов, требующих снятия ТОП2!`;
         } else {
             banner.classList.remove('show');
         }
@@ -826,14 +792,14 @@
         if (state.topCoFilter !== 'all') data = data.filter(r => r.topCo === state.topCoFilter);
         if (state.excludeTopCoOne) data = data.filter(r => r.topCo !== '1');
         if (state.excludeWithStock) data = data.filter(r => r.stock === 0);
-        if (!state.showArchived) data = data.filter(r => !r.isArchived);
 
         if (state.quickFilter === 'top1') data = data.filter(r => r.top === '1');
         else if (state.quickFilter === 'top2') data = data.filter(r => r.top === '2');
-        else if (state.quickFilter === 'applied') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`));
-        else if (state.quickFilter === 'overdue') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`) && (r.shouldRemove || r.isArchived));
+        else if (state.quickFilter === 'applied') data = data.filter(r => state.appliedSet.has(`${r.store}|${r.article}`) && !r.isRemoved);
+        else if (state.quickFilter === 'overdue') data = data.filter(r => r.shouldRemove && state.appliedSet.has(`${r.store}|${r.article}`));
         else if (state.quickFilter === 'transit') data = data.filter(r => r.inTransit);
-        else if (state.quickFilter === 'archived') data = data.filter(r => r.isArchived);
+        else if (state.quickFilter === 'removed') data = data.filter(r => r.isRemoved);
+        else if (state.quickFilter === 'extended') data = data.filter(r => r.isExtended);
         else data = data.filter(r => r.hasUto);
 
         state.filtered = data;
@@ -852,44 +818,68 @@
         let html = '';
         for (const row of data) {
             const isApplied = state.appliedSet.has(`${row.store}|${row.article}`);
-            const isOverdue = (row.shouldRemove || row.isArchived) && isApplied;
+            const isOverdue = row.shouldRemove && isApplied;
             const trClass = row.hasUto ? 'highlight-uto' : '';
             const overdueClass = isOverdue ? 'row-overdue' : '';
             const transitClass = row.inTransit ? 'row-transit' : '';
-            const archivedClass = row.isArchived ? 'row-archived' : '';
+            const removedClass = row.isRemoved ? 'row-removed' : '';
+            const extendedClass = row.isExtended ? 'row-extended' : '';
             
             const topBadge = row.top === '2' ? '<span class="badge badge-top2">ТОП2</span>' : (row.top === '1' ? '<span class="badge badge-top1">ТОП1</span>' : row.top || '—');
             let topCoBadge = '—';
             if (row.topCo === '1') topCoBadge = '<span class="badge" style="background:#e65100;">1</span>';
             else if (row.topCo) topCoBadge = `<span class="badge" style="background:#6a1b9a;">${row.topCo}</span>`;
             
-            const appliedBadge = isApplied ? '<span class="badge badge-applied">✅</span>' : '';
+            const appliedBadge = isApplied && !row.isRemoved ? '<span class="badge badge-applied">✅</span>' : '';
             const transitBadge = row.inTransit ? '<span class="badge badge-transit">🚚</span>' : '';
             const stockBadge = row.stock === 0 ? '<span class="badge badge-no-stock">0</span>' : `<span class="badge" style="background:#00838f;">${row.stock}</span>`;
-            const archivedBadge = row.isArchived ? '<span class="badge badge-archived">📦</span>' : '';
+            const removedBadge = row.isRemoved ? '<span class="badge badge-removed">❌</span>' : '';
+            const extendedBadge = row.isExtended ? '<span class="badge badge-extended">⏳</span>' : '';
             const historyBadge = row.isFromHistory ? '<span class="badge" style="background:#4a148c;">📜</span>' : '';
             
+            // Формируем статус с причинами
             let statusBadge = '';
-            if (row.isArchived && isApplied) {
-                statusBadge = `<span class="badge badge-overdue">🔴 Снять</span><br><span style="font-size:0.45rem;color:#757575;">${row.removeReason || 'В архиве'}</span>`;
+            if (row.isRemoved) {
+                statusBadge = '<span class="badge badge-removed">❌ Снят</span>';
             } else if (isOverdue) {
+                let reasonsHtml = '';
+                if (row.removeReasons && row.removeReasons.length > 0) {
+                    reasonsHtml = row.removeReasons.map(r => {
+                        let cls = 'date';
+                        if (r.includes('приехал')) cls = 'transit';
+                        if (r.includes('запас')) cls = 'stock';
+                        return `<span class="reason-tag ${cls}">${r}</span>`;
+                    }).join(' ');
+                }
                 statusBadge = `<span class="badge badge-overdue">🔴 Снять</span>`;
-                if (row.removeReason) statusBadge += `<br><span style="font-size:0.45rem;color:#c62828;">${row.removeReason}</span>`;
-            } else if (isApplied && row.removalDate) {
+                if (reasonsHtml) statusBadge += `<br><span style="font-size:0.45rem;">${reasonsHtml}</span>`;
+            } else if (row.isExtended && isApplied) {
+                statusBadge = `<span class="badge badge-extended">⏳ Продлён до ${row.removalDate}</span>`;
+            } else if (isApplied && row.removalDate && row.removalDate !== '—') {
                 statusBadge = `<span class="badge badge-ontime">🟢 до ${row.removalDate}</span>`;
             } else if (isApplied) {
                 statusBadge = '<span class="badge badge-ontime">🟢 Активен</span>';
             }
 
-            const canApply = !row.isArchived && row.inTransit && row.stock === 0 && row.topCo !== '1';
-            const actionBtn = isApplied ?
-                `<button class="btn-small danger" data-action="remove" data-store="${row.store}" data-art="${row.article}">✕</button>` :
-                (canApply ? `<button class="btn-small" data-action="apply" data-store="${row.store}" data-art="${row.article}">✅</button>` :
-                `<button class="btn-small disabled" title="Условия не выполнены">⛔</button>`);
+            const canApply = !row.isRemoved && row.inTransit && row.stock === 0 && row.topCo !== '1' && row.hasUto;
+            
+            let actionBtns = '';
+            if (isApplied && !row.isRemoved) {
+                actionBtns = `<button class="btn-small danger" data-action="remove" data-store="${row.store}" data-art="${row.article}">✕</button>`;
+                if (isOverdue) {
+                    actionBtns += ` <button class="btn-small extend" data-action="extend" data-store="${row.store}" data-art="${row.article}">⏳ +7дн</button>`;
+                }
+            } else if (canApply) {
+                actionBtns = `<button class="btn-small" data-action="apply" data-store="${row.store}" data-art="${row.article}">✅</button>`;
+            } else if (row.isRemoved) {
+                actionBtns = `<span style="font-size:0.5rem;color:#9e9e9e;">—</span>`;
+            } else {
+                actionBtns = `<button class="btn-small disabled" title="Условия не выполнены">⛔</button>`;
+            }
 
-            html += `<tr class="${trClass} ${overdueClass} ${transitClass} ${archivedClass}">
+            html += `<tr class="${trClass} ${overdueClass} ${transitClass} ${removedClass} ${extendedClass}">
                 <td>${row.store}</td>
-                <td><strong>${row.article}</strong> ${appliedBadge} ${archivedBadge} ${historyBadge}</td>
+                <td><strong>${row.article}</strong> ${appliedBadge} ${removedBadge} ${extendedBadge} ${historyBadge}</td>
                 <td>${row.name.substring(0, 25)}</td>
                 <td>${row.subdepartment || '—'}</td>
                 <td>${topBadge}</td>
@@ -901,7 +891,7 @@
                 <td>${row.postavkaSrok || '—'}</td>
                 <td>${row.removalDate || '—'}</td>
                 <td>${statusBadge}</td>
-                <td>${actionBtn}</td>
+                <td style="white-space:nowrap;">${actionBtns}</td>
             </tr>`;
         }
         tbody.innerHTML = html;
@@ -912,11 +902,16 @@
         tbody.querySelectorAll('[data-action="remove"]').forEach(btn => {
             btn.addEventListener('click', function() { removeTop2(this.dataset.store, this.dataset.art); });
         });
+        tbody.querySelectorAll('[data-action="extend"]').forEach(btn => {
+            btn.addEventListener('click', function() { extendTop2(this.dataset.store, this.dataset.art); });
+        });
     }
 
     function applyTop2(store, article) {
         const key = `${store}|${article}`;
         if (state.appliedSet.has(key)) { showToast('Уже применён', 'info'); return; }
+        state.removedSet.delete(key);
+        state.extendedSet.delete(key);
         state.appliedSet.add(key);
         state.history.push({ store, article, date: new Date().toISOString() });
         saveHistory();
@@ -930,19 +925,44 @@
         const key = `${store}|${article}`;
         if (!state.appliedSet.has(key)) return;
         state.appliedSet.delete(key);
+        state.removedSet.add(key);
+        state.extendedSet.delete(key);
         state.history = state.history.filter(h => !(h.store === store && h.article === article));
         saveHistory();
-        showToast(`↩️ ТОП2 отменён для ${article}`, 'info');
+        showToast(`↩️ ТОП2 снят с ${article}`, 'info');
+        applyFilters();
+        renderHistory();
+        checkArchivedItems();
+    }
+
+    function extendTop2(store, article) {
+        const key = `${store}|${article}`;
+        if (!state.appliedSet.has(key)) { showToast('ТОП2 не применён', 'warning'); return; }
+        if (state.removedSet.has(key)) { showToast('ТОП2 уже снят', 'warning'); return; }
+        
+        state.extendedSet.add(key);
+        // Добавляем запись о продлении в историю
+        state.history.push({ 
+            store, 
+            article, 
+            date: new Date().toISOString(),
+            action: 'extend',
+            extendedDate: new Date(Date.now() + 7*24*60*60*1000).toISOString()
+        });
+        saveHistory();
+        showToast(`⏳ ТОП2 продлён на 7 дней для ${article}`, 'success');
         applyFilters();
         renderHistory();
         checkArchivedItems();
     }
 
     function updateRowCounter() {
-        const active = state.filtered.filter(r => !r.isArchived).length;
-        const archived = state.filtered.filter(r => r.isArchived).length;
-        const historySize = state.utoHistory.size;
-        document.getElementById('rowCounter').textContent = `${state.filtered.length} записей (активных: ${active}, архив: ${archived} | история УТО: ${historySize})`;
+        const active = state.filtered.filter(r => !r.isRemoved && state.appliedSet.has(`${r.store}|${r.article}`)).length;
+        const overdue = state.filtered.filter(r => r.shouldRemove && state.appliedSet.has(`${r.store}|${r.article}`)).length;
+        const removed = state.filtered.filter(r => r.isRemoved).length;
+        const extended = state.filtered.filter(r => r.isExtended).length;
+        document.getElementById('rowCounter').textContent = 
+            `${state.filtered.length} записей (активных: ${active}, снять: ${overdue}, сняты: ${removed}, продлены: ${extended})`;
     }
 
     function updateFilterStatus() {
@@ -953,7 +973,8 @@
             'applied': '✅ Применён',
             'overdue': '⏳ Снять',
             'transit': '🚚 В пути',
-            'archived': '📦 Архив',
+            'removed': '❌ Сняты',
+            'extended': '⏳ Продлены',
         };
         const excludeMsg = [];
         if (state.excludeTopCoOne) excludeMsg.push('TOP ЦО≠1');
@@ -987,10 +1008,16 @@
         for (const session of sortedSessions) {
             const details = session.details || [];
             for (const d of details) {
+                const key = `${d.store}|${d.article}`;
+                const isRemoved = state.removedSet.has(key);
+                const isActive = state.appliedSet.has(key);
+                const isExtended = state.extendedSet.has(key);
+                let statusText = '🟢 Активен';
+                if (isRemoved) statusText = '❌ Снят';
+                else if (isExtended) statusText = '⏳ Продлён';
+                else if (!isActive) statusText = '📦 Архив';
                 const found = state.merged.find(r => r.store === d.store && r.article === d.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
-                const isActive = found && !found.isArchived && state.appliedSet.has(`${d.store}|${d.article}`);
-                const statusText = isActive ? '🟢 Активен' : (found && found.isArchived ? '📦 Архив' : '❌ Снят');
                 html += `<tr>
                     <td>${session.date}</td>
                     <td>${d.article}</td>
@@ -999,33 +1026,41 @@
                     <td>Выгрузка</td>
                     <td>${period}</td>
                     <td><span style="font-size:0.55rem;">${statusText}</span></td>
-                    <td><button class="btn-small danger" data-action="remove-session" data-store="${d.store}" data-art="${d.article}">✕</button></td>
+                    <td><button class="btn-small danger" data-action="${isRemoved ? 'apply' : 'remove'}" data-store="${d.store}" data-art="${d.article}">${isRemoved ? '↩️' : '✕'}</button></td>
                 </tr>`;
             }
         }
 
+        // Отдельные применения
         const sessionArticles = new Set();
         for (const s of sessions) {
             for (const d of (s.details || [])) sessionArticles.add(`${d.store}|${d.article}`);
         }
         const orphanHistory = state.history.filter(h => !sessionArticles.has(`${h.store}|${h.article}`));
         if (orphanHistory.length) {
-            html += `<tr class="history-group"><td colspan="8">📌 Отдельные применения</td></tr>`;
+            html += `<tr class="history-group"><td colspan="8">📌 Отдельные действия</td></tr>`;
             for (const h of orphanHistory.reverse()) {
+                const key = `${h.store}|${h.article}`;
+                const isRemoved = state.removedSet.has(key);
+                const isActive = state.appliedSet.has(key);
+                const isExtended = state.extendedSet.has(key);
+                let statusText = '🟢 Активен';
+                if (isRemoved) statusText = '❌ Снят';
+                else if (isExtended) statusText = '⏳ Продлён';
+                else if (!isActive) statusText = '📦 Архив';
                 const found = state.merged.find(r => r.store === h.store && r.article === h.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
-                const isActive = found && !found.isArchived && state.appliedSet.has(`${h.store}|${h.article}`);
-                const statusText = isActive ? '🟢 Активен' : (found && found.isArchived ? '📦 Архив' : '❌ Снят');
                 const dateStr = h.date ? new Date(h.date).toLocaleString() : '—';
+                const actionType = h.action === 'extend' ? 'Продление' : 'Ручное';
                 html += `<tr>
                     <td>${dateStr}</td>
                     <td>${h.article}</td>
                     <td>${h.store}</td>
                     <td><span class="badge badge-top2">ТОП2</span></td>
-                    <td>Ручное</td>
+                    <td>${actionType}</td>
                     <td>${period}</td>
                     <td><span style="font-size:0.55rem;">${statusText}</span></td>
-                    <td><button class="btn-small danger" data-action="remove-history" data-store="${h.store}" data-art="${h.article}">✕</button></td>
+                    <td><button class="btn-small danger" data-action="${isRemoved ? 'apply' : 'remove'}" data-store="${h.store}" data-art="${h.article}">${isRemoved ? '↩️' : '✕'}</button></td>
                 </tr>`;
             }
         }
@@ -1033,13 +1068,16 @@
         tbody.innerHTML = html;
         count.textContent = state.history.length;
 
-        tbody.querySelectorAll('[data-action="remove-history"], [data-action="remove-session"]').forEach(btn => {
+        tbody.querySelectorAll('[data-action="remove"]').forEach(btn => {
             btn.addEventListener('click', function() { removeTop2(this.dataset.store, this.dataset.art); });
+        });
+        tbody.querySelectorAll('[data-action="apply"]').forEach(btn => {
+            btn.addEventListener('click', function() { applyTop2(this.dataset.store, this.dataset.art); });
         });
     }
 
     // ============================================================
-    // 7. Экспорт (сокращён для экономии места)
+    // 7. Экспорт
     // ============================================================
     function exportTemplate(onlyApplied = false, topAttribute = 'ТОП2') {
         let data = [];
@@ -1047,13 +1085,13 @@
 
         if (onlyApplied) {
             for (const row of sourceData) {
-                if (state.appliedSet.has(`${row.store}|${row.article}`) && !row.isArchived) {
+                if (state.appliedSet.has(`${row.store}|${row.article}`) && !row.isRemoved) {
                     data.push({ store: row.store, article: row.article, top: topAttribute, name: row.name || '' });
                 }
             }
             if (!data.length) { showToast('Нет применённых ТОП2', 'warning'); return; }
         } else {
-            const candidates = sourceData.filter(r => !r.isArchived && r.inTransit && r.stock === 0 && r.hasActiveOrder);
+            const candidates = sourceData.filter(r => !r.isRemoved && r.inTransit && r.stock === 0 && r.hasActiveOrder);
             const histSet = new Set(state.history.map(h => `${h.store}|${h.article}`));
             for (const r of candidates) {
                 const key = `${r.store}|${r.article}`;
@@ -1062,7 +1100,7 @@
             for (const h of state.history) {
                 if (!data.some(d => d.store === h.store && d.article === h.article)) {
                     const found = sourceData.find(r => r.store === h.store && r.article === h.article);
-                    if (found && !found.isArchived) data.push({ store: h.store, article: h.article, top: topAttribute, name: found.name || '' });
+                    if (found && !found.isRemoved) data.push({ store: h.store, article: h.article, top: topAttribute, name: found.name || '' });
                 }
             }
             if (!data.length) { showToast('Нет данных для шаблона', 'warning'); return; }
@@ -1106,15 +1144,7 @@
     }
 
     function exportRemoveTemplate() {
-        let sourceData = state.filtered.length ? state.filtered : state.merged;
-        const appliedItems = state.history.map(h => {
-            const found = sourceData.find(r => r.store === h.store && r.article === h.article);
-            return { ...h, data: found };
-        });
-        const toRemove = appliedItems.filter(item => {
-            if (!item.data) return true;
-            return item.data.shouldRemove || item.data.isArchived;
-        });
+        const toRemove = state.merged.filter(r => r.shouldRemove && state.appliedSet.has(`${r.store}|${r.article}`));
         if (!toRemove.length) { showToast('Нет артикулов для снятия', 'warning'); return; }
 
         const wsData = [['Артикул', 'Номер магазина', 'Атрибут ТОП']];
@@ -1133,6 +1163,8 @@
 
         for (const item of toRemove) {
             state.appliedSet.delete(`${item.store}|${item.article}`);
+            state.removedSet.add(`${item.store}|${item.article}`);
+            state.extendedSet.delete(`${item.store}|${item.article}`);
             state.history = state.history.filter(h => !(h.store === item.store && h.article === item.article));
         }
         saveHistory();
@@ -1143,26 +1175,12 @@
     }
 
     function suggestRemoveTop2() {
-        let sourceData = state.filtered.length ? state.filtered : state.merged;
-        const appliedItems = state.history.map(h => {
-            const found = sourceData.find(r => r.store === h.store && r.article === h.article);
-            return { ...h, data: found };
-        });
-        const toRemove = appliedItems.filter(item => {
-            if (!item.data) return true;
-            return item.data.shouldRemove || item.data.isArchived;
-        });
+        const toRemove = state.merged.filter(r => r.shouldRemove && state.appliedSet.has(`${r.store}|${r.article}`));
         if (!toRemove.length) { showToast('✅ Нет артикулов для снятия', 'success'); return; }
 
         const wsData = [['Артикул', 'Номер магазина', 'Текущий ТОП', 'Причина снятия']];
         for (const item of toRemove) {
-            let reason = '';
-            if (!item.data) reason = 'Артикул отсутствует';
-            else if (item.data.isArchived) reason = item.data.removeReason || 'В архиве';
-            else if (!item.data.inTransit) reason = 'Товар приехал (В пути=0)';
-            else if (item.data.stock > 0) reason = `Появился запас (${item.data.stock} шт)`;
-            else if (item.data.isOverdue) reason = `Просрочен (${item.data.removalDate})`;
-            else reason = item.data.removeReason || 'Условия выполнены';
+            let reason = item.removeReason || 'Условия выполнены';
             wsData.push([item.article, item.store, 'ТОП2', reason]);
         }
         const wb = XLSX.utils.book_new();
@@ -1232,7 +1250,7 @@
     document.getElementById('resetHistoryBtn').addEventListener('click', resetHistory);
     
     document.getElementById('applyTemplateBtn').addEventListener('click', function() {
-        const candidates = state.filtered.filter(r => !r.isArchived && r.inTransit && r.stock === 0 && r.hasActiveOrder);
+        const candidates = state.filtered.filter(r => !r.isRemoved && r.inTransit && r.stock === 0 && r.hasActiveOrder);
         if (!candidates.length) { showToast('Нет товаров с УТО, в пути и без запаса', 'warning'); return; }
         let added = 0;
         for (const r of candidates) {
@@ -1264,10 +1282,6 @@
         if (state.gamma.length && state.uto.length && state.postavki.length) mergeReports();
         else applyFilters();
     });
-    document.getElementById('showArchived').addEventListener('change', function() {
-        state.showArchived = this.checked;
-        applyFilters();
-    });
 
     document.querySelectorAll('.quick-actions .btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1280,24 +1294,37 @@
 
     function exportHistory() {
         if (!state.history.length && !state.exportSessions.length) { showToast('История пуста', 'warning'); return; }
-        const wsData = [['Дата сессии', 'Артикул', 'Номер магазина', 'Атрибут ТОП', 'Тип', 'Период действия', 'Статус']];
+        const wsData = [['Дата', 'Артикул', 'Магазин', 'Атрибут', 'Тип', 'Период', 'Статус']];
         for (const session of state.exportSessions) {
             for (const d of (session.details || [])) {
+                const key = `${d.store}|${d.article}`;
+                const isRemoved = state.removedSet.has(key);
+                const isActive = state.appliedSet.has(key);
+                const isExtended = state.extendedSet.has(key);
+                let statusText = 'Активен';
+                if (isRemoved) statusText = 'Снят';
+                else if (isExtended) statusText = 'Продлён';
+                else if (!isActive) statusText = 'Архив';
                 const found = state.merged.find(r => r.store === d.store && r.article === d.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
-                const isActive = found && !found.isArchived && state.appliedSet.has(`${d.store}|${d.article}`);
-                const statusText = isActive ? 'Активен' : (found && found.isArchived ? 'Архив' : 'Снят');
                 wsData.push([session.date, d.article, d.store, 'ТОП2', 'Выгрузка', period, statusText]);
             }
         }
         for (const h of state.history) {
             const inSession = state.exportSessions.some(s => s.details.some(d => d.article === h.article && d.store === h.store));
             if (!inSession) {
+                const key = `${h.store}|${h.article}`;
+                const isRemoved = state.removedSet.has(key);
+                const isActive = state.appliedSet.has(key);
+                const isExtended = state.extendedSet.has(key);
+                let statusText = 'Активен';
+                if (isRemoved) statusText = 'Снят';
+                else if (isExtended) statusText = 'Продлён';
+                else if (!isActive) statusText = 'Архив';
                 const found = state.merged.find(r => r.store === h.store && r.article === h.article);
                 const period = found ? found.periodDisplay || found.removalDate || '—' : '—';
-                const isActive = found && !found.isArchived && state.appliedSet.has(`${h.store}|${h.article}`);
-                const statusText = isActive ? 'Активен' : (found && found.isArchived ? 'Архив' : 'Снят');
-                wsData.push([h.date ? new Date(h.date).toLocaleString() : '', h.article, h.store, 'ТОП2', 'Ручное', period, statusText]);
+                const actionType = h.action === 'extend' ? 'Продление' : 'Ручное';
+                wsData.push([h.date ? new Date(h.date).toLocaleString() : '', h.article, h.store, 'ТОП2', actionType, period, statusText]);
             }
         }
         const wb = XLSX.utils.book_new();
@@ -1316,10 +1343,12 @@
 
     function resetHistory() {
         if (!state.history.length && !state.exportSessions.length) { showToast('История пуста', 'info'); return; }
-        if (confirm('Удалить всю историю ТОП2?')) {
+        if (confirm('Удалить всю историю?')) {
             state.history = [];
             state.exportSessions = [];
             state.appliedSet.clear();
+            state.removedSet.clear();
+            state.extendedSet.clear();
             state.utoHistory.clear();
             saveHistory();
             applyFilters();
@@ -1329,8 +1358,9 @@
         }
     }
 
-    console.log('📦 УТО→ТОП2 (оптимизированный) загружен.');
-    console.log('📌 Условия: в пути + запас=0 + TOP ЦО≠1 + УТО');
+    console.log('📦 УТО→ТОП2 (с продлением) загружен.');
+    console.log('📌 ТОП2: в пути + нет запаса + TOP ЦО≠1 + УТО');
+    console.log('⏳ Продление: +7 дней к дате снятия');
 
     applyFilters();
     renderHistory();
