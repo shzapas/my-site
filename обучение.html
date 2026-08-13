@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STOCKWISE · Обучение работе с порталом</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
+    body { background: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .presentation-wrapper { max-width: 1300px; width: 100%; background: white; border-radius: 40px 40px 32px 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); overflow: hidden; }
+    
+    .header { background: #003057; padding: 16px 32px; display: flex; align-items: center; gap: 16px; border-bottom: 3px solid #ffb81c; flex-wrap: wrap; }
+    .logo { display: flex; align-items: center; gap: 10px; color: white; }
+    .logo i { font-size: 28px; color: #ffb81c; }
+    .logo span { font-weight: 600; font-size: 20px; letter-spacing: 0.5px; }
+    .logo small { font-weight: 300; font-size: 14px; opacity: 0.8; margin-left: 6px; }
+    .header-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    .header-actions button { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 30px; padding: 6px 16px; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .header-actions button:hover { background: rgba(255,255,255,0.3); }
+    .header-actions .btn-export { background: #ffb81c; color: #003057; border-color: #ffb81c; }
+    .header-actions .btn-export:hover { background: #ffc94d; }
+    .header-actions .btn-import { background: #4a90d9; color: white; border-color: #4a90d9; }
+    .header-actions .btn-import:hover { background: #5a9fe9; }
+    
+    .slide-container { padding: 24px 32px 16px 32px; min-height: 500px; background: #fcfcfd; overflow: hidden; position: relative; }
+    .slide { display: none; opacity: 0; transform: translateX(30px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .slide.active { display: block; opacity: 1; transform: translateX(0); animation: slideIn 0.5s ease forwards; }
+    .slide.exit { display: block; opacity: 0; transform: translateX(-30px); animation: slideOut 0.5s ease forwards; }
+    @keyframes slideIn { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
+    @keyframes slideOut { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(-30px); } }
+    
+    .slide-title { font-size: 24px; font-weight: 600; color: #003057; margin-bottom: 18px; border-left: 8px solid #ffb81c; padding-left: 16px; }
+    .slide-title i { margin-right: 10px; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+    .stat-card { background: white; border-radius: 20px; padding: 18px 18px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e9edf3; transition: 0.2s; position: relative; }
+    .stat-card:hover { border-color: #003057; box-shadow: 0 6px 14px rgba(0,48,87,0.08); }
+    .stat-card .label { font-size: 13px; color: #4a5b6f; letter-spacing: 0.3px; font-weight: 500; text-transform: uppercase; }
+    .stat-card .value { font-size: 22px; font-weight: 700; color: #003057; margin-top: 4px; }
+    .stat-card .sub { font-size: 14px; color: #2c3e50; margin-top: 6px; border-top: 1px dashed #dce3ec; padding-top: 6px; }
+    
+    .shop-list { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+    .shop-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #eef2f5; font-size: 14px; align-items: center; }
+    .shop-item .name { font-weight: 500; color: #003057; }
+    .shop-item .data { font-size: 13px; color: #2c3e50; }
+    
+    .btn { background: #f0f4fe; border: 1px solid #d0d9e4; border-radius: 30px; padding: 6px 18px; font-size: 13px; font-weight: 500; color: #003057; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover { background: #dce6f5; border-color: #003057; }
+    .btn-primary { background: #003057; color: white; border-color: #003057; }
+    .btn-primary:hover { background: #004a7a; }
+    .btn-success { background: #27ae60; color: white; border-color: #27ae60; }
+    .btn-success:hover { background: #2ecc71; }
+    .btn-danger { background: #e74c3c; color: white; border-color: #e74c3c; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-warning { background: #f39c12; color: white; border-color: #f39c12; }
+    .btn-warning:hover { background: #f1c40f; }
+    
+    .nav-bar { background: #f0f4f8; padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #dce3ec; flex-wrap: wrap; gap: 10px; }
+    .dots { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dot { width: 34px; height: 34px; border-radius: 40px; background: #d0d9e4; border: none; font-weight: 600; color: #1f2a3a; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .dot.active-dot { background: #003057; color: white; box-shadow: 0 4px 8px rgba(0,48,87,0.3); }
+    .dot:hover { background: #b0c4db; transform: scale(1.02); }
+    .nav-arrows button { background: white; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 40px; font-weight: 500; color: #1e293b; cursor: pointer; transition: 0.15s; margin: 0 4px; }
+    .nav-arrows button:hover { background: #003057; color: white; border-color: #003057; }
+    
+    .instruction-step { display: flex; gap: 16px; align-items: flex-start; padding: 12px; background: #f8faff; border-radius: 16px; margin-bottom: 10px; border-left: 4px solid #ffb81c; }
+    .instruction-step .num { font-weight: 700; font-size: 20px; color: #003057; min-width: 30px; }
+    .instruction-step .content { flex: 1; }
+    .instruction-step .content strong { color: #003057; }
+    
+    .tip { background: #eef3fa; border-radius: 12px; padding: 10px 14px; font-size: 13px; color: #2c3e50; margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+    .tip i { color: #ffb81c; font-size: 16px; }
+    
+    .screenshot-area { margin-top: 12px; padding: 12px; background: #f8faff; border: 1px dashed #d0d9e4; border-radius: 16px; text-align: center; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; position: relative; }
+    .screenshot-area.has-image { border-style: solid; border-color: #27ae60; background: #f0faf5; }
+    .screenshot-area img { max-width: 100%; max-height: 200px; border-radius: 12px; object-fit: contain; margin-top: 8px; cursor: pointer; transition: 0.2s; }
+    .screenshot-area img:hover { opacity: 0.9; transform: scale(1.01); }
+    .screenshot-area .delete-btn { position: absolute; top: 6px; right: 6px; background: rgba(200,0,0,0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer; transition: 0.2s; display: none; align-items: center; justify-content: center; }
+    .screenshot-area .delete-btn:hover { background: #e74c3c; transform: scale(1.1); }
+    .screenshot-area.has-image .delete-btn { display: flex; }
+    .screenshot-area .upload-btn { background: white; border: 1px solid #d0d9e4; border-radius: 30px; padding: 6px 18px; font-size: 13px; color: #003057; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .screenshot-area .upload-btn:hover { background: #dce6f5; border-color: #003057; }
+    
+    .fullscreen-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; display: none; align-items: center; justify-content: center; cursor: pointer; }
+    .fullscreen-overlay img { max-width: 90%; max-height: 90%; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .fullscreen-overlay.active { display: flex; }
+    
+    .import-status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #003057; color: white; padding: 12px 32px; border-radius: 40px; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+    .import-status.show { opacity: 1; }
+    .import-status.success { background: #27ae60; }
+    .import-status.error { background: #e74c3c; }
+    
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 24px; padding: 32px; max-width: 600px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto; }
+    .modal-content h3 { color: #003057; margin-bottom: 16px; font-size: 20px; }
+    .modal-content .close-btn { float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: #4a5b6f; }
+    .modal-content .close-btn:hover { color: #003057; }
+    
+    .error-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .error-filter .tag { background: #f0f4fe; border: 1px solid #d0d9e4; border-radius: 20px; padding: 4px 14px; font-size: 13px; cursor: pointer; transition: 0.15s; }
+    .error-filter .tag:hover { background: #dce6f5; border-color: #003057; }
+    .error-filter .tag.active { background: #003057; color: white; border-color: #003057; }
+    
+    .fix-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    .fix-table th { background: #f0f4f8; padding: 8px 10px; text-align: left; border-bottom: 2px solid #dce3ec; }
+    .fix-table td { padding: 8px 10px; border-bottom: 1px dotted #eef2f5; }
+    .fix-table .status-badge { display: inline-block; padding: 2px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .fix-table .status-badge.applied { background: #d5f5e3; color: #27ae60; }
+    .fix-table .status-badge.pending { background: #fef9e7; color: #f39c12; }
+    
+    /* ===== ИНТЕРАКТИВНЫЕ ЭЛЕМЕНТЫ ===== */
+    .interactive-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .interactive-item { background: #f8faff; border-radius: 16px; padding: 20px; text-align: center; border: 2px solid #e9edf3; cursor: pointer; transition: 0.3s; }
+    .interactive-item:hover { border-color: #003057; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,48,87,0.1); }
+    .interactive-item .icon { font-size: 36px; color: #003057; margin-bottom: 8px; }
+    .interactive-item .title { font-weight: 600; color: #003057; font-size: 15px; }
+    .interactive-item .desc { font-size: 13px; color: #4a5b6f; margin-top: 4px; }
+    .interactive-item .badge { display: inline-block; background: #ffb81c; color: #003057; padding: 2px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 6px; }
+    
+    .interactive-item.active { border-color: #003057; background: #eef3fa; }
+    .interactive-item .tooltip-text { display: none; margin-top: 10px; padding: 10px 14px; background: #003057; color: white; border-radius: 12px; font-size: 13px; text-align: left; animation: fadeIn 0.3s ease; }
+    .interactive-item.active .tooltip-text { display: block; }
+    @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
+    
+    .error-list { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+    .error-item { background: #f8faff; border-radius: 12px; padding: 12px 16px; border-left: 4px solid #e74c3c; }
+    .error-item .error-title { font-weight: 600; color: #003057; display: flex; align-items: center; gap: 8px; }
+    .error-item .error-title .icon { font-size: 16px; }
+    .error-item .error-desc { font-size: 13px; color: #4a5b6f; margin-top: 4px; }
+    .error-item .error-fix { font-size: 13px; color: #27ae60; margin-top: 4px; }
+    .error-item .error-fix i { margin-right: 4px; }
+    
+    .error-item.success { border-left-color: #27ae60; }
+    .error-item.warning { border-left-color: #f39c12; }
+    .error-item.danger { border-left-color: #e74c3c; }
+    
+    /* Контакты */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .contact-card { background: #f8faff; border-radius: 16px; padding: 16px 20px; border: 1px solid #e9edf3; transition: 0.2s; display: flex; align-items: center; gap: 14px; }
+    .contact-card:hover { border-color: #003057; }
+    .contact-card .icon { font-size: 28px; color: #003057; min-width: 40px; text-align: center; }
+    .contact-card .info { flex: 1; }
+    .contact-card .info .label { font-size: 11px; color: #4a5b6f; text-transform: uppercase; }
+    .contact-card .info .value { font-weight: 500; color: #003057; font-size: 14px; }
+    
+    @media (max-width: 780px) { 
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } 
+      .slide-container { padding: 16px; } 
+      .header-actions { margin-left: 0; width: 100%; justify-content: center; }
+      .interactive-grid { grid-template-columns: 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .fix-table { font-size: 11px; }
+      .fix-table th, .fix-table td { padding: 4px 6px; }
+    }
+  </style>
+</head>
+<body>
+<div class="presentation-wrapper">
+  <!-- ===== ХЕДЕР ===== -->
+  <div class="header">
+    <div class="logo">
+      <i class="fas fa-chart-line"></i>
+      <span>STOCKWISE <small>· Обучение</small></span>
+    </div>
+    <div style="color: white; font-weight: 300; font-size: 14px; opacity: 0.9;">
+      <i class="fas fa-graduation-cap"></i> Работа с порталом
+    </div>
+    <div class="header-actions">
+      <button class="btn-export" onclick="exportData()"><i class="fas fa-download"></i> Экспорт</button>
+      <button class="btn-import" onclick="document.getElementById('importInput').click()"><i class="fas fa-upload"></i> Импорт</button>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
+      <button onclick="window.open('https://shzapas.github.io/my-site/', '_blank')" style="background: #ffb81c; color: #003057; border-color: #ffb81c;">
+        <i class="fas fa-external-link-alt"></i> Портал
+      </button>
+    </div>
+  </div>
+  
+  <!-- ===== КОНТЕЙНЕР СЛАЙДОВ ===== -->
+  <div class="slide-container" id="slideContainer">
+    
+    <!-- ===== СЛАЙД 1: ТИТУЛЬНЫЙ ===== -->
+    <div class="slide active" data-slide="0">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center;">
+        <div style="background: #003057; border-radius: 60px; padding: 20px 40px; display: inline-block; margin-bottom: 24px;">
+          <i class="fas fa-chart-line" style="font-size: 56px; color: #ffb81c;"></i>
+        </div>
+        <h1 style="font-size: 44px; color: #003057; margin-bottom: 8px;">STOCKWISE</h1>
+        <p style="font-size: 24px; font-weight: 300; color: #1f2a3a; margin-bottom: 8px;">Обучение работе с порталом</p>
+        <div style="margin-top: 32px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+          <span class="btn btn-primary" onclick="goToSlide(1)"><i class="fas fa-play"></i> Начать</span>
+          <span class="btn" onclick="window.open('https://shzapas.github.io/my-site/', '_blank')"><i class="fas fa-external-link-alt"></i> Портал</span>
+        </div>
+        <div style="margin-top: 32px; color: #4a5b6f; font-size: 14px;">
+          <i class="fas fa-info-circle"></i> Для менеджеров товарного запаса
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== СЛАЙД 2: СТРУКТУРА ПОРТАЛА (ДЕТАЛЬНО) ===== -->
+    <div class="slide" data-slide="1">
+      <div class="slide-title"><i class="fas fa-sitemap"></i>Структура портала</div>
+      <div style="margin-bottom: 16px;">
+        <div class="interactive-grid" id="structureGrid">
+          <!-- Левая панель -->
+          <div class="interactive-item" data-target="left">
+            <div class="icon">📂</div>
+            <div class="title">Левая панель</div>
+            <div class="desc">10 отчётов для загрузки</div>
+            <span class="badge">👆 Кликните</span>
+            <div class="tooltip-text">
+              <strong>📊 Что здесь:</strong><br>
+              • Гамма (Магазин → Отдел → Details)<br>
+              • Резервы (Магазин → Отдел → Резервы)<br>
+              • УТО (Магазин → Отдел → Перебои)<br>
+              • БЭСТ (Регион → The Best)<br>
+              • Автоминимумы, Максы, ЭКСПО, Недопоставки, Коррекции, Детали поставки
+            </div>
+          </div>
+          <!-- Центральная часть -->
+          <div class="interactive-item" data-target="center">
+            <div class="icon">📋</div>
+            <div class="title">Центральная часть</div>
+            <div class="desc">Сводная таблица с данными</div>
+            <span class="badge">👆 Кликните</span>
+            <div class="tooltip-text">
+              <strong>📊 Что здесь:</strong><br>
+              • 32+ колонок с аналитикой<br>
+              • Данные по всем магазинам и подотделам<br>
+              • Редактирование минимумов в онлайн-режиме<br>
+              • Поиск и фильтры<br>
+              • Экспорт изменений
+            </div>
+          </div>
+          <!-- Правая панель -->
+          <div class="interactive-item" data-target="right">
+            <div class="icon">📈</div>
+            <div class="title">Правая панель</div>
+            <div class="desc">Аналитика и статистика</div>
+            <span class="badge">👆 Кликните</span>
+            <div class="tooltip-text">
+              <strong>📊 Что здесь:</strong><br>
+              • 📊 УТО-позиции<br>
+              • ⭐ Бест-позиции<br>
+              • 📋 Мины (заказ завтра)<br>
+              • 🔴 Критический запас<br>
+              • 🟡 Внимание (7-14 дней)<br>
+              • ✅ Нормальный запас (>22 дн)<br>
+              • 🚚 В пути
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="screenshot_structure">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Скриншот структуры портала</span>
+        <button class="upload-btn" onclick="document.getElementById('fileInput_structure').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileInput_structure" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_structure', 'structure')">
+        <div class="delete-btn" onclick="deleteScreenshot('screenshot_structure', 'structure')">✕</div>
+      </div>
+      <div class="tip"><i class="fas fa-mouse-pointer"></i> Кликните по блоку, чтобы увидеть детали</div>
+    </div>
+
+    <!-- ===== СЛАЙД 3: ЗАГРУЗКА ОТЧЁТОВ ===== -->
+    <div class="slide" data-slide="2">
+      <div class="slide-title"><i class="fas fa-upload"></i>Загрузка отчётов</div>
+      <div class="grid-2">
+        <div class="stat-card">
+          <span class="label">📂 10 отчётов</span>
+          <div class="shop-list">
+            <div class="shop-item"><span class="name">1. Гамма</span> <span class="data">Магазин → Отдел → Details</span></div>
+            <div class="shop-item"><span class="name">2. Резервы</span> <span class="data">Магазин → Отдел → Резервы</span></div>
+            <div class="shop-item"><span class="name">3. УТО</span> <span class="data">Магазин → Отдел → Перебои</span></div>
+            <div class="shop-item"><span class="name">4. БЭСТ</span> <span class="data">Регион → The Best</span></div>
+            <div class="shop-item"><span class="name">5. Автоминимумы</span> <span class="data">Магазин → Отдел → Автоминимумы</span></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="label">📂 Продолжение</span>
+          <div class="shop-list">
+            <div class="shop-item"><span class="name">6. Максы</span> <span class="data">Магазин → Отдел → Активный MAX</span></div>
+            <div class="shop-item"><span class="name">7. ЭКСПО</span> <span class="data">Магазин → Отдел → EXPO > 0</span></div>
+            <div class="shop-item"><span class="name">8. Недопоставки</span> <span class="data">Магазин → Отдел → По неделям</span></div>
+            <div class="shop-item"><span class="name">9. Коррекции</span> <span class="data">Магазин → Отдел → C1 и C3</span></div>
+            <div class="shop-item"><span class="name">10. Детали поставки</span> <span class="data">Магазин → Отдел → Детали поставок</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="screenshot_upload">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример загрузки отчётов</span>
+        <button class="upload-btn" onclick="document.getElementById('fileInput_upload').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileInput_upload" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_upload', 'upload')">
+        <div class="delete-btn" onclick="deleteScreenshot('screenshot_upload', 'upload')">✕</div>
+      </div>
+      <div class="tip"><i class="fas fa-lightbulb"></i>Как правильно назвать отчет можно узнать по клику загрузчика отчета</div>
+    </div>
+
+    <!-- ===== СЛАЙД 4: СВОДНАЯ ТАБЛИЦА ===== -->
+    <div class="slide" data-slide="3">
+      <div class="slide-title"><i class="fas fa-table"></i>Сводная таблица и фильтры</div>
+      <div class="grid-2">
+        <div class="stat-card">
+          <span class="label">📋 Сводная таблица</span>
+          <div class="value" style="font-size:18px;">Все данные в одном месте</div>
+          <div class="sub">
+            <p>После загрузки всех отчётов:</p>
+            <ul style="list-style: none; padding-left: 0; margin-top: 6px;">
+              <li style="padding: 4px 0;">✅ 32+ колонок с аналитикой</li>
+              <li style="padding: 4px 0;">✅ Данные по всем магазинам и подотделам</li>
+              <li style="padding: 4px 0;">✅ Возможность редактирования минимумов в онлайн-режиме</li>
+            </ul>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="label">🔍 Фильтры</span>
+          <div class="value" style="font-size:18px;">Быстрый поиск</div>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="padding: 4px 0;">🔹 Поиск по магазинам</li>
+              <li style="padding: 4px 0;">🔹 Фильтр по подотделам</li>
+              <li style="padding: 4px 0;">🔹 Сброс всех фильтров</li>
+              <li style="padding: 4px 0;">🔹 Экспорт изменений</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="screenshot_table">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример сводной таблицы</span>
+        <button class="upload-btn" onclick="document.getElementById('fileInput_table').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileInput_table" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_table', 'table')">
+        <div class="delete-btn" onclick="deleteScreenshot('screenshot_table', 'table')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== СЛАЙД 5: РАБОТА С УТО / БЕСТ / МИНЫ ===== -->
+    <div class="slide" data-slide="4">
+      <div class="slide-title"><i class="fas fa-filter"></i>Работа с УТО / Бест / Мины</div>
+      <div class="stat-card">
+        <span class="label">📋 Фильтры для отработки</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+          <span class="btn btn-danger" style="font-size:13px;">📊 УТО</span>
+          <span class="btn btn-warning" style="font-size:13px;">⭐ Бест</span>
+          <span class="btn btn-primary" style="font-size:13px;">📋 Мины</span>
+          <span class="btn" style="font-size:13px;">📋 Все</span>
+          <span class="btn btn-success" style="font-size:13px;">✏️ Редактирование</span>
+        </div>
+        <div class="sub" style="margin-top: 12px;">
+          <strong>Алгоритм работы:</strong>
+          <ol style="padding-left: 20px; margin-top: 6px;">
+            <li>Выберите фильтр <strong>📊 УТО</strong> (или ⭐ Бест / 📋 Мины)</li>
+            <li>Установите диапазон: <strong>Запас в днях &lt; 22-24 дней</strong> и <strong>В пути &lt; 22-24 дней</strong></li>
+            <li>Получите список артикулов с отображением текущих минимумов</li>
+            <li>В колонках <strong>«Вид минимума»</strong> и <strong>«Кол-во проектов»</strong> скорректируйте значения в онлайн-режиме</li>
+          </ol>
+        </div>
+        <div class="tip"><i class="fas fa-mouse-pointer"></i> Изменения применяются мгновенно, данные сохраняются в сессии</div>
+      </div>
+      <div class="screenshot-area" id="screenshot_uto">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример работы с УТО</span>
+        <button class="upload-btn" onclick="document.getElementById('fileInput_uto').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileInput_uto" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_uto', 'uto')">
+        <div class="delete-btn" onclick="deleteScreenshot('screenshot_uto', 'uto')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== СЛАЙД 6: ФИЛЬТР ОШИБОК ===== -->
+    <div class="slide" data-slide="5">
+      <div class="slide-title"><i class="fas fa-tools"></i>Фильтр ошибок и предложение исправлений</div>
+      <div class="stat-card">
+        <span class="label">🔍 Фильтр ошибок</span>
+        <div class="error-filter">
+          <span class="tag">MIN 441 > Вместимость</span>
+          <span class="tag">Новинка без MIN 401</span>
+          <span class="tag">Запас > Вместимость</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+          <span class="btn btn-success" style="font-size:13px;">✅ Применить фильтр</span>
+          <span class="btn btn-danger" style="font-size:13px;">🗑️ Снять все</span>
+          <span class="btn btn-warning" style="font-size:13px;">💡 Предложить исправления</span>
+        </div>
+        <div class="sub" style="margin-top: 12px;">
+          <strong>📋 Результат фильтрации:</strong>
+          <table class="fix-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Магазин</th><th>Артикул</th><th>Наименование</th>
+                <th>Поле</th><th>Текущее</th><th>Рекомендуется</th><th>Причина</th><th>Действие</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td><td>8</td><td>18009222</td><td>ВЫШКА КЛАССИКА - 5</td>
+                <td>min 441 ПМ</td><td>6 шт</td><td>4 шт</td><td>MIN 441 (6) > вместимости (4)</td>
+                <td><span class="status-badge pending">⏳ Принять</span></td>
+              </tr>
+              <tr>
+                <td>2</td><td>165</td><td>18628541</td><td>РАПТОР СПИРАЛЬ ОТ КОМАРОВ Б/ЗАПАХА 10 ШТ</td>
+                <td>min 441 ПМ</td><td>48 шт</td><td>30 шт</td><td>MIN 441 (48) > вместимости (30)</td>
+                <td><span class="status-badge pending">⏳ Принять</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <span class="btn btn-success" style="font-size:13px;"><i class="fas fa-check"></i> Принять все</span>
+          <span class="btn btn-danger" style="font-size:13px;"><i class="fas fa-times"></i> Отклонить все</span>
+          <span class="btn btn-primary" style="font-size:13px;"><i class="fas fa-file-excel"></i> ВЫГРУЗИТЬ MIN Custom (ВСЕ МАГАЗИНЫ)</span>
+        </div>
+        <div class="tip"><i class="fas fa-info-circle"></i> После принятия система формирует готовый шаблон Excel для выгрузки</div>
+      </div>
+      <div class="screenshot-area" id="screenshot_fix">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример работы с исправлениями</span>
+        <button class="upload-btn" onclick="document.getElementById('fileInput_fix').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileInput_fix" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_fix', 'fix')">
+        <div class="delete-btn" onclick="deleteScreenshot('screenshot_fix', 'fix')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== СЛАЙД 7: ТИПИЧНЫЕ ОШИБКИ НОВИЧКОВ ===== -->
+    <div class="slide" data-slide="6">
+      <div class="slide-title"><i class="fas fa-exclamation-circle"></i>Типичные ошибки новичков</div>
+      <div class="error-list">
+        <div class="error-item danger">
+          <div class="error-title"><span class="icon">❌</span> Ошибка 1: Неправильное название файлов</div>
+          <div class="error-desc">Файлы должны иметь строго определённые названия, иначе система их не распознает.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Переименуйте файлы согласно инструкции или используйте кнопку «Загрузить все отчёты»</div>
+        </div>
+        <div class="error-item warning">
+          <div class="error-title"><span class="icon">⚠️</span> Ошибка 2: Игнорирование фильтров</div>
+          <div class="error-desc">Без фильтров сложно найти нужные артикулы среди сотен строк таблицы.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Используйте поиск по магазинам и фильтр по подотделам</div>
+        </div>
+        <div class="error-item danger">
+          <div class="error-title"><span class="icon">❌</span> Ошибка 3: Несвоевременная загрузка отчётов</div>
+          <div class="error-desc">Актуальность данных зависит от свежести загруженных отчётов.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Загружайте отчёты ежедневно или после каждого обновления в системе</div>
+        </div>
+        <div class="error-item success">
+          <div class="error-title"><span class="icon">💡</span> Совет: Используйте предложения системы</div>
+          <div class="error-desc">Система автоматически анализирует данные и предлагает оптимальные корректировки минимумов.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Доверяйте рекомендациям, но проверяйте контекст</div>
+        </div>
+      </div>
+      <div class="tip"><i class="fas fa-lightbulb"></i> Помните: система — это инструмент, а решения принимает менеджер</div>
+    </div>
+
+    <!-- ===== СЛАЙД 8: ALERT-СИСТЕМА ===== -->
+    <div class="slide" data-slide="7">
+      <div class="slide-title"><i class="fas fa-bell"></i>Alert — Аномалии</div>
+      <div class="grid-4">
+        <div class="stat-card" style="border-left: 4px solid #e74c3c;">
+          <span class="label">🔴 Перезапас</span>
+          <div class="value" style="font-size:16px; color:#e74c3c;">Избыток</div>
+          <div class="sub">Слишком большой запас</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #f39c12;">
+          <span class="label">🟡 Дефицит</span>
+          <div class="value" style="font-size:16px; color:#f39c12;">Риск</div>
+          <div class="sub">Запас на исходе</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #9b59b6;">
+          <span class="label">🟣 Ошибки в настройках</span>
+          <div class="value" style="font-size:16px; color:#9b59b6;">MIN-ошибки</div>
+          <div class="sub">Некорректные минимумы</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #c0392b;">
+          <span class="label">🔴 Критические</span>
+          <div class="value" style="font-size:16px; color:#c0392b;">Дефицит + УТО</div>
+          <div class="sub">Срочные действия</div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="screenshot_alert">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример Alert-системы</span>
+        <button class="upload-btn" onclick="document.getElementById('fileInput_alert').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileInput_alert" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_alert', 'alert')">
+        <div class="delete-btn" onclick="deleteScreenshot('screenshot_alert', 'alert')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== СЛАЙД 9: КОНТАКТЫ ПОДДЕРЖКИ (ФИНАЛ) ===== -->
+<div class="slide" data-slide="8">
+  <div class="slide-title"><i class="fas fa-headset"></i>Контакты поддержки</div>
+  <div class="contact-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+    <div class="contact-card">
+      <div class="icon">📧</div>
+      <div class="info">
+        <div class="label">Электронная почта</div>
+        <div class="value">
+          <a href="mailto:Denis.Scheblykin@lemanapro.ru" style="color: #003057; text-decoration: none; font-weight: 500;">
+            Denis.Scheblykin@lemanapro.ru
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="icon">📱</div>
+      <div class="info">
+        <div class="label">Группа в Коннекте</div>
+        <div class="value">
+          <a href="https://connect.lemanapro.ru/net_home/groups/6649?tab=feed" target="_blank" style="color: #003057; text-decoration: none; font-weight: 500;">
+            STOCKWISE · Группа
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="icon">👤</div>
+      <div class="info">
+        <div class="label">Профиль в Коннекте</div>
+        <div class="value">
+          <a href="https://connect.lemanapro.ru/net_home/people/36702?tab=Feed" target="_blank" style="color: #003057; text-decoration: none; font-weight: 500;">
+            Денис Щеблыкин
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tip" style="margin-top: 12px;">
+    <i class="fas fa-info-circle"></i> При возникновении вопросов обращайтесь в группу Коннекта или пишите на почту — мы всегда рады помочь!
+  </div>
+</div>
+
+    <!-- ===== СЛАЙД 10: ЗАКЛЮЧЕНИЕ ===== -->
+    <div class="slide" data-slide="9">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; text-align: center;">
+        <i class="fas fa-check-circle" style="font-size: 64px; color: #27ae60; margin-bottom: 16px;"></i>
+        <h2 style="color: #003057; font-size: 28px; margin-bottom: 8px;">Обучение завершено!</h2>
+        <p style="font-size: 18px; color: #2c3e50; margin-bottom: 8px;">Теперь вы готовы работать с порталом STOCKWISE</p>
+        <div style="margin-top: 24px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+          <span class="btn btn-primary" onclick="goToSlide(0)"><i class="fas fa-home"></i> К началу</span>
+          <span class="btn btn-success" onclick="window.open('https://shzapas.github.io/my-site/', '_blank')"><i class="fas fa-external-link-alt"></i> Открыть портал</span>
+        </div>
+        <div style="margin-top: 24px; padding: 12px 24px; background: #eef3fa; border-radius: 40px; font-size: 13px; color: #4a5b6f;">
+          <i class="fas fa-question-circle"></i> Вопросы? Обратитесь к наставнику
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== НАВИГАЦИЯ ===== -->
+  <div class="nav-bar">
+    <div class="dots" id="dotsContainer"></div>
+    <div class="nav-arrows">
+      <button id="prevBtn"><i class="fas fa-chevron-left"></i> Назад</button>
+      <button id="nextBtn">Вперед <i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ОВЕРЛЕЙ ДЛЯ ПРОСМОТРА ===== -->
+<div class="fullscreen-overlay" id="fullscreenOverlay" onclick="closeFullscreen()">
+  <img id="fullscreenImg" src="" alt="скриншот">
+</div>
+
+<!-- ===== СТАТУС ===== -->
+<div class="import-status" id="importStatus"></div>
+
+<script>
+  // ============================================================
+  // НАВИГАЦИЯ
+  // ============================================================
+  (function() {
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dotsContainer');
+    let current = 0;
+    const total = slides.length;
+    let isAnimating = false;
+    
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active-dot' : '');
+      dot.textContent = i + 1;
+      dot.dataset.index = i;
+      dot.addEventListener('click', () => goToSlide(i));
+      dotsContainer.appendChild(dot);
+    }
+    
+    window.goToSlide = function(index) {
+      if (isAnimating) return;
+      if (index < 0) index = 0;
+      if (index >= total) index = total - 1;
+      if (index === current) return;
+      
+      isAnimating = true;
+      const currentSlide = slides[current];
+      const nextSlide = slides[index];
+      
+      currentSlide.classList.add('exit');
+      
+      setTimeout(() => {
+        currentSlide.classList.remove('active', 'exit');
+        nextSlide.classList.add('active');
+        isAnimating = false;
+      }, 500);
+      
+      document.querySelectorAll('.dot').forEach((d, i) => {
+        d.classList.toggle('active-dot', i === index);
+      });
+      
+      current = index;
+    };
+    
+    document.getElementById('prevBtn').addEventListener('click', () => goToSlide(current - 1));
+    document.getElementById('nextBtn').addEventListener('click', () => goToSlide(current + 1));
+    
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goToSlide(current - 1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); goToSlide(current + 1); }
+    });
+  })();
+
+  // ============================================================
+  // ИНТЕРАКТИВНАЯ ДЕМОНСТРАЦИЯ
+  // ============================================================
+  document.querySelectorAll('.interactive-item').forEach(item => {
+    item.addEventListener('click', function() {
+      // Закрываем все остальные
+      document.querySelectorAll('.interactive-item').forEach(el => {
+        if (el !== this) el.classList.remove('active');
+      });
+      this.classList.toggle('active');
+    });
+  });
+
+  // ============================================================
+  // РАБОТА СО СКРИНШОТАМИ
+  // ============================================================
+  const screenshotData = {};
+
+  window.handleScreenshotUpload = function(event, containerId, storageId) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      screenshotData[storageId] = dataUrl;
+      
+      container.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.alt = 'скриншот';
+      img.onclick = function(e) { e.stopPropagation(); openFullscreen(this.src); };
+      container.appendChild(img);
+      container.classList.add('has-image');
+      
+      const deleteBtn = document.createElement('div');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = '✕';
+      deleteBtn.title = 'Удалить скриншот';
+      deleteBtn.onclick = function(e) {
+        e.stopPropagation();
+        deleteScreenshot(containerId, storageId);
+      };
+      container.appendChild(deleteBtn);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.deleteScreenshot = function(containerId, storageId) {
+    if (!confirm('Удалить этот скриншот?')) return;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    delete screenshotData[storageId];
+    const labels = {
+      'screenshot_structure': 'Скриншот структуры портала',
+      'screenshot_upload': 'Пример загрузки отчётов',
+      'screenshot_table': 'Пример сводной таблицы',
+      'screenshot_uto': 'Пример работы с УТО',
+      'screenshot_fix': 'Пример исправлений',
+      'screenshot_alert': 'Пример Alert-системы'
+    };
+    container.innerHTML = `
+      <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> ${labels[containerId] || 'Скриншот'}</span>
+      <button class="upload-btn" onclick="document.getElementById('fileInput_${storageId}').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+    `;
+    container.classList.remove('has-image');
+  };
+
+  window.openFullscreen = function(src) {
+    const overlay = document.getElementById('fullscreenOverlay');
+    const img = document.getElementById('fullscreenImg');
+    img.src = src;
+    overlay.classList.add('active');
+  };
+  window.closeFullscreen = function() {
+    document.getElementById('fullscreenOverlay').classList.remove('active');
+  };
+
+  // ============================================================
+  // ЭКСПОРТ / ИМПОРТ
+  // ============================================================
+  window.exportData = function() {
+    const status = document.getElementById('importStatus');
+    status.textContent = '⏳ Сбор данных...';
+    status.className = 'import-status show';
+    
+    try {
+      const exportData = {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        screenshots: screenshotData
+      };
+      const json = JSON.stringify(exportData);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'stockwise_presentation.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      status.textContent = `✅ Экспортировано ${Object.keys(screenshotData).length} скриншотов.`;
+      status.className = 'import-status show success';
+      setTimeout(() => { status.className = 'import-status'; }, 3000);
+    } catch (error) {
+      status.textContent = '❌ Ошибка экспорта';
+      status.className = 'import-status show error';
+      setTimeout(() => { status.className = 'import-status'; }, 3000);
+    }
+  };
+
+  window.importData = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const status = document.getElementById('importStatus');
+    status.textContent = '⏳ Импорт...';
+    status.className = 'import-status show';
+    
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      if (!data.version) throw new Error('Неверный формат');
+      
+      const map = {
+        'structure': 'screenshot_structure',
+        'upload': 'screenshot_upload',
+        'table': 'screenshot_table',
+        'uto': 'screenshot_uto',
+        'fix': 'screenshot_fix',
+        'alert': 'screenshot_alert'
+      };
+      
+      let count = 0;
+      if (data.screenshots) {
+        for (const [storageId, dataUrl] of Object.entries(data.screenshots)) {
+          screenshotData[storageId] = dataUrl;
+          const containerId = map[storageId];
+          if (containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+              container.innerHTML = '';
+              const img = document.createElement('img');
+              img.src = dataUrl;
+              img.alt = 'скриншот';
+              img.onclick = function(e) { e.stopPropagation(); openFullscreen(this.src); };
+              container.appendChild(img);
+              container.classList.add('has-image');
+              const deleteBtn = document.createElement('div');
+              deleteBtn.className = 'delete-btn';
+              deleteBtn.textContent = '✕';
+              deleteBtn.onclick = function(e) {
+                e.stopPropagation();
+                deleteScreenshot(containerId, storageId);
+              };
+              container.appendChild(deleteBtn);
+              count++;
+            }
+          }
+        }
+      }
+      
+      status.textContent = `✅ Импортировано ${count} скриншотов.`;
+      status.className = 'import-status show success';
+      setTimeout(() => { status.className = 'import-status'; }, 3000);
+      event.target.value = '';
+    } catch (error) {
+      status.textContent = '❌ Ошибка импорта';
+      status.className = 'import-status show error';
+      setTimeout(() => { status.className = 'import-status'; }, 3000);
+    }
+  };
+</script>
+</body>
+</html>
