@@ -209,7 +209,7 @@
                 <ul>
                     <li><strong>📤 Экспорт:</strong> выгружает все артикулы, переведённые в ТОП2</li>
                     <li><strong>📥 Импорт:</strong> загружает список артикулов, которые уже переведены в ТОП2</li>
-                    <li>Формат: Артикул, Номер магазина, Дата применения</li>
+                    <li>Формат: Артикул, Номер магазина, Атрибут ТОП (или просто Артикул, Номер магазина)</li>
                 </ul>
             </details>
         </div>
@@ -235,7 +235,7 @@
                     </div>
 
                     <div class="upload-section">
-                        <label>📎 Загрузить список ТОП2</label>
+                        <label>📎 Загрузить список ТОП2 (Артикул, Номер магазина)</label>
                         <div style="display:flex;gap:6px;margin-top:4px;">
                             <input type="file" id="top2ListFile" accept=".xlsx,.xls,.csv,.txt" style="font-size:0.65rem;flex:1;">
                             <button class="btn" id="loadTop2ListBtn" style="padding:3px 12px;font-size:0.6rem;">📤 Загрузить</button>
@@ -488,7 +488,7 @@
     loadFile('postavkiFile', state.postavki, 'postavkiStatus', 'Поставки');
 
     // ============================================================
-    // 3. Импорт истории ТОП2
+    // 3. Импорт/Экспорт истории
     // ============================================================
     function importHistoryFromFile() {
         const input = document.createElement('input');
@@ -526,21 +526,60 @@
 
                 let added = 0;
                 for (const row of imported) {
-                    const article = toStr(row['Артикул'] || row['article'] || row['Article']);
-                    const store = toStr(row['Номер магазина'] || row['store'] || row['Store'] || row['Магазин']);
+                    // Ищем артикул в разных вариантах
+                    let article = toStr(row['Артикул'] || row['article'] || row['Article']);
+                    if (!article) {
+                        // Если нет заголовка, берем первое значение
+                        const values = Object.values(row);
+                        if (values.length > 0) article = toStr(values[0]);
+                    }
+                    
+                    let store = toStr(row['Номер магазина'] || row['store'] || row['Store'] || row['Магазин']);
+                    if (!store) {
+                        const values = Object.values(row);
+                        if (values.length > 1) store = toStr(values[1]);
+                    }
+                    
+                    // Если все еще нет магазина - пробуем найти в строке с атрибутом ТОП2
+                    if (!store) {
+                        for (const [key, val] of Object.entries(row)) {
+                            if (String(val).includes('ТОП2') || String(val).includes('ТОП2')) {
+                                // Если нашли ТОП2, пробуем взять первый числовой столбец как магазин
+                                for (const [k2, v2] of Object.entries(row)) {
+                                    if (k2 !== key && !isNaN(parseInt(v2))) {
+                                        store = toStr(v2);
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    
                     if (article && store) {
-                        const key = `${store}|${article}`;
-                        if (!state.appliedSet.has(key)) {
-                            state.appliedSet.add(key);
-                            const dateStr = row['Дата'] || row['date'] || row['Date'] || new Date().toISOString();
-                            state.history.push({ store, article, date: new Date(dateStr).toISOString() || new Date().toISOString() });
-                            added++;
+                        // Очищаем артикул от лишних символов
+                        article = article.replace(/[^0-9]/g, '');
+                        store = store.replace(/[^0-9]/g, '');
+                        
+                        if (article && store) {
+                            const key = `${store}|${article}`;
+                            if (!state.appliedSet.has(key)) {
+                                state.appliedSet.add(key);
+                                const dateStr = row['Дата'] || row['date'] || row['Date'] || new Date().toISOString();
+                                state.history.push({ 
+                                    store, 
+                                    article, 
+                                    date: new Date(dateStr).toISOString() || new Date().toISOString() 
+                                });
+                                added++;
+                            }
                         }
                     }
                 }
                 
                 saveHistory();
                 hideLoading();
+                document.getElementById('top2ListStatus').textContent = `Загружено: ${added} артикулов (всего в истории: ${state.history.length})`;
                 showToast(`✅ Импортировано ${added} артикулов`, 'success');
                 applyFilters();
                 renderHistory();
@@ -554,9 +593,6 @@
         input.click();
     }
 
-    // ============================================================
-    // 4. Экспорт истории ТОП2
-    // ============================================================
     function exportHistoryToFile() {
         if (!state.history.length) {
             showToast('История пуста', 'warning');
@@ -603,7 +639,7 @@
     }
 
     // ============================================================
-    // 5. Сведение отчётов
+    // 4. Сведение отчётов
     // ============================================================
     function mergeReports() {
         if (!state.gamma.length) { showToast('Загрузите Гамму', 'error'); return; }
@@ -911,7 +947,7 @@
     }
 
     // ============================================================
-    // 6. Построение мультиселекта
+    // 5. Построение мультиселекта
     // ============================================================
     function buildMultiSelect(containerId, items, selectedSet) {
         const container = document.getElementById(containerId);
@@ -942,7 +978,7 @@
     }
 
     // ============================================================
-    // 7. Фильтрация и отображение
+    // 6. Фильтрация и отображение
     // ============================================================
     function applyFilters() {
         let data = [...state.merged];
@@ -1149,7 +1185,7 @@
     }
 
     // ============================================================
-    // 8. История
+    // 7. История
     // ============================================================
     function renderHistory() {
         const tbody = document.getElementById('historyBody');
@@ -1236,7 +1272,7 @@
     }
 
     // ============================================================
-    // 9. Экспорт шаблонов
+    // 8. Экспорт шаблонов
     // ============================================================
     function exportTemplate(onlyApplied = false, topAttribute = 'ТОП2') {
         let data = [];
@@ -1357,7 +1393,7 @@
     }
 
     // ============================================================
-    // 10. Загрузка списка ТОП2
+    // 9. Загрузка списка ТОП2 (в левой панели)
     // ============================================================
     document.getElementById('loadTop2ListBtn').addEventListener('click', function() {
         const input = document.getElementById('top2ListFile');
@@ -1391,8 +1427,23 @@
 
                 let added = 0;
                 for (const row of data) {
-                    const article = toStr(row['Артикул'] || row['article'] || row['Article']);
-                    const store = toStr(row['Номер магазина'] || row['store'] || row['Store'] || row['Магазин']);
+                    // Ищем артикул
+                    let article = toStr(row['Артикул'] || row['article'] || row['Article']);
+                    if (!article) {
+                        const values = Object.values(row);
+                        if (values.length > 0) article = toStr(values[0]);
+                    }
+                    
+                    let store = toStr(row['Номер магазина'] || row['store'] || row['Store'] || row['Магазин']);
+                    if (!store) {
+                        const values = Object.values(row);
+                        if (values.length > 1) store = toStr(values[1]);
+                    }
+                    
+                    // Очищаем
+                    if (article) article = article.replace(/[^0-9]/g, '');
+                    if (store) store = store.replace(/[^0-9]/g, '');
+                    
                     if (article && store) {
                         const key = `${store}|${article}`;
                         if (!state.appliedSet.has(key)) {
@@ -1422,7 +1473,7 @@
     });
 
     // ============================================================
-    // 11. Инициализация
+    // 10. Инициализация
     // ============================================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
