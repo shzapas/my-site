@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>STOCKWISE — Умный анализ резервов</title>
     <script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=111267729', 'ym');
-
-    ym(111267729, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/111267729" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=110478648', 'ym');
+    
+        ym(110478648, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/110478648" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
      <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <style>
@@ -682,6 +682,8 @@
         .quick-filter-btn.best-active.active { background: #f9a825; color: #1e1e1e; border-color: #f9a825; }
         .quick-filter-btn.min-active { border-color: #e65100; color: #e65100; }
         .quick-filter-btn.min-active.active { background: #e65100; color: white; border-color: #e65100; }
+        .quick-filter-btn.puto-active { border-color: #1e88e5; color: #1e88e5; }
+        .quick-filter-btn.puto-active.active { background: #1e88e5; color: white; border-color: #1e88e5; }
         
         .quick-filter-status { font-size: 0.5rem; color: #1a5e1a; margin-top: 2px; text-align: center; }
         
@@ -1130,8 +1132,8 @@
             </span>
             <button id="toggleModeBtn" class="mode-toggle-btn basic">🔄 Онлайн-редактор</button>
             <button id="expandPanelBtnGlobal" class="global-expand-btn">▶ Панель</button>
-            <a href="https://shzapas.github.io/my-site/index2.html" target="_blank" class="nav-btn ts-btn">🟢 ТС Аналитика</a>
-            <a href="https://shzapas.github.io/my-site/" target="_blank" class="nav-btn almaz-btn">💎 Алмаз</a>
+            <a href="https://shdencic-prog.github.io/lemana-pro/TS.html" target="_blank" class="nav-btn ts-btn">🟢 ТС Аналитика</a>
+            <a href="https://shdencic-prog.github.io/lemana-pro/almaz.html" target="_blank" class="nav-btn almaz-btn">💎 Алмаз</a>
         </div>
     </div>
     <!-- ===== Модальное окно инструкции ===== -->
@@ -1177,7 +1179,7 @@
                         <li>По ТОП (1, 2, 0)</li>
                         <li><strong>Поиск по артикулу, штрихкоду, поставщику</strong> — ищет по всем магазинам</li>
                         <li>Если артикул не найден — показывает понятное сообщение</li>
-                        <li><strong>Быстрые фильтры (УТО, Бест, Мины) показывают понятное сообщение, если товаров нет</strong></li>
+                        <li><strong>Быстрые фильтры (УТО, Бест, Мины, ПУТО) показывают понятное сообщение, если товаров нет</strong></li>
                     </ul>
                 </div>
                 
@@ -1388,6 +1390,7 @@
                     <button class="quick-filter-btn uto-active" data-filter="uto" id="filterUtoBtn">📊 УТО</button>
                     <button class="quick-filter-btn best-active" data-filter="best" id="filterBestBtn">⭐ Бест</button>
                     <button class="quick-filter-btn min-active" data-filter="min" id="filterMinBtn">📋 Мины</button>
+                    <button class="quick-filter-btn puto-active" data-filter="puto" id="filterPutoBtn">📌 ПУТО</button>
                 </div>
                 <div id="quickFilterStatus" class="quick-filter-status">🔍 Показаны все товары</div>
                 
@@ -2012,11 +2015,11 @@ function getTomorrowDay() {
 const BASE_COLUMNS = [
     "№ магазина","Артикул","Наименование","BEST гамма","BEST NEXT","Гамма","ТОП","LOC","Статус","CPQ",
     "min дн","max дн.","Авто min","min ЦО Проект","min ЦО ПАК-Подиум","min ЦО коорд","min 401 NEW","min 441 ПМ","min 500 Проект","min 902 B2B",
-    "max шт.","Брак","ЭКСПО","През. минимум","ТЖ/ПАК","Подиум магазина","Улич. Торг","Наибольший резерв MIN",
+    "max шт.","Брак","ЭКСПО","През. минимум","ТЖ/ПАК","Подиум магазина","Улич. Торг", "Доп. презентация","Наибольший резерв MIN","Наибольший резерв MIN (число)",
     "Вид минимума","Кол-во проектов",
     "Вместимость","Наполненность полки",
     "Отгружено в сред. За 7 дн","Теор сток ГАММА","Запас, шт.","Запас, дн.","В пути, шт.","В пути, дн.","Размер упаковки",
-    "УТО, руб.","УТО, шт.","Кол-во случаев перебоя за 30 дн","Кол-во дней в перебое","20/80","ТС","МС","Корекции","Недопоставки",
+    "УТО, руб.","ПУТО","УТО, шт.","Кол-во случаев перебоя за 30 дн","Кол-во дней в перебое","20/80","ТС","МС","Корекции","Недопоставки",
     "Подотдел","ТИП","Дни выхода заказа поставщика","Номер поставщика","Поставщик","Запас больше вместимости",
     "Дата AVS","Штрихкод"
 ];
@@ -2033,7 +2036,7 @@ const ZERO_AS_EMPTY_COLUMNS = [
     "max дн.", "Авто min", "min ЦО Проект", "min ЦО ПАК-Подиум", 
     "min ЦО коорд", "min 401 NEW", "min 441 ПМ", "min 500 Проект", 
     "min 902 B2B", "max шт.", "Брак", "ЭКСПО", "През. минимум", 
-    "ТЖ/ПАК", "Подиум магазина", "Улич. Торг"
+    "ТЖ/ПАК", "Подиум магазина", "Улич. Торг","Доп. презентация",
 ];
 
 if (appState.visibleColumns && appState.visibleColumns.length) {
@@ -2081,7 +2084,7 @@ const excelHeaderColors = {
     "min ЦО Проект": "E3F2FD", "min ЦО ПАК-Подиум": "E3F2FD", "min ЦО коорд": "E3F2FD",
     "min 401 NEW": "E3F2FD", "min 441 ПМ": "E3F2FD", "min 500 Проект": "E3F2FD", "min 902 B2B": "E3F2FD",
     "max шт.": "FFF3E0", "Брак": "E3F2FD", "ЭКСПО": "E3F2FD", "През. минимум": "E3F2FD",
-    "ТЖ/ПАК": "E3F2FD", "Подиум магазина": "E3F2FD", "Улич. Торг": "E3F2FD", "Наибольший резерв MIN": "E3F2FD",
+    "ТЖ/ПАК": "E3F2FD", "Подиум магазина": "E3F2FD", "Улич. Торг": "E3F2FD", "Доп. презентация": "E3F2FD", "Наибольший резерв MIN": "E3F2FD",
     "Вид минимума": "FFF8E1", "Кол-во проектов": "FFF8E1",
     "Вместимость": "FFB347", "Наполненность полки": "E8F5E9",
     "Отгружено в сред. За 7 дн": "FFEBEE",
@@ -2169,7 +2172,7 @@ const maxMap = new Map();
 const avtoMinMap = new Map();
 const bestsMap = new Map();
 const utoMap = new Map();
-const postavkiMap = new Map();
+const postavkiMap = new Map(); // КЛЮЧ: store|supplierCode, ЗНАЧЕНИЕ: дни заказа
 const korrekciiMap = new Map();
 const nedopostavkiMap = new Map();
 const ekspoMap = new Map();
@@ -2187,6 +2190,265 @@ function getStoreValue(item, possibleKeys = []) {
         }
     }
     return "";
+}
+
+// ==================== ОБНОВЛЕННАЯ ФУНКЦИЯ getMinDataByType ====================
+function getMinDataByType(store, art, type) {
+    const key = `${store}|${art}`;
+    const items = reservyMap.get(key);
+    if (!items) return [];
+    const result = [];
+    
+    for (const item of items) {
+        const reserveType = String(item["Резерв"] || "").trim();
+        // Проверяем, соответствует ли тип резерва искомому типу или содержит его
+        if (reserveType && (reserveType === type || reserveType.includes(type) || type.includes(reserveType))) {
+            const count = toNumber(item["Кол-во резерва"]);
+            let startDate = null;
+            let endDate = null;
+            if (item["Дата начала"]) {
+                const startStr = String(item["Дата начала"]).trim();
+                const parts = startStr.split('.');
+                if (parts.length === 3) {
+                    startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                } else {
+                    startDate = new Date(startStr);
+                }
+                if (startDate) startDate.setHours(0, 0, 0, 0);
+            }
+            if (item["Дата окончания"]) {
+                const endStr = String(item["Дата окончания"]).trim();
+                const parts = endStr.split('.');
+                if (parts.length === 3) {
+                    endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                } else {
+                    endDate = new Date(endStr);
+                }
+                if (endDate) endDate.setHours(0, 0, 0, 0);
+            }
+            result.push({
+                count: count,
+                startDate: startDate,
+                endDate: endDate,
+                rawStart: item["Дата начала"] || "",
+                rawEnd: item["Дата окончания"] || ""
+            });
+        }
+    }
+    return result;
+}
+
+// ==================== ИСПРАВЛЕННАЯ ФУНКЦИЯ getActiveMinData ====================
+function getActiveMinData(store, art) {
+    const key = `${store}|${art}`;
+    const items = reservyMap.get(key);
+    if (!items) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Расширенный список ключевых слов для MIN'ов
+    const minKeywords = [
+        "Мин Магазин Амбиция проекта шт",
+        "Мин Магазин ПМ шт",
+        "Мин Магазин В2В шт",
+        "Мин Новый товар шт",
+        "Мин ЦО Амбиция проекта шт",
+        "Мин ЦО Пак-Подиум шт",
+        "Мин ЦО коорд. шт",
+        "Мин ЦО Проект",
+        "Мин Магазин Амбиция",
+        "Мин Магазин ПМ",
+        "Мин Магазин В2В",
+        "Мин Новый товар",
+        "Мин ЦО",
+        "Авто min",
+        "През. минимум",
+        "ТЖ/ПАК",
+        "Подиум магазина",
+        "Уличн. торговля",
+        "Доп. презентация",
+        "мин",
+        "min"
+    ];
+
+    // Сопоставление типа MIN с кодом для поля "Вид минимума"
+    const typeToCodeMap = {
+        "Мин Магазин Амбиция проекта шт": "500",
+        "Мин Магазин ПМ шт": "441",
+        "Мин Магазин В2В шт": "902",
+        "Мин Новый товар шт": "401",
+        "Мин ЦО Амбиция проекта шт": "500",
+        "Мин ЦО Пак-Подиум шт": "500",
+        "Мин ЦО коорд. шт": "500",
+        "Мин ЦО Проект": "500",
+        "Мин Магазин Амбиция": "500",
+        "Мин Магазин ПМ": "441",
+        "Мин Магазин В2В": "902",
+        "Мин Новый товар": "401",
+        "Мин ЦО": "500",
+        "През. минимум": "През.",
+        "ТЖ/ПАК": "ТЖ/ПАК",
+        "Подиум магазина": "Подиум",
+        "Уличн. торговля": "Улич.",
+        "Доп. презентация": "Доп.",
+        "Авто min": "Авто"
+    };
+
+    let activeMin = null;
+    let maxActiveCount = 0;
+    
+    for (const item of items) {
+        const reserveType = String(item["Резерв"] || "").trim();
+        if (!reserveType) continue;
+        
+        // Проверяем, содержит ли тип резерва ключевое слово MIN
+        let isMin = false;
+        const lowerReserveType = reserveType.toLowerCase();
+        for (const keyword of minKeywords) {
+            if (lowerReserveType.includes(keyword.toLowerCase())) {
+                isMin = true;
+                break;
+            }
+        }
+        
+        if (!isMin) continue;
+        
+        const count = toNumber(item["Кол-во резерва"]);
+        if (count <= 0) continue;
+
+        // Парсим даты
+        let startDate = null;
+        let endDate = null;
+        
+        if (item["Дата начала"]) {
+            const startStr = String(item["Дата начала"]).trim();
+            const parts = startStr.split('.');
+            if (parts.length === 3) {
+                startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+                startDate = new Date(startStr);
+            }
+            if (startDate) startDate.setHours(0, 0, 0, 0);
+        }
+        
+        if (item["Дата окончания"]) {
+            const endStr = String(item["Дата окончания"]).trim();
+            const parts = endStr.split('.');
+            if (parts.length === 3) {
+                endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+                endDate = new Date(endStr);
+            }
+            if (endDate) endDate.setHours(0, 0, 0, 0);
+        }
+
+        // Проверяем активность MIN на текущую дату
+        let isActive = false;
+        
+        // Если нет дат начала и окончания -> MIN активен всегда
+        if (!startDate && !endDate) {
+            isActive = true;
+        }
+        // Если есть только дата начала
+        else if (startDate && !endDate) {
+            isActive = startDate <= today;
+        }
+        // Если есть только дата окончания
+        else if (!startDate && endDate) {
+            isActive = endDate >= today;
+        }
+        // Если есть обе даты
+        else if (startDate && endDate) {
+            isActive = startDate <= today && endDate >= today;
+        }
+
+        if (isActive && count > maxActiveCount) {
+            maxActiveCount = count;
+            // Определяем код для поля "Вид минимума"
+            let code = "500";
+            for (const [key, val] of Object.entries(typeToCodeMap)) {
+                if (reserveType.includes(key) || key.includes(reserveType)) {
+                    code = val;
+                    break;
+                }
+            }
+            activeMin = {
+                type: reserveType,
+                count: count,
+                startDate: startDate,
+                endDate: endDate,
+                rawStart: item["Дата начала"] || "",
+                rawEnd: item["Дата окончания"] || "",
+                code: code
+            };
+        }
+    }
+
+    // Если нет активных MIN'ов, берем любой MIN с максимальным значением (без учета дат)
+    // НО: только если он не имеет даты начала в будущем
+    if (!activeMin) {
+        let maxCount = 0;
+        for (const item of items) {
+            const reserveType = String(item["Резерв"] || "").trim();
+            if (!reserveType) continue;
+            
+            let isMin = false;
+            const lowerReserveType = reserveType.toLowerCase();
+            for (const keyword of minKeywords) {
+                if (lowerReserveType.includes(keyword.toLowerCase())) {
+                    isMin = true;
+                    break;
+                }
+            }
+            if (!isMin) continue;
+            
+            const count = toNumber(item["Кол-во резерва"]);
+            if (count <= 0) continue;
+            
+            // Проверяем, не начинается ли MIN в будущем
+            let startsInFuture = false;
+            if (item["Дата начала"]) {
+                const startStr = String(item["Дата начала"]).trim();
+                const parts = startStr.split('.');
+                let startDate = null;
+                if (parts.length === 3) {
+                    startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                } else {
+                    startDate = new Date(startStr);
+                }
+                if (startDate) {
+                    startDate.setHours(0, 0, 0, 0);
+                    startsInFuture = startDate > today;
+                }
+            }
+            
+            // Пропускаем MIN'ы, которые начинаются в будущем
+            if (startsInFuture) continue;
+            
+            if (count > maxCount) {
+                maxCount = count;
+                let code = "500";
+                for (const [key, val] of Object.entries(typeToCodeMap)) {
+                    if (reserveType.includes(key) || key.includes(reserveType)) {
+                        code = val;
+                        break;
+                    }
+                }
+                activeMin = {
+                    type: reserveType,
+                    count: count,
+                    startDate: null,
+                    endDate: null,
+                    rawStart: item["Дата начала"] || "",
+                    rawEnd: item["Дата окончания"] || "",
+                    code: code
+                };
+            }
+        }
+    }
+
+    return activeMin;
 }
 
 function buildMaps() {
@@ -2263,14 +2525,19 @@ function buildMaps() {
         } 
     }
     
+    // --- ИСПРАВЛЕНИЕ: Детали поставки (поставщики) с учетом магазина ---
     postavkiMap.clear();
     for (const item of postavkiData) { 
+        const store = getStoreValue(item, ["Магазин", "№ магазина"]);
         const supplierCode = String(item["Поставщик"] || item["№ поставщика"] || "").trim();
         const daysOrder = String(item["Дни заказа"] || item["Дни выхода заказа"] || "").trim();
-        if (supplierCode && daysOrder) { 
-            postavkiMap.set(supplierCode, daysOrder);
+        // КЛЮЧ: store|supplierCode
+        if (store && supplierCode && daysOrder) {
+            const key = `${store}|${supplierCode}`;
+            postavkiMap.set(key, daysOrder);
         } 
     }
+    console.log(`📦 Дни заказа поставщиков (по магазинам): ${postavkiMap.size} комбинаций`);
     
     korrekciiMap.clear();
     for (const item of korrekciiData) { 
@@ -2359,7 +2626,7 @@ function getFieldValue(item, possibleNames) {
     return "";
 }
 
-// ==================== calculateRow ====================
+// ==================== ОБНОВЛЕННАЯ calculateRow ====================
 function calculateRow(gammaItem) {
     const artikul = String(gammaItem["Артикул"] || "").trim();
     const store = String(gammaItem["№ магазина"] || "").trim();
@@ -2385,59 +2652,229 @@ function calculateRow(gammaItem) {
         topValue = "";
     }
     
+    // --- ПОЛУЧАЕМ ДАННЫЕ ПО РЕЗЕРВАМ ---
+    const items = reservyMap.get(mapKey) || [];
+
+    // 1. Суммируем резервы по типам (для остальных колонок)
+    const typeToColumnMap = {
+        "Мин Магазин Амбиция проекта шт": "min 500 Проект",
+        "Мин Магазин ПМ шт": "min 441 ПМ",
+        "Мин Магазин В2В шт": "min 902 B2B",
+        "Мин Новый товар шт": "min 401 NEW",
+        "Мин ЦО Амбиция проекта шт": "min ЦО Проект",
+        "Мин ЦО Пак-Подиум шт": "min ЦО ПАК-Подиум",
+        "Мин ЦО коорд. шт": "min ЦО коорд",
+        "През. минимум": "През. минимум",
+        "ТЖ/ПАК": "ТЖ/ПАК",
+        "Подиум магазина": "Подиум магазина",
+        "Уличн. торговля": "Улич. Торг",
+        "Доп. презентация": "Доп. презентация",
+        "Брак": "Брак",
+        "ЭКСПО": "ЭКСПО"
+    };
+
+    // Инициализируем суммы для всех типов
+    const sums = {
+        "min 500 Проект": 0, "min 441 ПМ": 0, "min 902 B2B": 0, "min 401 NEW": 0,
+        "min ЦО Проект": 0, "min ЦО ПАК-Подиум": 0, "min ЦО коорд": 0,
+        "През. минимум": 0, "ТЖ/ПАК": 0, "Подиум магазина": 0, "Улич. Торг": 0, "Доп. презентация": 0,
+        "Брак": 0, "ЭКСПО": 0
+    };
+
+    // Суммируем все резервы
+    for (const item of items) {
+        const reserveType = String(item["Резерв"] || "").trim();
+        const count = toNumber(item["Кол-во резерва"]);
+        const colName = typeToColumnMap[reserveType];
+        if (colName && sums.hasOwnProperty(colName)) {
+            sums[colName] += count;
+        }
+    }
+
+    // Извлекаем отдельные значения
     const minDn = getMaxReserveByKeyword(store, artikul) || 0;
     const maxItem = maxMap.get(mapKey);
     const maxDn = maxItem ? (maxItem["Дни, значение"] || 0) : 0;
     const maxSht = maxItem ? (maxItem["Штуки, значение"] || 0) : 0;
     const avtoMin = avtoMinMap.get(mapKey) || 0;
-    const minTsProekt = getSumByReserve(store, artikul, "Мин ЦО Амбиция проекта шт") || 0;
-    const minTsPakPodium = getSumByReserve(store, artikul, "Мин ЦО Пак-Подиум шт") || 0;
-    const minTsKoord = getSumByReserve(store, artikul, "Мин ЦО коорд. шт") || 0;
-    const minNoviyTovar = getSumByReserve(store, artikul, "Мин Новый товар шт") || 0;
-    const minPm = getSumByReserve(store, artikul, "Мин Магазин ПМ шт") || 0;
-    const minAmbitsiya = getSumByReserve(store, artikul, "Мин Магазин Амбиция проекта шт") || 0;
-    const minV2B = getSumByReserve(store, artikul, "Мин Магазин В2В шт") || 0;
-    const brak = getSumByReserve(store, artikul, "Брак") || 0;
-    const ekspo = ekspoMap.get(mapKey) || getSumByReserve(store, artikul, "ЭКСПО") || 0;
-    const prezMinimum = getSumByReserve(store, artikul, "През. минимум") || 0;
-    const tjPak = getSumByReserve(store, artikul, "ТЖ/ПАК") || 0;
-    const podiumMagazina = getSumByReserve(store, artikul, "Подиум магазина") || 0;
-    const ulichnTorg = getSumByReserve(store, artikul, "Уличн. торговля") || 0;
+    const minTsProekt = sums["min ЦО Проект"] || 0;
+    const minTsPakPodium = sums["min ЦО ПАК-Подиум"] || 0;
+    const minTsKoord = sums["min ЦО коорд"] || 0;
+    const minNoviyTovar = sums["min 401 NEW"] || 0;
+    const minPm = sums["min 441 ПМ"] || 0;
+    const minAmbitsiya = sums["min 500 Проект"] || 0;
+    const minV2B = sums["min 902 B2B"] || 0;
+    const brak = sums["Брак"] || 0;
+    const ekspo = sums["ЭКСПО"] || 0;
+    const prezMinimum = sums["През. минимум"] || 0;
+    const tjPak = sums["ТЖ/ПАК"] || 0;
+    const podiumMagazina = sums["Подиум магазина"] || 0;
+    const ulichnTorg = sums["Улич. Торг"] || 0;
+    const dopPrezentaciya = sums["Доп. презентация"] || 0;
+
+    // --- 2. НАХОДИМ НАИБОЛЬШИЙ РЕЗЕРВ MIN (максимальное значение среди ВСЕХ активных MIN'ов) ---
+// Получаем все MIN'ы с датами
+const allMinData = [];
+const minKeywords = [
+    "Мин Магазин Амбиция проекта шт",
+    "Мин Магазин ПМ шт",
+    "Мин Магазин В2В шт",
+    "Мин Новый товар шт",
+    "Мин ЦО Амбиция проекта шт",
+    "Мин ЦО Пак-Подиум шт",
+    "Мин ЦО коорд. шт",
+    "Мин ЦО Проект",
+    "През. минимум",
+    "ТЖ/ПАК",
+    "Подиум магазина",
+    "Уличн. торговля",
+    "Доп. презентация",
+    "Авто min",
+    "мин",
+    "min"
+];
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+// Проходим по всем резервам для этого артикула в магазине
+for (const item of items) {
+    const reserveType = String(item["Резерв"] || "").trim();
+    if (!reserveType) continue;
     
-    const minTypes = {
-        "Авто min": toNumber(avtoMin),
-        "min ЦО Проект": toNumber(minTsProekt),
-        "min ЦО ПАК-Подиум": toNumber(minTsPakPodium),
-        "min ЦО коорд": toNumber(minTsKoord),
-        "min 401 NEW": toNumber(minNoviyTovar),
-        "min 441 ПМ": toNumber(minPm),
-        "min 500 Проект": toNumber(minAmbitsiya),
-        "min 902 B2B": toNumber(minV2B)
-    };
-    
-    let maxMinValue = 0;
-    let maxMinType = "";
-    for (const [type, value] of Object.entries(minTypes)) {
-        if (value > maxMinValue) {
-            maxMinValue = value;
-            maxMinType = type;
+    // Проверяем, содержит ли тип резерва ключевое слово MIN
+    let isMin = false;
+    const lowerReserveType = reserveType.toLowerCase();
+    for (const keyword of minKeywords) {
+        if (lowerReserveType.includes(keyword.toLowerCase())) {
+            isMin = true;
+            break;
         }
     }
     
-    const typeFullName = {
-        "Авто min": "Авто min",
-        "min ЦО Проект": "min ЦО Проект",
-        "min ЦО ПАК-Подиум": "min ЦО ПАК-Подиум",
-        "min ЦО коорд": "min ЦО коорд",
-        "min 401 NEW": "401 NEW",
-        "min 441 ПМ": "441 ПМ",
-        "min 500 Проект": "500 Проект",
-        "min 902 B2B": "902 B2B"
-    };
+    if (!isMin) continue;
     
-    const fullName = typeFullName[maxMinType] || maxMinType;
-    const naibolshiyRezervMin = maxMinValue > 0 ? `${fullName} (${maxMinValue})` : "";
+    const count = toNumber(item["Кол-во резерва"]);
+    if (count <= 0) continue;
+
+    // Парсим даты
+    let startDate = null;
+    let endDate = null;
+    if (item["Дата начала"]) {
+        const startStr = String(item["Дата начала"]).trim();
+        const parts = startStr.split('.');
+        if (parts.length === 3) {
+            startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        } else {
+            startDate = new Date(startStr);
+        }
+        if (startDate) startDate.setHours(0, 0, 0, 0);
+    }
+    if (item["Дата окончания"]) {
+        const endStr = String(item["Дата окончания"]).trim();
+        const parts = endStr.split('.');
+        if (parts.length === 3) {
+            endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        } else {
+            endDate = new Date(endStr);
+        }
+        if (endDate) endDate.setHours(0, 0, 0, 0);
+    }
+
+    // Проверяем, активен ли MIN на текущую дату
+    const isActive = (!startDate || startDate <= today) && (!endDate || endDate >= today);
     
+    if (isActive) {
+        allMinData.push({
+            type: reserveType,
+            count: count,
+            startDate: startDate,
+            endDate: endDate
+        });
+    }
+}
+
+// Находим максимальное значение среди активных MIN'ов
+let maxMinValue = 0;
+let maxMinType = "";
+for (const min of allMinData) {
+    if (min.count > maxMinValue) {
+        maxMinValue = min.count;
+        maxMinType = min.type;
+    }
+}
+
+// Если нет активных MIN'ов, берем максимальный среди всех (без учета дат)
+if (maxMinValue === 0) {
+    for (const item of items) {
+        const reserveType = String(item["Резерв"] || "").trim();
+        if (!reserveType) continue;
+        
+        let isMin = false;
+        const lowerReserveType = reserveType.toLowerCase();
+        for (const keyword of minKeywords) {
+            if (lowerReserveType.includes(keyword.toLowerCase())) {
+                isMin = true;
+                break;
+            }
+        }
+        if (!isMin) continue;
+        
+        const count = toNumber(item["Кол-во резерва"]);
+        if (count > maxMinValue) {
+            maxMinValue = count;
+            maxMinType = reserveType;
+        }
+    }
+}
+
+// Сопоставляем тип резерва с названием колонки
+const typeToDisplayName = {
+    "Мин Магазин Амбиция проекта шт": "500 Проект",
+    "Мин Магазин ПМ шт": "441 ПМ",
+    "Мин Магазин В2В шт": "902 B2B",
+    "Мин Новый товар шт": "401 NEW",
+    "Мин ЦО Амбиция проекта шт": "ЦО Проект",
+    "Мин ЦО Пак-Подиум шт": "ЦО ПАК-Подиум",
+    "Мин ЦО коорд. шт": "ЦО коорд",
+    "Мин ЦО Проект": "ЦО Проект",
+    "През. минимум": "През. минимум",
+    "ТЖ/ПАК": "ТЖ/ПАК",
+    "Подиум магазина": "Подиум магазина",
+    "Уличн. торговля": "Улич. Торг",
+    "Доп. презентация": "Доп. презентация",
+    "Авто min": "Авто min"
+};
+
+const displayName = typeToDisplayName[maxMinType] || maxMinType;
+const naibolshiyRezervMin = maxMinValue > 0 ? `${displayName} (${maxMinValue})` : "";
+const naibolshiyRezervMinNumber = maxMinValue;
+
+    // --- 3. ОПРЕДЕЛЯЕМ АКТИВНЫЙ MIN НА ТЕКУЩУЮ ДАТУ (для Вид минимума и Кол-во проектов) ---
+    const activeMin = getActiveMinData(store, artikul);
+    let activeMinType = "";
+    let activeMinCount = 0;
+
+    if (activeMin) {
+        const typeMap = {
+            "Мин Магазин Амбиция проекта шт": "500",
+            "Мин Магазин ПМ шт": "441",
+            "Мин Магазин В2В шт": "902",
+            "Мин Новый товар шт": "401",
+            "Мин ЦО Амбиция проекта шт": "500",
+            "Мин ЦО Пак-Подиум шт": "500",
+            "Мин ЦО коорд. шт": "500",
+            "През. минимум": "През.",
+            "ТЖ/ПАК": "ТЖ/ПАК",
+            "Подиум магазина": "Подиум",
+            "Уличн. торговля": "Улич.",
+            "Доп. презентация": "Доп."
+        };
+        activeMinType = typeMap[activeMin.type] || "500";
+        activeMinCount = activeMin.count;
+    }
+
+    // --- 4. РАСЧЕТ ОСТАЛЬНЫХ ПОКАЗАТЕЛЕЙ ---
     const teorStokGamma = toNumber(gammaItem["Сумма Кол-во в запасе"]) || 0;
     const otgruzheno = toNumber(gammaItem["Отгруженное кол-во"]) || 0;
     const otgruzhenoSred = otgruzheno > 0 ? round(otgruzheno / 6, 1) : 0;
@@ -2474,7 +2911,8 @@ function calculateRow(gammaItem) {
     const pereboiCount = utoItem ? toNumber(utoItem["Кол-во случаев перебоя за 30 дней"]) || 0 : 0;
     const pereboiDays = utoItem ? toNumber(utoItem["Кол-во дней в перебое за 30 дней"]) || 0 : 0;
     const supplierCode = supplier || String(gammaItem["Номер поставщика"] || gammaItem["№ Поставщика"] || "").trim();
-    const dniZakaza = postavkiMap.get(supplierCode) || "";
+    // Ищем дни заказа по КЛЮЧУ store|supplierCode
+    const dniZakaza = postavkiMap.get(`${store}|${supplierCode}`) || "";
     const korrekcii = korrekciiMap.get(mapKey) || 0;
     const nedopostavki = nedopostavkiMap.get(mapKey) || 0;
     
@@ -2489,6 +2927,15 @@ function calculateRow(gammaItem) {
     let percentZapasa = 0;
     if (vmesimost > 0 && zapasSht > 0) {
         percentZapasa = Math.min(round((zapasSht / vmesimost) * 100, 0), 100);
+    }
+
+    // --- 5. РАСЧЕТ ПУТО (Потенциальное УТО) ---
+    let puto = 0;
+    const zapasDaysNum = zapasDn;
+    const vPutishShtNum = vPutishSht;
+    const vPutishDnNum = vPutishDn;
+    if (zapasDaysNum < 21 && zapasDaysNum > 0 && (vPutishShtNum === 0 || vPutishDnNum === 0)) {
+        puto = 1;
     }
     
     function cleanValue(val, colName) {
@@ -2528,9 +2975,11 @@ function calculateRow(gammaItem) {
         "ТЖ/ПАК": cleanValue(tjPak, "ТЖ/ПАК"),
         "Подиум магазина": cleanValue(podiumMagazina, "Подиум магазина"),
         "Улич. Торг": cleanValue(ulichnTorg, "Улич. Торг"),
+        "Доп. презентация": cleanValue(dopPrezentaciya, "Доп. презентация"),
         "Наибольший резерв MIN": naibolshiyRezervMin,
-        "Вид минимума": "",
-        "Кол-во проектов": "",
+        "Наибольший резерв MIN (число)": naibolshiyRezervMinNumber,
+        "Вид минимума": activeMinType,
+        "Кол-во проектов": activeMinCount > 0 ? activeMinCount : "",
         "Вместимость": cleanValue(vmesimost, "Вместимость"),
         "Наполненность полки": percentZapasa,
         "Отгружено в сред. За 7 дн": cleanValue(otgruzhenoSred, "Отгружено в сред. За 7 дн"),
@@ -2541,6 +2990,7 @@ function calculateRow(gammaItem) {
         "В пути, дн.": vPutishDn === 999 ? 999 : cleanValue(vPutishDn, "В пути, дн."),
         "Размер упаковки": gammaItem["Размер упаковки"] || "",
         "УТО, руб.": cleanValue(utoRub, "УТО, руб."),
+        "ПУТО": puto,
         "УТО, шт.": cleanValue(utoSht, "УТО, шт."),
         "Кол-во случаев перебоя за 30 дн": cleanValue(pereboiCount, "Кол-во случаев перебоя за 30 дн"),
         "Кол-во дней в перебое": cleanValue(pereboiDays, "Кол-во дней в перебое"),
@@ -2572,7 +3022,8 @@ function applyQuickFilter(filter) {
         'all': '🔍 Показаны все товары',
         'uto': '📊 Показаны товары с УТО',
         'best': '⭐ Показаны товары с признаком Бест',
-        'min': `📋 Показаны товары с заказом на ${getTomorrowDay()}`
+        'min': `📋 Показаны товары с заказом на ${getTomorrowDay()}`,
+        'puto': '📌 Показаны товары с ПУТО'
     };
     const statusDiv = document.getElementById('quickFilterStatus');
     if (statusDiv) statusDiv.textContent = statusMap[filter] || statusMap['all'];
@@ -2644,7 +3095,6 @@ function applyFilters() {
                 result = result.filter(row => String(row["Подотдел"] || "") === subdeptFilter);
             }
             
-            // Фильтр по типу — только если выбран подотдел
             if (typeFilter !== 'all') {
                 if (subdeptFilter === 'all') {
                     showToast('⚠️ Для фильтрации по типу сначала выберите подотдел', 'warning', 3000);
@@ -2733,7 +3183,14 @@ function applyFilters() {
                 const tomorrow = getTomorrowDay();
                 result = result.filter(row => {
                     const days = String(row["Дни выхода заказа поставщика"] || "").trim();
-                    return days === tomorrow;
+                    if (!days) return false;
+                    // Разбиваем строку по запятым и проверяем, есть ли завтрашний день
+                    const dayList = days.split(',').map(d => d.trim());
+                    return dayList.includes(tomorrow);
+                });
+            } else if (activeQuickFilter === 'puto') {
+                result = result.filter(row => {
+                    return toNumber(row["ПУТО"], 0) === 1;
                 });
             }
             
@@ -2742,7 +3199,8 @@ function applyFilters() {
                 const quickFilterName = {
                     'uto': 'УТО',
                     'best': 'Бест',
-                    'min': 'Мины'
+                    'min': 'Мины',
+                    'puto': 'ПУТО'
                 };
                 const filterName = quickFilterName[activeQuickFilter] || activeQuickFilter;
                 emptyType = 'empty_quickfilter';
@@ -3034,7 +3492,8 @@ function renderFullTableWithFilter(emptyType = null) {
         const quickFilterName = {
             'uto': 'УТО',
             'best': 'Бест',
-            'min': 'Мины'
+            'min': 'Мины',
+            'puto': 'ПУТО'
         };
         
         if (emptyType === 'empty_quickfilter') {
@@ -3105,7 +3564,8 @@ function renderFullTableWithFilter(emptyType = null) {
                         (row["BEST NEXT"] && row["BEST NEXT"] !== "");
         
         const tomorrow = getTomorrowDay();
-        const hasMin = String(row["Дни выхода заказа поставщика"] || "").trim() === tomorrow;
+        const daysString = String(row["Дни выхода заказа поставщика"] || "").trim();
+        const hasMin = daysString.split(',').map(d => d.trim()).includes(tomorrow);
         
         if (isEdited) tr.classList.add('edited-row');
         if (hasUto) tr.classList.add('uto-row');
@@ -3270,7 +3730,7 @@ function renderFullTableWithFilter(emptyType = null) {
                 
                 if (MIN_COLUMNS.includes(col)) {
                     const tomorrow = getTomorrowDay();
-                    if (String(value || "").trim() === tomorrow) {
+                    if (String(value || "").trim().split(',').map(d => d.trim()).includes(tomorrow)) {
                         td.classList.add('min-highlight');
                     }
                 }
@@ -3354,7 +3814,8 @@ function updateAnalytics(data) {
         }
         
         const tomorrow = getTomorrowDay();
-        const hasMin = String(row["Дни выхода заказа поставщика"] || "").trim() === tomorrow;
+        const daysString = String(row["Дни выхода заказа поставщика"] || "").trim();
+        const hasMin = daysString.split(',').map(d => d.trim()).includes(tomorrow);
         if (hasMin) {
             storeStats[store].min++;
             totalMin++;
@@ -3805,7 +4266,7 @@ function exportCardData(cardType) {
             const tomorrow = getTomorrowDay();
             items = data.filter(row => {
                 const days = String(row["Дни выхода заказа поставщика"] || "").trim();
-                return days === tomorrow;
+                return days.split(',').map(d => d.trim()).includes(tomorrow);
             });
             fileName = 'Мины_заказ_завтра';
             reason = `Заказ поставщика на ${tomorrow}`;
@@ -4159,7 +4620,6 @@ async function exportChanges() {
             if (!minType && !quantity) continue;
             if (!quantity) quantity = "0";
             
-            // Определяем комментарий, если не установлен
             if (!comment) {
                 comment = data.isAnomaly ? "аномалия" : "ручная корректировка";
             }
@@ -4487,6 +4947,13 @@ async function exportAllData() {
         return; 
     }
     
+    // Используем ВИДИМЫЕ колонки для экспорта
+    const visibleCols = FULL_COLUMNS.filter(col => visibleColumns.has(col));
+    if (!visibleCols.length) {
+        showToast('Нет видимых колонок для экспорта', 'warning');
+        return;
+    }
+    
     const loadingDiv = document.getElementById('loadingIndicator');
     loadingDiv.style.display = 'block';
     document.getElementById('loadingText').innerText = 'Формируем Excel...';
@@ -4495,12 +4962,12 @@ async function exportAllData() {
         const worksheet = workbook.addWorksheet('Сводная STOCKWISE');
         worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
         
-        const headerRow = worksheet.addRow(FULL_COLUMNS);
+        const headerRow = worksheet.addRow(visibleCols);
         headerRow.font = { bold: true, color: { argb: "FF000000" } };
         headerRow.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
         headerRow.height = 30;
         
-        FULL_COLUMNS.forEach((col, idx) => {
+        visibleCols.forEach((col, idx) => {
             const cell = headerRow.getCell(idx + 1);
             const color = excelHeaderColors[col] || "FFB347";
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${color}` } };
@@ -4509,7 +4976,7 @@ async function exportAllData() {
         
         for (const row of dataToExport) {
             const rowData = [];
-            for (const col of FULL_COLUMNS) {
+            for (const col of visibleCols) {
                 let value = row[col];
                 if (value === undefined || value === null) value = '';
                 if (EDITABLE_COLUMNS.includes(col)) {
@@ -4523,14 +4990,14 @@ async function exportAllData() {
                 rowData.push(value);
             }
             const dataRow = worksheet.addRow(rowData);
-            FULL_COLUMNS.forEach((col, idx) => {
+            visibleCols.forEach((col, idx) => {
                 const cell = dataRow.getCell(idx + 1);
                 cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
             });
         }
         
         worksheet.columns.forEach((column, idx) => {
-            let maxLength = FULL_COLUMNS[idx].length + 3;
+            let maxLength = visibleCols[idx].length + 3;
             worksheet.getColumn(idx + 1).eachCell({ includeEmpty: true }, (cell) => {
                 const cellValue = cell.value ? String(cell.value).length : 0;
                 maxLength = Math.max(maxLength, cellValue + 2);
@@ -4538,7 +5005,7 @@ async function exportAllData() {
             worksheet.getColumn(idx + 1).width = Math.min(maxLength, 35);
         });
         
-        worksheet.autoFilter = { from: 'A1', to: `${String.fromCharCode(64 + FULL_COLUMNS.length)}${dataToExport.length + 1}` };
+        worksheet.autoFilter = { from: 'A1', to: `${String.fromCharCode(64 + visibleCols.length)}${dataToExport.length + 1}` };
         
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -5209,21 +5676,18 @@ function clearErrorFilters() {
 
 // ===== ПРЕДЛОЖИТЬ ИСПРАВЛЕНИЯ (ОБНОВЛЁННАЯ ВЕРСИЯ) =====
 function suggestFixes() {
-    // Получаем активные фильтры ошибок
     const checkboxes = document.querySelectorAll('.error-filter');
     const activeFilters = {};
     checkboxes.forEach(cb => {
         activeFilters[cb.dataset.type] = cb.checked;
     });
     
-    // Проверяем, есть ли активные фильтры
     const hasActiveFilters = Object.values(activeFilters).some(v => v === true);
     if (!hasActiveFilters) {
         showToast('⚠️ Выберите хотя бы один тип ошибок для сканирования', 'warning');
         return;
     }
     
-    // Фильтруем ошибки по выбранным типам
     let filteredErrors = alertData.errors.filter(row => {
         if (row.errorType === 'min441' && !activeFilters.min441) return false;
         if (row.errorType === 'min401' && !activeFilters.min401) return false;
@@ -5251,7 +5715,6 @@ function suggestFixes() {
         const article = row["Артикул"] || '';
         const name = row["Наименование"] || '';
         
-        // 1. MIN 441 > Вместимость
         if (min441 > vmesimost && vmesimost > 0 && min441 > 0) {
             const newMin = Math.floor(vmesimost);
             suggestions.push({
@@ -5269,7 +5732,6 @@ function suggestFixes() {
             });
         }
         
-        // 2. Новинка без MIN 401
         if (isNew && min401 === 0) {
             const recVal = vmesimost > 0 ? Math.ceil(vmesimost * 0.5) : 50;
             suggestions.push({
@@ -5287,7 +5749,6 @@ function suggestFixes() {
             });
         }
         
-        // 3. Запас > Вместимость
         if (zapasSht > vmesimost && vmesimost > 0) {
             let recommendation = '';
             let newMinValue = '500';
@@ -5665,6 +6126,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filterUtoBtn').addEventListener('click', () => applyQuickFilter('uto'));
     document.getElementById('filterBestBtn').addEventListener('click', () => applyQuickFilter('best'));
     document.getElementById('filterMinBtn').addEventListener('click', () => applyQuickFilter('min'));
+    document.getElementById('filterPutoBtn').addEventListener('click', () => applyQuickFilter('puto'));
     
     document.getElementById('applyArticleFilterBtn').addEventListener('click', () => applyArticleFilter());
     document.getElementById('clearArticleFilterBtn').addEventListener('click', () => clearArticleFilter());
@@ -5796,7 +6258,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderFullTableWithFilter();
     generateColumnToggles();
     
-    console.log('📌 STOCKWISE v2.0 готов!');
+    console.log('📌 STOCKWISE v2.1 готов!');
     console.log('📊 Умный анализ запасов');
     console.log('🏪 Двойной клик или Enter → MagPortal');
     console.log('🚨 Вкладка "Аномалии" — сканирование ошибок с фильтрацией');
@@ -5809,6 +6271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('📝 Комментарии в экспорте MIN: "ручная корректировка" или "аномалия"');
     console.log('⌨️ F1 - Аналитика, F2 - Таблица, F3 - Аномалии, F5 - Обновить');
     console.log('❓ Кнопка "Инструкция" для быстрого ознакомления');
+    console.log('🆕 Новое: ПУТО, активный MIN по датам, фильтр "Мины" по магазину+поставщику');
 });
 </script>
 </body>
