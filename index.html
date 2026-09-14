@@ -2642,7 +2642,7 @@ function calculateRow(gammaItem) {
     const gammaValue = String(gammaItem["Гамма"] || "").trim();
     const typeValue = String(gammaItem["Тип"] || "").trim();
     
-    let topValue = getFieldValue(gammaItem, ["Топ в магазине", "ТОП", "Top", "топ"]);
+    let topValue = getFieldValue(gammaItem, ["Сумма Топ в магазине", "Топ в магазине", "ТОП", "Top", "топ"]);
     if (topValue !== undefined && topValue !== null && topValue !== "") {
         const topStr = String(topValue).trim();
         if (topStr.match(/^\d+\.00$/)) {
@@ -4569,7 +4569,7 @@ function updateTopAndGammaFilters() {
     for (const item of gammaData) {
         let gamma = String(item["Гамма"] || "").trim();
         if (gamma !== "") gammaSet.add(gamma);
-        const top = item["ТОП"] || item["Топ в магазине"]; 
+        const top = item["ТОП"] || item["Сумма Топ в магазине"] || item["Топ в магазине"]; 
         if (top !== undefined && top !== null && top !== "") {
             topSet.add(String(top).trim());
         }
