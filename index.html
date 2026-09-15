@@ -2903,7 +2903,7 @@ const naibolshiyRezervMinNumber = maxMinValue;
         vPutishDn = 0;
     }
     
-    const vmesimost = toNumber(gammaItem["Вместимость полки"]) || 0;
+    const vmesimost = toNumber(gammaItem["Сумма Вместимость полки"]) || 0;
     const zapasBolsheVmes = (zapasSht >= vmesimost && vmesimost > 0) ? "да" : "нет";
     const utoItem = utoMap.get(mapKey);
     const utoRub = utoItem ? toNumber(utoItem["Уп.GMV руб"]) || 0 : 0;
@@ -4346,7 +4346,7 @@ async function loadExcelFileFromFile(file, reportName, targetArray) {
                 if (!rawData || rawData.length < 4) throw new Error("Файл пуст");
                 const headers = rawData[2] ? rawData[2].map(h => String(h || "").trim()) : [];
                 
-                const possibleArtColumns = ["Артикул", "SKU", "Код", "Article", "ЛМ-код"];
+                const possibleArtColumns = ["Артикул", "Мастер артикул", "SKU", "Код", "Article", "ЛМ-код"];
                 let artColName = "Артикул";
                 for (const col of possibleArtColumns) {
                     if (headers.includes(col)) { artColName = col; break; }
