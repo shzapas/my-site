@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STOCKWISE · Лемана ПРО — Инструменты товарного запаса</title>
+
+<!-- SEO -->
+<meta name="description" content="STOCKWISE — рабочий портал команды товарного запаса Лемана ПРО. Инструменты анализа запасов, резервов, токсичного стока и обучение в одном месте.">
+<meta name="theme-color" content="#ffa938">
+
+<!-- Open Graph (для красивых превью в мессенджерах) -->
+<meta property="og:title" content="STOCKWISE · Лемана ПРО — Инструменты товарного запаса">
+<meta property="og:description" content="Все инструменты товарного запаса в одном месте: STOCKWISE, PROGNOZ, ТОП-2, ТС Аналитика и Обучение.">
+<meta property="og:type" content="website">
+
+<!-- Favicon: SVG-иконка с графиком в стиле портала -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffa938'/%3E%3Cpath d='M7 22V10h3v12H7zm6 0V15h3v7h-3zm6 0v-9h3v9h-3z' fill='%23fff'/%3E%3C/svg%3E">
+
+<style>
+  :root{
+    --orange:#ffa938;
+    --orange-dark:#e89320;
+    --orange-light:#ffcf7a;
+    --blue-light:#ddeeff;
+    --blue-dark:#2c3e50;
+    --white:#ffffff;
+    --gray:#6b7a8d;
+    --shadow:0 4px 16px rgba(44,62,80,0.10);
+    --shadow-hover:0 12px 32px rgba(255,169,56,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+    background:linear-gradient(180deg,#ddeeff 0%, #f4f9ff 100%);
+    color:var(--blue-dark);
+    min-height:100vh;
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+
+  /* ЖИВОЙ ФОН */
+  .bg-blobs{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
+  .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.3;animation:blobFloat 18s ease-in-out infinite;}
+  .blob.b1{width:400px;height:400px;background:var(--orange);top:-120px;left:-120px;}
+  .blob.b2{width:340px;height:340px;background:#7fb4ff;bottom:-100px;right:-80px;animation-delay:-6s;}
+  .blob.b3{width:280px;height:280px;background:var(--orange-light);top:40%;left:60%;animation-delay:-12s;}
+  @keyframes blobFloat{
+    0%,100%{transform:translate(0,0) scale(1);}
+    33%{transform:translate(40px,-30px) scale(1.1);}
+    66%{transform:translate(-30px,30px) scale(.95);}
+  }
+
+  /* ПРОГРЕСС-БАР */
+  .read-progress{
+    position:fixed;top:0;left:0;height:3px;width:0%;
+    background:linear-gradient(90deg,var(--orange),var(--orange-light));
+    z-index:999;transition:width .1s linear;
+    box-shadow:0 0 10px rgba(255,169,56,.6);
+  }
+
+  /* ШАПКА */
+  header{
+    background:linear-gradient(135deg, var(--blue-dark) 0%, #1a2735 100%);
+    color:#fff;padding:18px 20px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.15);
+    position:relative;overflow:hidden;
+  }
+  header::after{
+    content:"";position:absolute;right:-60px;top:-60px;
+    width:180px;height:180px;background:var(--orange);
+    opacity:.15;border-radius:50%;
+    animation:blobFloat 14s ease-in-out infinite;
+  }
+  .header-inner{
+    max-width:1200px;margin:0 auto;
+    display:flex;align-items:center;gap:20px;
+    position:relative;z-index:2;
+  }
+  .logo{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:800;}
+  .logo-mark{
+    width:46px;height:46px;background:var(--orange);
+    border-radius:12px;display:flex;align-items:center;justify-content:center;
+    font-size:24px;box-shadow:0 4px 14px rgba(255,169,56,.5);
+    animation:float 3s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+  .logo-text small{
+    display:block;font-size:11px;font-weight:400;
+    color:var(--orange);letter-spacing:2px;text-transform:uppercase;
+  }
+  .header-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+  .btn-header{
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.25);
+    color:#fff;padding:8px 14px;border-radius:9px;
+    font-size:12.5px;text-decoration:none;transition:.25s;
+    display:flex;align-items:center;gap:6px;
+  }
+  .btn-header:hover{background:var(--orange);border-color:var(--orange);transform:translateY(-2px);}
+
+  /* HERO — СЖАТЫЙ */
+  .hero{
+    max-width:1200px;margin:0 auto;
+    padding:32px 20px 12px;
+    display:grid;
+    grid-template-columns:1.2fr .8fr;
+    gap:32px;
+    align-items:center;
+  }
+  .hero-text h1{
+    font-size:clamp(24px, 3vw, 34px);
+    font-weight:800;line-height:1.2;
+    margin-bottom:12px;
+    animation:fadeUp .6s ease both;
+  }
+  .hero-text h1 span{color:var(--orange);}
+  .hero-text p{
+    font-size:15px;color:var(--gray);
+    margin-bottom:18px;max-width:560px;
+    animation:fadeUp .6s .1s ease both;
+  }
+  .hero-cta{
+    display:flex;gap:10px;flex-wrap:wrap;
+    animation:fadeUp .6s .15s ease both;
+  }
+  .btn-primary{
+    background:var(--orange);color:#fff;
+    padding:11px 22px;border-radius:10px;
+    text-decoration:none;font-weight:700;font-size:14px;
+    display:inline-flex;align-items:center;gap:8px;
+    box-shadow:0 6px 16px rgba(255,169,56,.4);
+    transition:.25s;
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(255,169,56,.55);}
+  .btn-secondary{
+    background:transparent;color:var(--blue-dark);
+    padding:11px 22px;border-radius:10px;
+    text-decoration:none;font-weight:700;font-size:14px;
+    display:inline-flex;align-items:center;gap:8px;
+    border:2px solid var(--blue-dark);transition:.25s;
+  }
+  .btn-secondary:hover{background:var(--blue-dark);color:#fff;transform:translateY(-2px);}
+
+  .hero-art{position:relative;animation:fadeUp .7s .1s ease both;}
+  .hero-art svg{width:100%;height:auto;max-height:280px;filter:drop-shadow(0 16px 32px rgba(44,62,80,.12));}
+  .float-badge{
+    position:absolute;
+    background:var(--white);
+    border-radius:12px;
+    padding:8px 12px;
+    box-shadow:0 8px 20px rgba(44,62,80,.15);
+    font-size:11.5px;font-weight:700;
+    display:flex;align-items:center;gap:6px;
+    animation:floatBadge 4s ease-in-out infinite;
+  }
+  .float-badge.badge-1{top:8%;left:-6px;}
+  .float-badge.badge-2{bottom:12%;right:-6px;animation-delay:-2s;}
+  @keyframes floatBadge{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-8px);}
+  }
+  @keyframes fadeUp{
+    from{opacity:0;transform:translateY(12px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  /* СТАТИСТИКА */
+  .stats{
+    max-width:1000px;margin:14px auto 0;
+    padding:0 20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:12px;
+  }
+  .stat{
+    background:var(--white);
+    border-radius:14px;
+    padding:14px 10px;
+    text-align:center;
+    box-shadow:var(--shadow);
+    border:1px solid #eef3f9;
+    transition:.3s;
+    animation:fadeUp .5s ease both;
+  }
+  .stat:hover{transform:translateY(-3px);border-color:var(--orange);}
+  .stat .num{
+    font-size:22px;font-weight:800;
+    color:var(--orange);line-height:1;
+    margin-bottom:5px;
+  }
+  .stat .lbl{
+    font-size:10.5px;color:var(--gray);
+    text-transform:uppercase;letter-spacing:.5px;font-weight:600;
+  }
+  .stat .ico{font-size:15px;margin-bottom:3px;display:block;opacity:.85;}
+
+  /* СЕКЦИИ */
+  .section{max-width:1200px;margin:36px auto 0;padding:0 20px;}
+  .section-title{
+    font-size:20px;font-weight:800;margin-bottom:6px;
+    display:flex;align-items:center;gap:9px;color:var(--blue-dark);
+  }
+  .section-title .dot{
+    width:9px;height:9px;background:var(--orange);border-radius:50%;
+    box-shadow:0 0 0 4px rgba(255,169,56,.25);
+    animation:pulseDot 2s infinite;
+  }
+  .section-sub{color:var(--gray);font-size:13.5px;margin-bottom:16px;}
+  @keyframes pulseDot{
+    0%,100%{box-shadow:0 0 0 4px rgba(255,169,56,.25);}
+    50%{box-shadow:0 0 0 8px rgba(255,169,56,.05);}
+  }
+
+  /* СЕТКА КАРТОЧЕК */
+  .grid{
+    max-width:1200px;margin:22px auto 0;
+    padding:0 20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+    gap:18px;
+  }
+  .card{
+    background:var(--white);
+    border-radius:18px;
+    padding:22px 20px 20px;
+    box-shadow:var(--shadow);
+    position:relative;cursor:pointer;
+    transition:transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s, border-color .28s;
+    border:2px solid transparent;
+    overflow:hidden;text-decoration:none;color:inherit;display:block;
+    animation:cardIn .5s ease both;
+    animation-delay:var(--delay,0s);
+  }
+  @keyframes cardIn{
+    from{opacity:0;transform:translateY(16px) scale(.97);}
+    to{opacity:1;transform:translateY(0) scale(1);}
+  }
+  .card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg, var(--orange), var(--orange-light));
+    transform:scaleX(0);transform-origin:left;transition:transform .35s;
+  }
+  .card:hover{
+    transform:translateY(-5px);
+    box-shadow:var(--shadow-hover);
+    border-color:var(--orange);
+  }
+  .card:hover::before{transform:scaleX(1);}
+  .card:active{transform:translateY(-1px) scale(.99);}
+  .card-icon{
+    width:52px;height:52px;border-radius:14px;
+    background:var(--blue-light);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:14px;transition:.35s;
+  }
+  .card:hover .card-icon{background:var(--orange);transform:rotate(-6deg) scale(1.05);}
+  .card-icon svg{
+    width:26px;height:26px;stroke:var(--orange-dark);
+    fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+    transition:stroke .3s;
+  }
+  .card:hover .card-icon svg{stroke:#fff;}
+  .card-icon svg path, .card-icon svg rect, .card-icon svg circle, .card-icon svg line{
+    stroke-dasharray:100;stroke-dashoffset:100;
+    animation:draw 1.2s ease forwards;animation-delay:var(--delay,0s);
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  .card h3{font-size:17px;font-weight:700;margin-bottom:6px;color:var(--blue-dark);}
+  .card p{font-size:13px;color:var(--gray);line-height:1.5;}
+  .card .badge{
+    display:inline-block;margin-top:10px;
+    font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--orange-dark);background:var(--blue-light);
+    padding:3px 9px;border-radius:20px;transition:.25s;
+  }
+  .card:hover .badge{background:var(--orange);color:#fff;}
+
+  /* КНОПКА "i" */
+  .info-btn{
+    position:absolute;top:14px;right:14px;
+    width:26px;height:26px;border-radius:50%;
+    background:var(--blue-light);border:none;
+    color:var(--orange-dark);font-weight:800;font-size:12px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:.25s;z-index:5;font-family:Georgia, serif;
+  }
+  .info-btn:hover{background:var(--orange);color:#fff;transform:scale(1.15) rotate(8deg);}
+  .tooltip{
+    position:absolute;top:46px;right:14px;
+    width:230px;background:var(--blue-dark);color:#fff;
+    padding:12px 14px;border-radius:10px;
+    font-size:12.5px;line-height:1.45;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    opacity:0;visibility:hidden;transform:translateY(-6px);
+    transition:.25s;z-index:10;
+  }
+  .tooltip.show{opacity:1;visibility:visible;transform:translateY(0);}
+  .tooltip::before{
+    content:"";position:absolute;top:-6px;right:14px;
+    width:12px;height:12px;background:var(--blue-dark);transform:rotate(45deg);
+  }
+  .tooltip strong{color:var(--orange);}
+
+  /* КАК ЭТО РАБОТАЕТ */
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:16px;
+  }
+  .step{
+    background:var(--white);
+    border-radius:16px;
+    padding:22px 20px;
+    box-shadow:var(--shadow);
+    border:1px solid #eef3f9;
+    position:relative;
+    transition:.3s;
+  }
+  .step:hover{transform:translateY(-5px);box-shadow:var(--shadow-hover);border-color:var(--orange);}
+  .step-num{
+    position:absolute;top:-14px;left:20px;
+    width:34px;height:34px;border-radius:10px;
+    background:var(--orange);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:16px;
+    box-shadow:0 6px 14px rgba(255,169,56,.45);
+  }
+  .step-ico{font-size:26px;margin-bottom:8px;display:block;}
+  .step h4{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--blue-dark);}
+  .step p{font-size:12.5px;color:var(--gray);}
+
+  /* КАРУСЕЛЬ */
+  .reviews-wrap{
+    background:var(--blue-dark);
+    border-radius:20px;
+    padding:32px 20px;
+    overflow:hidden;
+    position:relative;
+  }
+  .reviews-wrap::before{
+    content:"";position:absolute;top:-40px;right:-40px;
+    width:160px;height:160px;background:var(--orange);
+    opacity:.12;border-radius:50%;filter:blur(40px);
+  }
+  .reviews-title{
+    text-align:center;color:#fff;
+    font-size:18px;font-weight:800;margin-bottom:4px;
+  }
+  .reviews-sub{
+    text-align:center;color:#a9b8c9;font-size:12.5px;
+    margin-bottom:24px;
+  }
+  .carousel{
+    max-width:680px;
+    margin:0 auto;
+    position:relative;
+    min-height:170px;
+  }
+  .review{
+    position:absolute;inset:0;
+    background:var(--white);
+    border-radius:16px;
+    padding:24px 26px;
+    box-shadow:0 16px 40px rgba(0,0,0,.22);
+    opacity:0;transform:scale(.92) translateY(8px);
+    transition:opacity .6s ease, transform .6s ease;
+    pointer-events:none;
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  .review.active{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;z-index:2;}
+  .review.prev, .review.next{opacity:.22;transform:scale(.9) translateY(0);pointer-events:none;z-index:1;}
+  .review-stars{color:var(--orange);font-size:15px;margin-bottom:10px;letter-spacing:1px;}
+  .review-text{
+    font-size:14.5px;color:var(--blue-dark);
+    line-height:1.55;margin-bottom:14px;font-style:italic;
+  }
+  .review-author{display:flex;align-items:center;gap:10px;}
+  .review-avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:var(--orange);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:15px;
+  }
+  .review-info strong{display:block;font-size:13px;color:var(--blue-dark);}
+  .review-info small{font-size:11.5px;color:var(--gray);}
+
+  .carousel-dots{
+    display:flex;justify-content:center;gap:7px;
+    margin-top:20px;position:relative;z-index:5;
+  }
+  .dot-btn{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,.3);border:none;cursor:pointer;
+    transition:.25s;
+  }
+  .dot-btn.active{background:var(--orange);transform:scale(1.4);}
+  .carousel-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);
+    width:38px;height:38px;border-radius:50%;
+    background:var(--white);color:var(--blue-dark);
+    border:none;cursor:pointer;font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 18px rgba(0,0,0,.2);
+    z-index:10;transition:.25s;
+  }
+  .carousel-arrow:hover{background:var(--orange);color:#fff;transform:translateY(-50%) scale(1.1);}
+  .carousel-arrow.left{left:-19px;}
+  .carousel-arrow.right{right:-19px;}
+
+  /* ОБРАТНАЯ СВЯЗЬ — КОМПАКТНАЯ */
+  .feedback-single{
+    background:linear-gradient(135deg, var(--white) 0%, var(--blue-light) 100%);
+    border-radius:18px;
+    padding:22px 26px;
+    box-shadow:var(--shadow);
+    border:1px solid #eef3f9;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+    transition:.3s;
+  }
+  .feedback-single:hover{border-color:var(--orange);transform:translateY(-2px);}
+  .feedback-single .ico-big{
+    font-size:34px;
+    flex-shrink:0;
+    background:var(--white);
+    width:62px;height:62px;
+    border-radius:16px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(44,62,80,.1);
+  }
+  .feedback-single .txt{flex:1; min-width:200px;}
+  .feedback-single h4{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--blue-dark);}
+  .feedback-single p{font-size:13px;color:var(--gray);line-height:1.5;}
+  .feedback-single .btn-secondary{flex-shrink:0;font-size:13px;padding:10px 20px;}
+
+  /* FAQ */
+  .faq-item{
+    background:var(--white);
+    border-radius:12px;
+    margin-bottom:9px;
+    box-shadow:var(--shadow);
+    border:1px solid #eef3f9;
+    overflow:hidden;
+    transition:.25s;
+  }
+  .faq-item:hover{border-color:var(--orange);}
+  .faq-q{
+    padding:14px 20px;
+    font-weight:700;font-size:14px;
+    cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;
+    color:var(--blue-dark);user-select:none;
+  }
+  .faq-q::after{
+    content:"+";
+    font-size:20px;color:var(--orange);
+    transition:.3s;font-weight:800;
+  }
+  .faq-item.open .faq-q::after{transform:rotate(45deg);}
+  .faq-a{
+    max-height:0;overflow:hidden;
+    transition:max-height .35s ease, padding .35s ease;
+    padding:0 20px;
+    font-size:13px;color:var(--gray);line-height:1.55;
+  }
+  .faq-item.open .faq-a{max-height:300px;padding:0 20px 15px;}
+
+  /* ЖУРНАЛ */
+  .changelog{
+    background:var(--white);
+    border-radius:18px;padding:6px 0;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    border:1px solid #eef3f9;
+  }
+  .log-item{
+    display:flex;gap:14px;
+    padding:14px 22px;
+    border-bottom:1px solid #eef3f9;
+    transition:.25s;position:relative;
+  }
+  .log-item:last-child{border-bottom:none;}
+  .log-item:hover{background:var(--blue-light);}
+  .log-item.new::before{
+    content:"NEW";position:absolute;top:12px;right:18px;
+    font-size:9.5px;font-weight:800;letter-spacing:1px;
+    background:var(--orange);color:#fff;
+    padding:3px 7px;border-radius:5px;
+    animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(255,169,56,.6);}
+    50%{box-shadow:0 0 0 6px rgba(255,169,56,0);}
+  }
+  .log-date{
+    flex-shrink:0;width:88px;font-size:12px;
+    font-weight:700;color:var(--orange-dark);padding-top:2px;
+  }
+  .log-body h4{
+    font-size:14px;font-weight:700;margin-bottom:3px;
+    color:var(--blue-dark);display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  }
+  .log-body p{font-size:12.5px;color:var(--gray);}
+  .log-ver{
+    font-size:10px;font-weight:700;
+    color:var(--orange-dark);background:var(--blue-light);
+    padding:2px 7px;border-radius:5px;
+  }
+
+  /* ТОСТ */
+  .toast{
+    position:fixed;bottom:20px;right:20px;
+    background:var(--blue-dark);color:#fff;
+    padding:14px 18px;border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+    font-size:13px;max-width:300px;
+    display:flex;gap:10px;align-items:flex-start;
+    transform:translateY(140%);
+    transition:transform .45s cubic-bezier(.2,.8,.2,1);
+    z-index:100;border-left:4px solid var(--orange);
+  }
+  .toast.show{transform:translateY(0);}
+  .toast-icon{font-size:18px;flex-shrink:0;animation:swing 1.5s ease-in-out infinite;}
+  @keyframes swing{
+    0%,100%{transform:rotate(0);}
+    25%{transform:rotate(14deg);}
+    75%{transform:rotate(-14deg);}
+  }
+  .toast strong{display:block;margin-bottom:2px;color:var(--orange);}
+  .toast-close{
+    margin-left:auto;background:none;border:none;
+    color:#8fa3b8;cursor:pointer;font-size:16px;
+    padding:0 3px;transition:.2s;
+  }
+  .toast-close:hover{color:#fff;transform:rotate(90deg);}
+
+  /* КНОПКА НАВЕРХ */
+  .to-top{
+    position:fixed;bottom:20px;left:20px;
+    width:42px;height:42px;border-radius:50%;
+    background:var(--orange);color:#fff;
+    border:none;font-size:18px;cursor:pointer;
+    box-shadow:0 6px 18px rgba(255,169,56,.5);
+    opacity:0;visibility:hidden;transform:translateY(20px);
+    transition:.3s;z-index:99;
+  }
+  .to-top.show{opacity:1;visibility:visible;transform:translateY(0);}
+  .to-top:hover{transform:translateY(-3px) scale(1.08);}
+
+  /* ПОДВАЛ */
+  footer{
+    margin-top:44px;
+    background:var(--blue-dark);color:#a9b8c9;
+    padding:28px 20px 22px;text-align:center;
+    font-size:13px;position:relative;overflow:hidden;
+  }
+  footer::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg, var(--orange), var(--orange-light), var(--orange));
+    background-size:200% 100%;animation:slide 3s linear infinite;
+  }
+  @keyframes slide{to{background-position:-200% 0;}}
+  footer .foot-logo{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:17px;font-weight:800;color:#fff;margin-bottom:10px;
+  }
+  footer .foot-logo .logo-mark{width:30px;height:30px;font-size:16px;animation:none;border-radius:8px;}
+  footer a{color:var(--orange);text-decoration:none;transition:.2s;}
+  footer a:hover{text-decoration:underline;}
+  .foot-contacts{
+    display:flex;justify-content:center;gap:20px;
+    flex-wrap:wrap;margin:14px 0;
+  }
+  .foot-contacts a{
+    display:flex;align-items:center;gap:6px;font-size:13px;
+  }
+  .foot-contacts a:hover{transform:translateY(-2px);}
+
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;padding-top:20px;}
+    .hero-art{max-width:380px;margin:0 auto;}
+    .carousel-arrow.left{left:6px;}
+    .carousel-arrow.right{right:6px;}
+  }
+  @media(max-width:640px){
+    .header-inner{flex-wrap:wrap;}
+    .header-actions{margin-left:0;width:100%;margin-top:12px;}
+    .logo{font-size:20px;}
+    .logo-mark{width:40px;height:40px;font-size:21px;border-radius:11px;}
+    .log-date{width:auto;}
+    .log-item{flex-direction:column;gap:5px;}
+    .toast{left:20px;right:20px;max-width:none;}
+    .review{padding:20px;}
+    .reviews-wrap{padding:24px 12px;}
+    .feedback-single{padding:18px;}
+    .feedback-single .ico-big{width:52px;height:52px;font-size:28px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ФОН И ПРОГРЕСС -->
+<div class="bg-blobs">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+<div class="read-progress" id="readProgress"></div>
+
+<!-- ШАПКА -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">📊</div>
+      <div class="logo-text">
+        STOCKWISE
+        <small>Лемана ПРО · Портал</small>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="btn-header" href="https://connect.lemanapro.ru/net_home/people/36702?tab=Feed" target="_blank" rel="noopener">👤 Коннект</a>
+      <a class="btn-header" href="https://shzapas.github.io/my-site/%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5" target="_blank" rel="noopener">📚 Обучение</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>Управляйте запасом <span>умнее</span>, а не сложнее</h1>
+    <p>
+      STOCKWISE — рабочий портал команды товарного запаса Лемана ПРО. Все инструменты,
+      отчёты и обучение в одном месте. Загружайте данные, получайте аналитику и принимайте решения быстрее.
+    </p>
+    <div class="hero-cta">
+      <a class="btn-primary" href="#tools">🚀 Начать работу</a>
+      <a class="btn-secondary" href="https://shzapas.github.io/my-site/%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5" target="_blank" rel="noopener">📚 Обучение</a>
+    </div>
+  </div>
+  <div class="hero-art">
+    <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="20" y="26" width="360" height="220" rx="18" fill="#ffffff" stroke="#ddeeff" stroke-width="2"/>
+      <line x1="60" y1="216" x2="360" y2="216" stroke="#ddeeff" stroke-width="2"/>
+      <line x1="60" y1="180" x2="360" y2="180" stroke="#eef3f9" stroke-width="1"/>
+      <line x1="60" y1="144" x2="360" y2="144" stroke="#eef3f9" stroke-width="1"/>
+      <line x1="60" y1="108" x2="360" y2="108" stroke="#eef3f9" stroke-width="1"/>
+      <rect x="85" y="160" width="30" height="56" rx="5" fill="#ddeeff"/>
+      <rect x="131" y="132" width="30" height="84" rx="5" fill="#ddeeff"/>
+      <rect x="177" y="106" width="30" height="110" rx="5" fill="#ffcf7a"/>
+      <rect x="223" y="80" width="30" height="136" rx="5" fill="#ffa938"/>
+      <rect x="269" y="54" width="30" height="162" rx="5" fill="#e89320"/>
+      <polyline points="100,152 146,124 192,98 238,72 284,46" 
+        fill="none" stroke="#2c3e50" stroke-width="2" stroke-dasharray="5 4" opacity="0.5"/>
+    </svg>
+    <div class="float-badge badge-1">📈 Рост +32%</div>
+    <div class="float-badge badge-2">⏱ Экономия 2ч/день</div>
+  </div>
+</section>
+
+<!-- СТАТИСТИКА -->
+<div class="stats">
+  <div class="stat" style="animation-delay:.1s;">
+    <span class="ico">⏱</span>
+    <div class="num" data-count="1240" data-suffix="+">0</div>
+    <div class="lbl">Часов сэкономлено</div>
+  </div>
+  <div class="stat" style="animation-delay:.15s;">
+    <span class="ico">😊</span>
+    <div class="num" data-count="87" data-suffix="%">0</div>
+    <div class="lbl">Довольных пользователей</div>
+  </div>
+  <div class="stat" style="animation-delay:.2s;">
+    <span class="ico">💬</span>
+    <div class="num" id="statReviews" data-count="25">0</div>
+    <div class="lbl">Отзывов о портале</div>
+  </div>
+  <div class="stat" style="animation-delay:.25s;">
+    <span class="ico">🟢</span>
+    <div class="num" id="statOnline" data-count="3">0</div>
+    <div class="lbl">Онлайн сейчас</div>
+  </div>
+</div>
+
+<!-- ИНСТРУМЕНТЫ -->
+<div class="section" id="tools">
+  <div class="section-title"><span class="dot"></span> Наши инструменты</div>
+  <p class="section-sub">Всё, что нужно для ежедневной работы с товарным запасом — в одном месте.</p>
+</div>
+
+<div class="grid">
+
+  <a class="card" href="https://shzapas.github.io/my-site/" target="_blank" rel="noopener" style="--delay:.1s">
+    <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
+    <div class="tooltip">
+      <strong>STOCKWISE</strong><br>
+      Умный анализ запасов: загрузка 10 отчётов, сводная таблица с 32+ колонками,
+      фильтры УТО/Бест/Мины, Alert-система аномалий и экспорт изменений.
+    </div>
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-6"/></svg>
+    </div>
+    <h3>STOCKWISE</h3>
+    <p>Главный инструмент: загрузка отчётов, сводная таблица, УТО, Бест, Мины, Alert-система.</p>
+    <span class="badge">Основной</span>
+  </a>
+
+  <a class="card" href="https://shzapas.github.io/my-site/index1.html" target="_blank" rel="noopener" style="--delay:.15s">
+    <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
+    <div class="tooltip">
+      <strong>PROGNOZ</strong><br>
+      Управление резервами: 11 отчётов, прогноз «Алмаз» с коэффициентом сезонности,
+      статусы стока, расчёт срочности заказа.
+    </div>
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    </div>
+    <h3>PROGNOZ</h3>
+    <p>Управление резервами и прогноз «Алмаз»: сезонность, статусы стока, срочность заказа.</p>
+    <span class="badge">Резервы</span>
+  </a>
+
+  <a class="card" href="https://shzapas.github.io/my-site/%D0%A3%D0%A2%D0%9E" target="_blank" rel="noopener" style="--delay:.2s">
+    <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
+    <div class="tooltip">
+      <strong>ТОП-2</strong><br>
+      Финальная версия работы с ТОП-2: загрузка, фильтры, сводка по УТО,
+      управление снятием/продлением, история применений.
+    </div>
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </div>
+    <h3>ТОП-2</h3>
+    <p>Работа с ТОП-2: фильтры УТО, управление снятием и продлением, полная история.</p>
+    <span class="badge">ТОП-2</span>
+  </a>
+
+  <a class="card" href="https://shzapas.github.io/my-site/index2.html" target="_blank" rel="noopener" style="--delay:.25s">
+    <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
+    <div class="tooltip">
+      <strong>ТС Аналитика</strong><br>
+      Токсичный сток: ТОП-10 самых токсичных артикулов, рекомендации по трансферу
+      (ТС → УТО и между магазинами), сводная таблица по магазинам.
+    </div>
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+    </div>
+    <h3>ТС Аналитика</h3>
+    <p>Токсичный сток: ТОП-10 токсичных артикулов, рекомендации по трансферу, сводка по магазинам.</p>
+    <span class="badge">Токсичный сток</span>
+  </a>
+
+  <a class="card" href="https://shzapas.github.io/my-site/%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5" target="_blank" rel="noopener" style="--delay:.3s">
+    <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
+    <div class="tooltip">
+      <strong>Обучение STOCKWISE</strong><br>
+      Пошаговое руководство: структура портала, загрузка 10 отчётов, работа с таблицей,
+      УТО/Бест/Мины, фильтр ошибок, типичные ошибки новичков.
+    </div>
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    </div>
+    <h3>Обучение</h3>
+    <p>Пошаговое руководство по работе с порталом: от загрузки отчётов до исправления ошибок MIN.</p>
+    <span class="badge">Гайд</span>
+  </a>
+
+</div>
+
+<!-- КАК ЭТО РАБОТАЕТ -->
+<div class="section">
+  <div class="section-title"><span class="dot"></span> Как это работает</div>
+  <p class="section-sub">Три простых шага — от данных до готового решения.</p>
+</div>
+<div class="section" style="margin-top:0;">
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <span class="step-ico">📂</span>
+      <h4>Загрузите отчёты</h4>
+      <p>Выгрузите 10 стандартных отчётов из MagPortal и перетащите их в STOCKWISE. Система распознает их автоматически.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <span class="step-ico">📊</span>
+      <h4>Получите сводку</h4>
+      <p>Все данные соберутся в одну таблицу с 32+ колонками. Фильтры по УТО, Бест, Минам и критическому запасу — в один клик.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <span class="step-ico">✅</span>
+      <h4>Примите решения</h4>
+      <p>Скорректируйте минимумы прямо в таблице, выгрузите изменения и отправьте в работу. Alert-система подскажет аномалии.</p>
+    </div>
+  </div>
+</div>
+
+<!-- КАРУСЕЛЬ ОТЗЫВОВ -->
+<div class="section">
+  <div class="reviews-wrap">
+    <div class="reviews-title">💬 Что говорят коллеги</div>
+    <div class="reviews-sub">Реальные отзывы пользователей портала</div>
+
+    <div class="carousel" id="carousel">
+      <div class="review active">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">«Спасибо тебе большое за такие волшебные вещи как макрос онлайн и расширение алмаз, дай бог тебе здоровья ❤️»</div>
+        <div class="review-author">
+          <div class="review-avatar">А</div>
+          <div class="review-info"><strong>Аноним</strong><small>Менеджер товарного запаса</small></div>
+        </div>
+      </div>
+      <div class="review">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">«Супер. Спасибо большое 😍»</div>
+        <div class="review-author">
+          <div class="review-avatar">М</div>
+          <div class="review-info"><strong>Мария</strong><small>Специалист по запасам</small></div>
+        </div>
+      </div>
+      <div class="review">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">«Спасибо, Денчик! Практику уже переняли 🚀»</div>
+        <div class="review-author">
+          <div class="review-avatar">К</div>
+          <div class="review-info"><strong>Коллега</strong><small>Команда товарного запаса</small></div>
+        </div>
+      </div>
+      <div class="review">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">«Крутой инструмент 👍»</div>
+        <div class="review-author">
+          <div class="review-avatar">И</div>
+          <div class="review-info"><strong>Иван</strong><small>Менеджер</small></div>
+        </div>
+      </div>
+      <div class="review">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">«Привет! <a href="https://shdencic-prog.github.io/lemana-pro/" target="_blank" rel="noopener" style="color:#e89320;">shdencic-prog.github.io/lemana-pro</a> — прикольная штука))»</div>
+        <div class="review-author">
+          <div class="review-avatar">Д</div>
+          <div class="review-info"><strong>Дмитрий</strong><small>Пользователь портала</small></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="carousel-arrow left" onclick="moveReview(-1)" aria-label="Назад">‹</button>
+    <button class="carousel-arrow right" onclick="moveReview(1)" aria-label="Вперёд">›</button>
+
+    <div class="carousel-dots" id="carouselDots"></div>
+  </div>
+</div>
+
+<!-- ОБРАТНАЯ СВЯЗЬ — ОДНА КОМПАКТНАЯ КАРТОЧКА -->
+<div class="section">
+  <div class="section-title"><span class="dot"></span> Обратная связь</div>
+  <p class="section-sub">Есть идея или замечание — напишите нам.</p>
+</div>
+<div class="section" style="margin-top:0;">
+  <div class="feedback-single">
+    <div class="ico-big">❤️</div>
+    <div class="txt">
+      <h4>Ваша лучшая благодарность</h4>
+      <p>Оставьте обратную связь о работе портала на официальном сайте — мы читаем каждое сообщение и учитываем его в доработках.</p>
+    </div>
+    <a class="btn-secondary" href="https://hr.lemanapro.ru/feedback" target="_blank" rel="noopener">
+      🔗 Оставить отзыв
+    </a>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="section">
+  <div class="section-title"><span class="dot"></span> Частые вопросы</div>
+  <p class="section-sub">Ответы на популярные вопросы новичков.</p>
+</div>
+<div class="section" style="margin-top:0;">
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Как загрузить отчёты в STOCKWISE?</div>
+    <div class="faq-a">Слева на портале расположена панель с 10 загрузчиками. Кликните по нужному, выберите файл из MagPortal — система автоматически распознает его. После загрузки всех 10 отчётов появится сводная таблица.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Что такое УТО, Бест и Мины?</div>
+    <div class="faq-a">УТО — упущенный товарооборот из-за перебоев. Бест — товары-лидеры продаж. Мины — позиции, у которых заканчивается запас (заказ нужно делать уже завтра). Подробнее — в разделе «Обучение».</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Что делать, если данные не загружаются?</div>
+    <div class="faq-a">Проверьте, что файл выгружен из правильного раздела MagPortal и имеет правильное название. Если ошибка сохраняется — напишите разработчику в Коннект.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Можно ли редактировать минимумы прямо в таблице?</div>
+    <div class="faq-a">Да. В STOCKWISE есть колонки «Вид минимума» и «Кол-во проектов» — они редактируются онлайн. После изменений нажмите «Экспортировать изменения», чтобы выгрузить готовый шаблон.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Как предложить улучшение?</div>
+    <div class="faq-a">Воспользуйтесь корпоративным порталом обратной связи: <a href="https://hr.lemanapro.ru/feedback" target="_blank" rel="noopener" style="color:#e89320; font-weight:700;">hr.lemanapro.ru/feedback</a>.</div>
+  </div>
+</div>
+
+<!-- ЖУРНАЛ -->
+<div class="section">
+  <div class="section-title"><span class="dot"></span> Журнал изменений и доработок</div>
+  <div class="changelog" id="changelog">
+    <!-- ============================================================
+         РЕДАКТИРУЙТЕ ЗДЕСЬ. Новую запись вставляйте ПЕРВОЙ,
+         с классом "new". У предыдущей — класс убирайте.
+         ============================================================ -->
+    <div class="log-item new">
+      <div class="log-date">15.09.2026</div>
+      <div class="log-body">
+        <h4>Запуск рабочего портала <span class="log-ver">v1.0</span></h4>
+        <p>Собраны все инструменты в одном месте: STOCKWISE, PROGNOZ, ТОП-2, ТС Аналитика и Обучение. Добавлены карусель отзывов, обратная связь, FAQ и журнал изменений.</p>
+      </div>
+    </div>
+    <div class="log-item">
+      <div class="log-date">10.09.2026</div>
+      <div class="log-body">
+        <h4>Доработка Alert-системы <span class="log-ver">v0.9</span></h4>
+        <p>Добавлены категории аномалий: перезапас, дефицит, ошибки MIN, критические позиции (дефицит + УТО).</p>
+      </div>
+    </div>
+    <div class="log-item">
+      <div class="log-date">05.09.2026</div>
+      <div class="log-body">
+        <h4>ТС Аналитика: трансферы <span class="log-ver">v0.8</span></h4>
+        <p>Реализованы рекомендации по трансферу токсичного стока в УТО и между магазинами.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ПОДВАЛ -->
+<footer>
+  <div class="foot-logo">
+    <div class="logo-mark">📊</div>
+    STOCKWISE
+  </div>
+  <div class="foot-contacts">
+    <a href="https://connect.lemanapro.ru/net_home/people/36702?tab=Feed" target="_blank" rel="noopener">👤 Щеблыкин Денис — разработчик</a>
+    <a href="https://shzapas.github.io/my-site/%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5" target="_blank" rel="noopener">📚 Обучение</a>
+    <a href="https://hr.lemanapro.ru/feedback" target="_blank" rel="noopener">📮 Обратная связь</a>
+  </div>
+  <div>Разработано командой управления товарным запасом, 2026 г.</div>
+  <div style="margin-top:6px; font-size:11.5px; color:#6b7a8d;">Лемана ПРО · Внутренний портал</div>
+</footer>
+
+<!-- ТОСТ -->
+<div class="toast" id="toast">
+  <div class="toast-icon">🔔</div>
+  <div>
+    <strong>Что нового?</strong>
+    <span id="toast-text">Запущен рабочий портал STOCKWISE v1.0</span>
+  </div>
+  <button class="toast-close" onclick="closeToast()" aria-label="Закрыть">✕</button>
+</div>
+
+<!-- КНОПКА НАВЕРХ -->
+<button class="to-top" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Наверх">↑</button>
+
+<script>
+/* ПОДСКАЗКИ "i" */
+function toggleTip(e, btn){
+  e.preventDefault();
+  e.stopPropagation();
+  const tip = btn.nextElementSibling;
+  const isOpen = tip.classList.contains('show');
+  document.querySelectorAll('.tooltip').forEach(t=>t.classList.remove('show'));
+  if(!isOpen) tip.classList.add('show');
+}
+document.addEventListener('click', ()=>{
+  document.querySelectorAll('.tooltip').forEach(t=>t.classList.remove('show'));
+});
+document.querySelectorAll('.tooltip').forEach(t=>{
+  t.addEventListener('click', e=>e.stopPropagation());
+});
+
+/* ТОСТ */
+const LAST_VERSION = 'v1.0';
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toast-text');
+const firstLog = document.querySelector('.log-item .log-body h4');
+if(firstLog) toastText.textContent = firstLog.textContent.replace('NEW','').trim();
+
+const seen = localStorage.getItem('stockwise_seen_version');
+if(seen !== LAST_VERSION){
+  setTimeout(()=>toast.classList.add('show'), 1200);
+}
+function closeToast(){
+  toast.classList.remove('show');
+  localStorage.setItem('stockwise_seen_version', LAST_VERSION);
+}
+
+/* СЧЁТЧИКИ */
+const counters = document.querySelectorAll('.stat .num');
+const statObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const el = entry.target;
+      const target = +el.dataset.count;
+      const suffix = el.dataset.suffix || '';
+      let current = 0;
+      const step = Math.max(1, Math.ceil(target/40));
+      const timer = setInterval(()=>{
+        current += step;
+        if(current >= target){ current = target; clearInterval(timer); }
+        el.textContent = current + suffix;
+      }, 30);
+      statObserver.unobserve(el);
+    }
+  });
+}, {threshold:.5});
+counters.forEach(c=>statObserver.observe(c));
+
+/* ПРОГРЕСС И КНОПКА НАВЕРХ */
+const progressBar = document.getElementById('readProgress');
+const toTop = document.getElementById('toTop');
+window.addEventListener('scroll', ()=>{
+  const h = document.documentElement;
+  const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+  progressBar.style.width = scrolled + '%';
+  if(window.scrollY > 400) toTop.classList.add('show');
+  else toTop.classList.remove('show');
+});
+
+/* КАРУСЕЛЬ */
+let currentReview = 0;
+const reviews = document.querySelectorAll('.review');
+const dotsContainer = document.getElementById('carouselDots');
+let autoTimer;
+
+reviews.forEach((_, i)=>{
+  const d = document.createElement('button');
+  d.className = 'dot-btn' + (i===0 ? ' active' : '');
+  d.onclick = ()=>goToReview(i);
+  dotsContainer.appendChild(d);
+});
+const dots = document.querySelectorAll('.dot-btn');
+
+function updateCarousel(){
+  const total = reviews.length;
+  reviews.forEach((r, i)=>{
+    r.classList.remove('active','prev','next');
+    if(i === currentReview) r.classList.add('active');
+    else if(i === (currentReview - 1 + total) % total) r.classList.add('prev');
+    else if(i === (currentReview + 1) % total) r.classList.add('next');
+  });
+  dots.forEach((d,i)=>d.classList.toggle('active', i===currentReview));
+}
+function moveReview(dir){
+  currentReview = (currentReview + dir + reviews.length) % reviews.length;
+  updateCarousel();
+  restartAuto();
+}
+function goToReview(i){
+  currentReview = i;
+  updateCarousel();
+  restartAuto();
+}
+function restartAuto(){
+  clearInterval(autoTimer);
+  autoTimer = setInterval(()=>moveReview(1), 6000);
+}
+updateCarousel();
+restartAuto();
+
+/* FAQ */
+function toggleFaq(el){
+  const item = el.parentElement;
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen) item.classList.add('open');
+}
+
+/* КЛИК ПО КАРТОЧКАМ */
+document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('click', function(e){
+    if(e.target.classList.contains('info-btn')) return;
+    this.style.transition = 'transform .1s';
+    this.style.transform = 'translateY(-1px) scale(.99)';
+    setTimeout(()=>{ this.style.transform=''; this.style.transition=''; }, 150);
+  });
+});
+</script>
+
+</body>
+</html>
