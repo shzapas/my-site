@@ -261,8 +261,8 @@
                         </div>
                         <div class="multi-select" id="subdeptMultiSelect"></div>
                     </div>
-                    <div class="filter-group"><label>ТОП</label><select id="topFilter"><option value="all">Все</option><option value="1">1</option><option value="2">2</option></select></div>
-                    <div class="filter-group"><label>TOP ЦО</label><select id="topCoFilter"><option value="all">Все</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
+                    <div class="filter-group"><label>Сумма Топ в магазине</label><select id="topFilter"><option value="all">Все</option><option value="1">1</option><option value="2">2</option></select></div>
+                    <div class="filter-group"><label>Сумма TOP ЦО</label><select id="topCoFilter"><option value="all">Все</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
                     
                     <div class="filter-checkbox" style="background:#ffebee;padding:4px 8px;border-radius:6px;border:1px solid #ef9a9a;">
                         <input type="checkbox" id="excludeTopCoOne" checked>
@@ -301,7 +301,7 @@
                             <thead>
                                 <tr>
                                     <th>№ маг</th><th>Артикул</th><th>Наименование</th><th>Подотдел</th>
-                                    <th>ТОП</th><th>TOP ЦО</th><th>УТО руб</th><th>Перебой</th>
+                                    <th>Сумма Топ в магазине</th><th>Сумма TOP ЦО</th><th>УТО руб</th><th>Перебой</th>
                                     <th>В пути</th><th>Запас</th><th>Срок пост</th><th>План снятия</th><th>Статус</th><th>Действие</th>
                                 </tr>
                             </thead>
@@ -750,8 +750,8 @@
                     const subdept = toStr(g['Подотдел']);
                     if (state.selectedSubdepts.size > 0 && !state.selectedSubdepts.has(subdept)) continue;
 
-                    const topInStore = toStr(g['Топ в магазине']).replace(/\.00$/, '');
-                    const topCo = toStr(g['TOP ЦО']).replace(/\.00$/, '');
+                    const topInStore = toStr(g['Сумма Топ в магазине']).replace(/\.00$/, '');
+                    const topCo = toStr(g['Сумма TOP ЦО']).replace(/\.00$/, '');
                     if (state.excludeTopCoOne && topCo === '1') { excludedByTopCo++; continue; }
 
                     const inTransit = toNum(g['Сумма В пути, шт.']) > 0;
@@ -1401,7 +1401,7 @@
         const toRemove = state.merged.filter(r => r.shouldRemove && state.appliedSet.has(`${r.store}|${r.article}`) && !r.isRemoved);
         if (!toRemove.length) { showToast('✅ Нет артикулов для снятия', 'success'); return; }
 
-        const wsData = [['Артикул', 'Номер магазина', 'Текущий ТОП', 'Причина снятия']];
+        const wsData = [['Артикул', 'Номер магазина', 'Сумма Топ в магазине', 'Причина снятия']];
         for (const item of toRemove) {
             let reason = item.removeReasons && item.removeReasons.length > 0 ? item.removeReasons.join(', ') : 'Условия выполнены';
             wsData.push([item.article, item.store, 'ТОП2', reason]);
