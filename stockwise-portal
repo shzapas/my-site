@@ -848,13 +848,13 @@
 </div>
 <div class="section" style="margin-top:0;">
   <div class="feedback-single">
-    <div class="ico-big">❤️</div>
+    <div class="ico-big">📮</div>
     <div class="txt">
-      <h4>Ваша лучшая благодарность</h4>
-      <p>Оставьте обратную связь о работе портала на официальном сайте — мы читаем каждое сообщение и учитываем его в доработках.</p>
+      <h4>Поделитесь мнением о портале</h4>
+      <p>Оставьте официальную обратную связь во внутренней сети — мы читаем каждое сообщение.</p>
     </div>
     <a class="btn-secondary" href="https://hr.lemanapro.ru/feedback" target="_blank" rel="noopener">
-      🔗 Оставить отзыв
+      🔗 hr.lemanapro.ru/feedback
     </a>
   </div>
 </div>
