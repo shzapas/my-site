@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТОП 0 — Снижение цены</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f5f2ee; color: #1e1e1e; padding: 20px; }
+        .app { max-width: 1900px; margin: 0 auto; background: #faf8f6; border-radius: 16px; padding: 20px; border: 1px solid #ddd6ce; }
+
+        .header {
+            background: linear-gradient(135deg, #e8e2da 0%, #d9d2c8 100%);
+            border-radius: 14px;
+            padding: 16px 22px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #ccc4b8;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .header-title { display: flex; flex-direction: column; gap: 4px; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: #4a3f35; display: flex; align-items: center; gap: 10px; }
+        .header-title small { font-size: 0.72rem; color: #7a6f62; font-weight: 500; }
+        .header-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+        .btn-help {
+            background: #7b6f5c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-help:hover { background: #5f5444; transform: scale(1.08); }
+
+        .btn { background: #b0a899; color: #1e1e1e; border: none; padding: 8px 18px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #9e968a; }
+        .btn-outline { background: transparent; border: 2px solid #b0a899; color: #4a3f35; }
+        .btn-outline:hover { background: #b0a899; color: #fff; }
+        .btn-success { background: #2c5f2d; color: #fff; }
+        .btn-success:hover { background: #1f4520; }
+        .btn-danger { background: #c0392b; color: #fff; }
+        .btn-danger:hover { background: #a93226; }
+        .btn-warning { background: #e65100; color: #fff; }
+        .btn-warning:hover { background: #bf360c; }
+        .btn-sm { padding: 4px 14px; font-size: 0.7rem; }
+
+        .status-text {
+            font-size: 0.72rem;
+            color: #4a3f35;
+            background: rgba(255,255,255,0.6);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .upload-area { background: #f0ece7; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; border: 1px solid #ddd6ce; }
+        .file-label { background: #d6cfc5; color: #1e1e1e; padding: 6px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
+        .file-label:hover { background: #c5bdb3; }
+
+        .control-panel { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: #f0ece7; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; border: 1px solid #ddd6ce; }
+        .control-panel label { font-weight: 600; font-size: 0.75rem; color: #4a3f35; display: flex; align-items: center; gap: 6px; }
+        .control-panel select, .control-panel input[type="text"] { padding: 5px 10px; border-radius: 30px; border: 1px solid #ccc4b8; background: #fffcf9; color: #1e1e1e; font-size: 0.75rem; }
+        .control-panel select { min-width: 110px; }
+
+        .slider-group { display: flex; align-items: center; gap: 6px; background: #fffcf9; padding: 5px 12px; border-radius: 30px; border: 1px solid #ccc4b8; }
+        .slider-group label { font-weight: 600; font-size: 0.7rem; white-space: nowrap; }
+        .slider-group input[type="range"] { width: 160px; accent-color: #2c5f2d; cursor: pointer; }
+        .slider-group input[type="number"] { width: 60px; padding: 3px 6px; border-radius: 20px; border: 1px solid #ccc4b8; background: #fffcf9; font-size: 0.8rem; font-weight: 700; text-align: center; color: #2c5f2d; }
+        .slider-group input[type="number"]:focus { outline: 2px solid #b0a899; }
+        .slider-group input[type="number"].negative { color: #c0392b; background: #ffebee; }
+        .slider-group .pct-label { font-weight: 700; font-size: 0.75rem; color: #7a6f62; }
+
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 2px solid #ddd6ce; }
+        .tab-btn { background: transparent; border: none; color: #7a6f62; padding: 8px 22px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border-radius: 12px 12px 0 0; transition: 0.2s; }
+        .tab-btn.active { background: #b0a899; color: #fff; }
+        .tab-btn:hover { background: #e0dbd4; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .quick-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+        .quick-filter { padding: 4px 14px; border-radius: 30px; border: 2px solid #b0a899; background: transparent; color: #4a3f35; font-weight: 600; font-size: 0.65rem; cursor: pointer; transition: 0.2s; }
+        .quick-filter.active { background: #b0a899; color: #fff; }
+        .quick-filter:hover { background: #e0dbd4; }
+        .quick-filter.active:hover { background: #9e968a; }
+        .quick-filter.avs-filter { border-color: #7b1fa2; color: #7b1fa2; }
+        .quick-filter.avs-filter.active { background: #7b1fa2; color: #fff; }
+        .quick-filter.avs-filter:hover { background: #f3e5f5; }
+        .quick-filter.status-id { border-color: #f57f17; color: #f57f17; }
+        .quick-filter.status-id.active { background: #f57f17; color: #fff; }
+        .quick-filter.status-id:hover { background: #fff9c4; }
+
+        .selection-bar {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+            background: #fff8e1; border: 2px solid #f9a825; border-radius: 12px;
+            padding: 10px 14px; margin: 10px 0;
+            font-size: 0.75rem;
+        }
+        .selection-bar .selected-count { font-weight: 700; color: #e65100; }
+        .selection-bar .selected-count span { background: #f9a825; padding: 2px 10px; border-radius: 20px; color: #1e1e1e; }
+
+        .table-wrap { overflow: auto; border-radius: 12px; background: #fffcf9; padding: 2px; max-height: 600px; border: 1px solid #ddd6ce; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 2400px; background: #fffcf9; }
+        th { background: #e0dbd4; color: #1e1e1e; padding: 5px 4px; position: sticky; top: 0; z-index: 10; white-space: nowrap; border: 1px solid #ddd6ce; text-align: center; font-size: 0.55rem; }
+        td { padding: 3px 4px; border: 1px solid #e8e2da; vertical-align: middle; color: #1e1e1e; background: #fffcf9; }
+        tr:nth-child(even) td { background: #f5f2ee; }
+        tr:hover td { background: #ece6df; }
+        .editable { background: #fff9f0 !important; }
+        .editable input { background: #fffcf9; color: #1e1e1e; border: 1px solid #ccc4b8; border-radius: 4px; padding: 2px 6px; width: 100%; font-size: 0.6rem; }
+        .editable input:focus { outline: 2px solid #b0a899; }
+
+        .row-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #2c5f2d; }
+        .selected-row td { background: #dcedc8 !important; }
+        .selected-row td:first-child { background: #aed581 !important; }
+
+        .highlight-sales { background: #ffedd5 !important; color: #1e1e1e; font-weight: 700; }
+        .highlight-stock { outline: 2px solid #c0392b; outline-offset: -1px; background: #fff5f5; }
+
+        .highlight-price { background: #bbdefb !important; color: #0d47a1; font-weight: 700; font-size: 0.7rem; }
+
+        .status-avs { background: #f3e5f5 !important; color: #4a148c; font-weight: 700; }
+        .status-a { background: #e8f5e9 !important; color: #1b5e20; font-weight: 700; }
+        .status-b { background: #fff3e0 !important; color: #e65100; }
+        .status-c { background: #f5f5f5 !important; color: #616161; }
+        .status-i { background: #fff9c4 !important; color: #f57f17; }
+        .status-d { background: #ffebee !important; color: #b71c1c; }
+
+        .top-zero { background: #ffcdd2 !important; color: #b71c1c; font-weight: 700; }
+
+        .store-8-h { background: #c8e6c9 !important; }
+        .store-92-h { background: #bbdefb !important; }
+        .store-147-h { background: #ffe0b2 !important; }
+        .store-150-h { background: #e1bee7 !important; }
+        .store-165-h { background: #f8bbd0 !important; }
+        .store-258-h { background: #b2ebf2 !important; }
+
+        .badge { padding: 2px 10px; border-radius: 20px; font-size: 0.55rem; font-weight: 700; display: inline-block; }
+        .badge-green { background: #2e7d32; color: #fff; }
+        .badge-red { background: #b71c1c; color: #fff; }
+        .badge-yellow { background: #f5c542; color: #1e1e1e; }
+        .badge-gray { background: #e0dbd4; color: #4a3f35; }
+
+        .total-row td { background: #e0dbd4 !important; font-weight: 700; border-top: 3px solid #b0a899; color: #1e1e1e; }
+        .empty-message { padding: 40px; text-align: center; color: #7a6f62; font-size: 0.9rem; }
+        .empty-message .icon { font-size: 3rem; display: block; margin-bottom: 10px; }
+        .empty-message .title { font-weight: 700; color: #4a3f35; font-size: 1.1rem; }
+
+        .load-more-wrap { display: flex; justify-content: center; padding: 12px; background: #f0ece7; border-top: 2px dashed #b0a899; }
+        .btn-load-more { background: linear-gradient(135deg, #7b6f5c 0%, #9e968a 100%); color: #fff; border: none; padding: 10px 32px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .btn-load-more:hover { background: linear-gradient(135deg, #5f5444 0%, #7b6f5c 100%); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .load-more-info { font-size: 0.65rem; color: #7a6f62; margin-top: 6px; text-align: center; }
+
+        .progress-wrap { display: none; background: #f0ece7; padding: 8px 12px; border-radius: 10px; margin-bottom: 8px; font-size: 0.75rem; }
+        .progress-wrap.active { display: block; }
+        .progress-bar { height: 4px; background: #ddd6ce; border-radius: 2px; overflow: hidden; margin-top: 6px; }
+        .progress-fill { height: 100%; background: #b0a899; width: 0%; transition: width 0.2s; }
+
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; max-width: 400px; }
+        .toast { background: #1e1e1e; color: #fff; padding: 10px 16px; border-radius: 10px; margin-bottom: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
+        .toast.success { background: #2c5f2d; border-left: 4px solid #4caf50; }
+        .toast.error { background: #b71c1c; border-left: 4px solid #ff5722; }
+        .toast.info { background: #1565c0; border-left: 4px solid #42a5f5; }
+        .toast.warning { background: #e65100; border-left: 4px solid #ffa726; }
+        @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+
+        .footer { margin-top: 20px; text-align: center; font-size: 0.65rem; color: #7a6f62; border-top: 1px solid #ddd6ce; padding-top: 14px; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.75rem; color: #4a3f35; flex-wrap: wrap; gap: 8px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-content { background: #fffcf9; border-radius: 16px; max-width: 720px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 28px 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); border: 2px solid #b0a899; }
+        .modal-content h2 { font-size: 1.3rem; color: #4a3f35; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .modal-content .subtitle { font-size: 0.8rem; color: #7a6f62; margin-bottom: 18px; border-bottom: 2px solid #e0dbd4; padding-bottom: 12px; }
+        .help-section { margin-bottom: 18px; }
+        .help-section h3 { color: #7b6f5c; font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .help-section ul { list-style: none; padding-left: 4px; }
+        .help-section ul li { padding: 4px 0 4px 22px; position: relative; font-size: 0.75rem; color: #4a3f35; line-height: 1.5; }
+        .help-section ul li::before { content: "▸"; position: absolute; left: 2px; color: #b0a899; font-weight: bold; }
+        .help-section kbd { background: #e0dbd4; border-radius: 4px; padding: 1px 6px; font-size: 0.7rem; font-family: monospace; }
+        .modal-close { position: sticky; top: 0; float: right; background: #e0dbd4; border: none; font-size: 18px; cursor: pointer; color: #4a3f35; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -8px; margin-right: -8px; transition: 0.2s; }
+        .modal-close:hover { background: #c0392b; color: #fff; }
+
+        @media (max-width: 768px) { .app { padding: 12px; } table { font-size: 0.55rem; } .control-panel { flex-direction: column; align-items: stretch; } }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <div class="header-title">
+            <h1>📉 ТОП 0</h1>
+            <small>Снижение цены — умный анализ</small>
+        </div>
+        <div class="header-actions">
+            <button class="btn-help" id="helpBtn" title="Краткая инструкция">?</button>
+            <button class="btn" id="computeBtn">🧮 РАССЧИТАТЬ</button>
+            <button class="btn btn-outline" id="exportBtn">⬇️ ВЫГРУЗИТЬ С ИЗМЕНЕНИЯМИ</button>
+            <span class="status-text" id="statusMsg">⏳ Ожидание загрузки файлов...</span>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-content">
+            <button class="modal-close" id="helpClose">✕</button>
+            <h2>📉 ТОП 0 — Снижение цены</h2>
+            <div class="subtitle">Краткая инструкция</div>
+
+            <div class="help-section">
+                <h3>🚀 Порядок работы</h3>
+                <ul>
+                    <li><strong>1.</strong> Загрузите <strong>Гамму</strong> (и при необходимости <strong>Условия поставщиков</strong>)</li>
+                    <li><strong>2.</strong> Нажмите <strong>🧮 РАССЧИТАТЬ</strong> — построится таблица</li>
+                    <li><strong>3.</strong> При необходимости примените фильтры: <strong>ТОП</strong>, <strong>Статус</strong>, <strong>Условие</strong>, <strong>Подотдел</strong></li>
+                    <li><strong>4.</strong> Отметьте чекбоксами нужные артикулы (или <strong>«Выделить все видимые»</strong>)</li>
+                    <li><strong>5.</strong> Задайте <strong>целевую маржу %</strong> — можно отрицательную</li>
+                    <li><strong>6.</strong> Нажмите <strong>⚡ ПРИМЕНИТЬ К ВЫДЕЛЕННЫМ</strong></li>
+                    <li><strong>7.</strong> Колонки <strong>«Нов ПЦ»</strong> и <strong>«Нов МАРЖ»</strong> заполнятся для этих артикулов</li>
+                    <li><strong>8.</strong> Нажмите <strong>⬇️ ВЫГРУЗИТЬ С ИЗМЕНЕНИЯМИ</strong> — в Excel попадут только артикулы с применённой маржой</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>📊 Как считается маржа</h3>
+                <ul>
+                    <li><strong>Закуп + НДС</strong> = <code>Цена DPAC × 1.22</code></li>
+                    <li><strong>Маржа %</strong> = <code>((ПЦ − Закуп с НДС) / ПЦ) × 100%</code></li>
+                    <li><strong>Нов ПЦ</strong> = <code>Закуп с НДС / (1 − Целевая маржа / 100)</code></li>
+                    <li><strong>Нов МАРЖ</strong> = <code>((Нов ПЦ − Закуп с НДС) / Нов ПЦ) × 100%</code></li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>⭐ Условие</h3>
+                <ul>
+                    <li><strong>снижение</strong>, если <code>ПЦ ≥ РРЦ</code></li>
+                    <li><strong>нет</strong>, если <code>ПЦ &lt; РРЦ</code></li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>🎯 Возможности</h3>
+                <ul>
+                    <li><strong>Магазины</strong> определяются автоматически из Гаммы</li>
+                    <li><strong>Исключаются</strong> артикулы с нулевым запасом по всем магазинам</li>
+                    <li><strong>Поиск по артикулам</strong> — работает по всей Гамме</li>
+                    <li><strong>+100 строк</strong> — кнопка внизу таблицы</li>
+                    <li><strong>Разные проценты</strong> — можно применять к разным группам</li>
+                    <li><strong>Комментарии</strong> — вводятся в таблице, выгружаются в Excel</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="upload-area">
+        <span style="font-size:0.75rem;">📎 <a href="https://clck.ru/3VTZfF" target="_blank" style="color:#4a3f35;font-weight:600;">Гамма</a></span>
+        <span style="font-size:0.75rem;">📎 <a href="https://clck.ru/3VTZcS" target="_blank" style="color:#4a3f35;font-weight:600;">Условия по контрактам</a></span>
+        <span class="file-label" id="gammaFileLabel">📁 Выбрать файл Гаммы</span>
+        <span class="file-label" id="supplierFileLabel">📁 Выбрать условия</span>
+        <span id="fileStatus" style="font-size:0.7rem;color:#4a3f35;">Файлы не загружены</span>
+        <input type="file" id="gammaFileInput" accept=".xlsx,.xls" style="display:none">
+        <input type="file" id="supplierFileInput" accept=".xlsx,.xls" style="display:none">
+    </div>
+
+    <div class="control-panel">
+        <label>🔍 Артикулы:
+            <input type="text" id="articleSearch" placeholder="Введите артикулы через запятую" style="width:220px;">
+        </label>
+        <label>📁 Подотдел:
+            <select id="subdeptSelect"><option value="all">Все</option></select>
+        </label>
+        <label>⭐ ТОП:
+            <select id="topSelect">
+                <option value="all">Все</option>
+                <option value="0">ТОП 0</option>
+                <option value="1">ТОП 1</option>
+                <option value="2">ТОП 2</option>
+            </select>
+        </label>
+        <label>📋 Условие:
+            <select id="conditionSelect">
+                <option value="all">Все</option>
+                <option value="снижение">Снижение</option>
+                <option value="нет">Нет</option>
+            </select>
+        </label>
+        <label>📉 Снижение (нет продаж):
+            <select id="reduceSelect">
+                <option value="all">Все</option>
+                <option value="снижение">Снижение</option>
+                <option value="нет">Нет</option>
+            </select>
+        </label>
+        <label>💎 Статус:
+            <select id="statusSelect">
+                <option value="all">Все</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="I">I</option>
+                <option value="D">D</option>
+                <option value="ID">🟡 I или D</option>
+            </select>
+        </label>
+        <button class="btn btn-success" id="applyFilterTopBtn">🔍 ПРИМЕНИТЬ</button>
+    </div>
+
+    <div class="control-panel">
+        <div class="slider-group">
+            <label>📊 Целевая маржа:</label>
+            <input type="range" id="marginSlider" min="-40" max="40" step="1" value="5">
+            <input type="number" id="marginInput" min="-40" max="40" step="1" value="5">
+            <span class="pct-label">%</span>
+        </div>
+        <button class="btn btn-warning" id="applyDiscountBtn" disabled>⚡ ПРИМЕНИТЬ К ВЫДЕЛЕННЫМ</button>
+        <button class="btn btn-sm btn-outline" id="resetFilterBtn">Сброс</button>
+        <button class="btn btn-sm btn-danger" id="clearDataBtn">🗑️ Очистить</button>
+    </div>
+
+    <div class="selection-bar" id="selectionBar">
+        <span>📊 Выделено: <span class="selected-count"><span id="selectedCount">0</span></span> артикулов</span>
+        <button class="btn btn-sm btn-outline" id="selectAllBtn">✅ Выделить все видимые</button>
+        <button class="btn btn-sm btn-outline" id="deselectAllBtn">❌ Снять выделение</button>
+        <span style="font-size:0.65rem;color:#7a6f62;">Отметьте чекбоксы → задайте % → «ПРИМЕНИТЬ К ВЫДЕЛЕННЫМ»</span>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+        <span id="progressText">Обработка...</span>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="main">📋 Сводная</button>
+    </div>
+
+    <div id="tab-main" class="tab-content active">
+        <div class="quick-filters">
+            <button class="quick-filter active" data-filter="all">📋 Все</button>
+            <button class="quick-filter avs-filter" data-filter="avs">💎 AVS</button>
+            <button class="quick-filter status-id" data-filter="status_id">🟡 Статус I или D</button>
+        </div>
+        <div class="info-row">
+            <span id="tableInfo">📊 Нет данных. Загрузите Гамму и нажмите "РАССЧИТАТЬ"</span>
+        </div>
+        <div class="table-wrap" id="tableWrap">
+            <table id="mainTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="40"><div class="empty-message"><span class="icon">🔍</span><div class="title">Загрузите Гамму и нажмите "РАССЧИТАТЬ"</div></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
+            <div>
+                <button class="btn-load-more" id="loadMoreBtn">➕ Показать ещё 100 строк</button>
+                <div class="load-more-info" id="loadMoreInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">📌 ТОП 0 — снижение цены. Двойной клик по строке — открыть в MagPortal.</div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// =========================== ДАННЫЕ ===========================
+let gammaData = [];
+let supplierData = [];
+let supplierMap = new Map();
+let allCalculatedRows = [];
+let filteredRows = [];
+let commentsMap = new Map();
+let selectedArticles = new Set();
+let articleParams = new Map();
+let activeStores = [];
+
+let DISPLAY_LIMIT = 200;
+const DISPLAY_STEP = 100;
+
+// =========================== ПАРСИНГ ===========================
+function parseSheet(rawData) {
+    if (!rawData || rawData.length === 0) return [];
+    let headerRowIdx = -1;
+    for (let r = 0; r < Math.min(15, rawData.length); r++) {
+        const row = rawData[r];
+        if (!row) continue;
+        const hasArticle = row.some(cell => {
+            const s = String(cell || "").toLowerCase().trim();
+            return s === "артикул" || s === "artikul" || s === "sku";
+        });
+        if (hasArticle) { headerRowIdx = r; break; }
+    }
+    if (headerRowIdx === -1) {
+        let maxCount = 0;
+        for (let r = 0; r < Math.min(10, rawData.length); r++) {
+            const row = rawData[r];
+            if (!row) continue;
+            const count = row.filter(c => c !== "" && c !== null && c !== undefined).length;
+            if (count > maxCount && count > 5) { maxCount = count; headerRowIdx = r; }
+        }
+    }
+    if (headerRowIdx === -1) headerRowIdx = 0;
+
+    const headers = (rawData[headerRowIdx] || []).map(h => String(h || "").trim());
+    const jsonData = [];
+    for (let i = headerRowIdx + 1; i < rawData.length; i++) {
+        const row = rawData[i];
+        if (!row || row.length === 0) continue;
+        const obj = {};
+        let hasData = false;
+        for (let j = 0; j < headers.length; j++) {
+            const h = headers[j];
+            if (h && h !== "" && !h.startsWith('__EMPTY')) {
+                let val = row[j] !== undefined && row[j] !== null ? row[j] : "";
+                if (typeof val === 'string') val = val.trim();
+                obj[h] = val;
+                if (val !== "" && val !== 0) hasData = true;
+            }
+        }
+        if (hasData) jsonData.push(obj);
+    }
+    return jsonData;
+}
+
+function pickVal(row, names) {
+    for (const name of names) {
+        if (row[name] !== undefined && row[name] !== null && row[name] !== "") return row[name];
+    }
+    for (const name of names) {
+        const cleanName = name.toLowerCase().replace(/\s+/g,'').replace(/[^\wа-яё]/gi,'');
+        for (const key of Object.keys(row)) {
+            const cleanKey = key.toLowerCase().replace(/\s+/g,'').replace(/[^\wа-яё]/gi,'');
+            if (cleanKey === cleanName && row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
+        }
+    }
+    return "";
+}
+
+function normalizeTop(val) {
+    if (val === undefined || val === null || val === "") return "";
+    const s = String(val).trim().replace(/\.00$/, '').replace(/\.0$/, '');
+    if (s === "") return "";
+    const n = parseInt(s);
+    if (!isNaN(n)) return String(n);
+    return s;
+}
+
+function isAvsDate(val) {
+    if (val === undefined || val === null) return false;
+    const s = String(val).trim();
+    if (s === "" || s === "0" || s === "—" || s === "-") return false;
+    return true;
+}
+
+function toNum(v) { 
+    if (v === undefined || v === null || v === '') return 0;
+    if (typeof v === 'number') return isNaN(v) ? 0 : v;
+    let str = String(v).trim()
+        .replace(/%/g, '')
+        .replace(/,/g, '.')
+        .replace(/\s/g, '')
+        .replace(/[^0-9.\-]/g, '');
+    const n = parseFloat(str);
+    return isNaN(n) ? 0 : n; 
+}
+
+function formatDate(dateVal) {
+    if (!dateVal) return '';
+    if (typeof dateVal === 'number') {
+        const d = new Date((dateVal - 25569) * 86400 * 1000);
+        if (!isNaN(d)) return d.toLocaleDateString('ru-RU');
+    }
+    const str = String(dateVal).trim();
+    if (str.includes('.')) return str;
+    const d = new Date(dateVal);
+    if (!isNaN(d)) return d.toLocaleDateString('ru-RU');
+    return str;
+}
+
+function updateProgress(text, pct) {
+    const wrap = document.getElementById('progressWrap');
+    wrap.classList.add('active');
+    document.getElementById('progressText').textContent = text;
+    document.getElementById('progressFill').style.width = pct + '%';
+    if (pct >= 100) setTimeout(() => wrap.classList.remove('active'), 800);
+}
+
+// =========================== ЗАГРУЗКА ===========================
+document.getElementById('gammaFileLabel').addEventListener('click', () => document.getElementById('gammaFileInput').click());
+document.getElementById('supplierFileLabel').addEventListener('click', () => document.getElementById('supplierFileInput').click());
+
+document.getElementById('gammaFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+        const data = await file.arrayBuffer();
+        const wb = XLSX.read(data);
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rawData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        gammaData = parseSheet(rawData);
+
+        const storeSet = new Set();
+        for (const row of gammaData) {
+            const store = String(pickVal(row, ["№ магазина", "Номер магазина"])).trim();
+            if (store) storeSet.add(store);
+        }
+        activeStores = Array.from(storeSet).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        let top0Count = 0, avsCount = 0;
+        for (const row of gammaData) {
+            const topNorm = normalizeTop(pickVal(row, ["Сумма Топ в магазине", "Топ в магазине", "ТОП"]));
+            if (topNorm === "0") top0Count++;
+            const avsRaw = pickVal(row, ["Дата AVS"]);
+            if (isAvsDate(avsRaw)) avsCount++;
+        }
+
+        document.getElementById('fileStatus').textContent = `✅ Гамма: ${gammaData.length} строк | Магазины: ${activeStores.join(', ')}`;
+        document.getElementById('statusMsg').textContent = `✅ Гамма: ${gammaData.length} строк. Магазины: ${activeStores.join(', ')}`;
+        updateSubdeptFilters();
+        showToast(`✅ Гамма: ${gammaData.length} строк. Магазины: ${activeStores.join(', ')}, ТОП 0: ${top0Count}, AVS: ${avsCount}`, 'success', 6000);
+    } catch(err) { 
+        console.error(err);
+        showToast('❌ Ошибка загрузки: '+err.message, 'error'); 
+    }
+});
+
+document.getElementById('supplierFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+        const data = await file.arrayBuffer();
+        const wb = XLSX.read(data);
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rawData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        let headerRowIdx = 0;
+        for (let r = 0; r < Math.min(10, rawData.length); r++) {
+            const row = rawData[r];
+            if (row && row.some(c => String(c).toLowerCase().includes('поставщик'))) { headerRowIdx = r; break; }
+        }
+        const headers = rawData[headerRowIdx].map(h => String(h || "").trim());
+        const jsonData = [];
+        for (let i = headerRowIdx + 1; i < rawData.length; i++) {
+            const row = rawData[i];
+            if (!row || row.length === 0) continue;
+            const obj = {};
+            for (let j = 0; j < headers.length; j++) {
+                if (headers[j] && !headers[j].startsWith('__EMPTY')) obj[headers[j]] = row[j] !== undefined ? row[j] : "";
+            }
+            if (Object.keys(obj).length > 0) jsonData.push(obj);
+        }
+        supplierData = jsonData;
+        supplierMap.clear();
+        supplierData.forEach(row => {
+            const code = String(row["Код поставщика"] || "").trim();
+            const consent = String(row["Согласие на возврат"] || "").trim();
+            if (code) supplierMap.set(code, consent);
+        });
+        document.getElementById('fileStatus').textContent = `✅ Гамма: ${gammaData.length} | Условия: ${supplierData.length}`;
+        showToast(`✅ Условия загружены: ${supplierData.length} поставщиков`, 'success');
+    } catch(err) { 
+        console.error(err);
+        showToast('❌ Ошибка загрузки: '+err.message, 'error'); 
+    }
+});
+
+// =========================== РАСЧЁТ ===========================
+function calculateAllRows() {
+    const grouped = new Map();
+    for (const row of gammaData) {
+        const art = String(pickVal(row, ["Артикул"])).trim();
+        if (!art) continue;
+        if (!grouped.has(art)) grouped.set(art, []);
+        grouped.get(art).push(row);
+    }
+
+    const result = [];
+    const entries = Array.from(grouped.entries());
+
+    for (const [art, rows] of entries) {
+        // ✅ Ищем ЛУЧШУЮ строку
+        let bestRow = rows.find(r => {
+            const store = String(pickVal(r, ["№ магазина"])).trim();
+            const p = toNum(pickVal(r, ["Сумма Продажная цена магазина", "Продажная цена магазина"]));
+            return store === "8" && p > 0;
+        });
+        if (!bestRow) {
+            bestRow = rows.find(r => toNum(pickVal(r, ["Сумма Продажная цена магазина", "Продажная цена магазина"])) > 0);
+        }
+        if (!bestRow) bestRow = rows[0];
+
+        const price = toNum(pickVal(bestRow, ["Сумма Продажная цена магазина", "Продажная цена магазина"]));
+        const rrp = toNum(pickVal(bestRow, ["Сумма Рекомендуемая продажная цена", "Рекомендуемая продажная цена"]));
+        const dpac = toNum(pickVal(bestRow, ["Сумма Цена DPAC", "Цена DPAC"]));
+        const zakupNds = dpac * 1.22;
+
+        // ✅ Маржа % = ((ПЦ - Закуп с НДС) / ПЦ) × 100%
+        let margin = 0;
+        if (price > 0) {
+            margin = ((price - zakupNds) / price) * 100;
+        }
+
+        const name = String(pickVal(bestRow, ["Наименование"]) || "").trim();
+        const dateChange = pickVal(bestRow, ["Дата последнего изменения цены"]);
+        const supplier = String(pickVal(bestRow, ["№ Поставщика", "Номер поставщика"]) || "").trim();
+        const subdept = String(pickVal(bestRow, ["Подотдел"]) || "").trim();
+
+        const avsRaw = pickVal(bestRow, ["Дата AVS"]);
+        const isAvs = isAvsDate(avsRaw);
+        const avsFormatted = isAvs ? formatDate(avsRaw) : '';
+
+        let totalSales = 0, totalStock = 0;
+        const storeData = {};
+        let minTop = null;
+        let topByAll = [];
+
+        for (const store of activeStores) {
+            const sr = rows.find(r => String(pickVal(r, ["№ магазина"])).trim() === store);
+            if (sr) {
+                const topVal = normalizeTop(pickVal(sr, ["Сумма Топ в магазине", "Топ в магазине", "ТОП"]));
+                const sd = {
+                    top: topVal,
+                    status: String(pickVal(sr, ["Статус"]) || "").trim(),
+                    sales: Math.round(toNum(pickVal(sr, ["Отгруженное кол-во"]))),
+                    stock: Math.round(toNum(pickVal(sr, ["Сумма Кол-во в запасе"]))),
+                    ts: String(pickVal(sr, ["Токсичный сток"]) || "").trim()
+                };
+                storeData[store] = sd;
+                totalSales += sd.sales;
+                totalStock += sd.stock;
+                if (topVal !== "") {
+                    topByAll.push({ store, top: topVal });
+                    if (minTop === null || parseInt(topVal) < parseInt(minTop)) minTop = topVal;
+                }
+            } else {
+                storeData[store] = { top: '', status: '', sales: '', stock: '', ts: '' };
+            }
+        }
+
+        // ✅ ПРОПУСКАЕМ артикул, если запас по ВСЕМ магазинам = 0
+        if (totalStock <= 0) {
+            continue;
+        }
+
+        const overallTop = minTop !== null ? minTop : '';
+        const top0Stores = topByAll.filter(t => t.top === '0').map(t => t.store);
+
+        // ✅ ЕСЛИ пользователь применил маржу — считаем Нов ПЦ
+        const params = articleParams.get(art);
+        const userMargin = params ? params.margin : null;
+
+        let newPrice = '';
+        let newMargin = '';
+        if (userMargin !== null && zakupNds > 0) {
+            const marginRatio = 1 - userMargin / 100;
+            if (marginRatio > 0) {
+                newPrice = Math.round(zakupNds / marginRatio);
+            } else {
+                newPrice = Math.round(zakupNds * 5);
+            }
+            newMargin = Math.round(((newPrice - zakupNds) / newPrice) * 1000) / 10;
+        }
+
+        // ✅ УСЛОВИЕ: снижение если ПЦ >= РРЦ
+        let condition = 'нет';
+        if (rrp > 0 && price >= rrp) {
+            condition = 'снижение';
+        }
+
+        const reduceIfNoSales = (totalSales === 0 && totalStock > 0) ? 'снижение' : 'нет';
+        const consent = supplierMap.get(supplier) || '';
+        const sumDpac = totalStock * dpac;
+
+        const mainStatus = storeData["8"]?.status || String(pickVal(bestRow, ["Статус"]) || "").trim();
+
+        result.push({
+            art, name,
+            price: Math.round(price),
+            rrp: Math.round(rrp),
+            dpac: Math.round(dpac),
+            zakupNds: Math.round(zakupNds),
+            margin: Math.round(margin * 10) / 10,
+            newPrice: newPrice,
+            newMargin: newMargin,
+            userMargin: userMargin,
+            dateChange: formatDate(dateChange),
+            condition, reduceIfNoSales,
+            supplier, consent,
+            avs: avsFormatted, isAvs,
+            sumDpac: Math.round(sumDpac),
+            subdept,
+            comment: commentsMap.get(art) || '',
+            top: overallTop, top0Stores,
+            status: mainStatus,
+            sales: totalSales, stock: Math.round(totalStock),
+            storeData
+        });
+    }
+    return result;
+}
+
+// =========================== ФИЛЬТРЫ ===========================
+function applyAllFilters() {
+    if (!allCalculatedRows.length) { filteredRows = []; renderTable(); return; }
+
+    const searchArt = document.getElementById('articleSearch').value.trim();
+    const subdeptFilter = document.getElementById('subdeptSelect').value;
+    const topFilter = document.getElementById('topSelect').value;
+    const statusFilter = document.getElementById('statusSelect').value;
+    const conditionFilter = document.getElementById('conditionSelect').value;
+    const reduceFilter = document.getElementById('reduceSelect').value;
+    const filterType = document.querySelector('.quick-filter.active')?.dataset.filter || 'all';
+
+    let data = [...allCalculatedRows];
+    
+    if (searchArt) {
+        const articles = searchArt.split(/[,\s\n]+/).filter(a => a.trim());
+        const artSet = new Set();
+        for (const artRaw of articles) {
+            const art = String(artRaw).replace(/[^\d]/g, '');
+            if (art && art.length >= 4) artSet.add(art);
+        }
+        if (artSet.size > 0) data = data.filter(r => artSet.has(String(r.art).replace(/[^\d]/g, '')));
+    }
+    if (subdeptFilter !== 'all') data = data.filter(r => r.subdept === subdeptFilter);
+    if (topFilter !== 'all') {
+        data = data.filter(r => {
+            for (const store of activeStores) {
+                if (r.storeData[store] && r.storeData[store].top === topFilter) return true;
+            }
+            return false;
+        });
+    }
+    if (statusFilter !== 'all') {
+        if (statusFilter === 'ID') data = data.filter(r => r.status === 'I' || r.status === 'D');
+        else data = data.filter(r => r.status === statusFilter);
+    }
+    if (conditionFilter !== 'all') data = data.filter(r => r.condition === conditionFilter);
+    if (reduceFilter !== 'all') data = data.filter(r => r.reduceIfNoSales === reduceFilter);
+
+    if (filterType === 'avs') data = data.filter(r => r.isAvs === true);
+    else if (filterType === 'status_id') data = data.filter(r => r.status === 'I' || r.status === 'D');
+    
+    filteredRows = data;
+    renderTable();
+}
+
+function computeSummary() {
+    if (!gammaData.length) { showToast('❌ Сначала загрузите Гамму', 'warning'); return; }
+    updateProgress('Расчёт ВСЕЙ Гаммы...', 10);
+    setTimeout(() => {
+        try {
+            updateProgress('Группировка артикулов...', 30);
+            allCalculatedRows = calculateAllRows();
+            updateProgress('Готово!', 100);
+            DISPLAY_LIMIT = 200;
+            applyAllFilters();
+            showToast(`✅ Рассчитано ${allCalculatedRows.length} артикулов (без нулевого запаса)`, 'success', 5000);
+        } catch (e) {
+            console.error(e);
+            updateProgress('Ошибка', 100);
+            showToast(`Ошибка: ${e.message}`, 'error');
+        }
+    }, 50);
+}
+
+// =========================== ТАБЛИЦА ===========================
+function renderTable() {
+    const thead = document.getElementById('tableHead');
+    const tbody = document.getElementById('tableBody');
+    const displayRows = filteredRows.slice(0, DISPLAY_LIMIT);
+
+    if (!displayRows.length) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '<tr><td colspan="40"><div class="empty-message"><span class="icon">🔍</span><div class="title">Загрузите Гамму и нажмите "РАССЧИТАТЬ"</div></div></td></tr>';
+        document.getElementById('tableInfo').textContent = '📊 Нет данных';
+        document.getElementById('loadMoreWrap').style.display = 'none';
+        return;
+    }
+
+    const baseCols = ["✔", "Артикул","Наименование","ПЦ","РРЦ","Цена dpac","Маржа %","Нов ПЦ","Нов МАРЖ","Дата изм.","Условие","Снижение если нет продаж","Статус","AVS"];
+    const endCols = ["Комментарии","№ Поставщика","Согласие на возврат","АВС","Сумма товара в dpac"];
+
+    let headerHTML = '<tr>';
+    headerHTML += baseCols.map(c => `<th rowspan="2">${c}</th>`).join('');
+    for (const store of activeStores) {
+        const storeClass = `store-${store}-h`;
+        headerHTML += `<th colspan="4" class="${storeClass}">🏬 Магазин ${store}</th>`;
+    }
+    headerHTML += endCols.map(c => `<th rowspan="2">${c}</th>`).join('');
+    headerHTML += '</tr><tr>';
+    for (const store of activeStores) {
+        const storeClass = `store-${store}-h`;
+        headerHTML += `<th class="${storeClass}">ТОП</th>`;
+        headerHTML += `<th class="${storeClass}" style="background:#ffedd5;">Продажи</th>`;
+        headerHTML += `<th class="${storeClass}">Сток</th>`;
+        headerHTML += `<th class="${storeClass}">ТС</th>`;
+    }
+    headerHTML += '</tr>';
+    thead.innerHTML = headerHTML;
+
+    let html = '';
+    displayRows.forEach((row) => {
+        const isSelected = selectedArticles.has(row.art);
+        const rowClass = isSelected ? 'selected-row' : '';
+        
+        html += `<tr class="${rowClass}" ondblclick="openMagPortal('${row.art}')" style="cursor:pointer;">`;
+        html += `<td style="text-align:center;"><input type="checkbox" class="row-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelection('${row.art}', this.checked)" onclick="event.stopPropagation();"></td>`;
+        html += `<td><strong>${row.art}</strong></td>`;
+        html += `<td>${row.name}</td>`;
+        html += `<td class="highlight-price">${row.price}</td>`;
+        html += `<td>${row.rrp}</td>`;
+        html += `<td>${row.dpac}</td>`;
+        const marginClass = row.margin < 0 ? 'background:#ffebee;color:#c0392b;font-weight:700;' : 'background:#e8f5e9;color:#1b5e20;font-weight:700;';
+        html += `<td style="${marginClass}">${row.margin}%</td>`;
+        if (row.newPrice === '' || row.newPrice === null) {
+            html += `<td style="background:#f5f5f5;color:#aaa;text-align:center;">—</td>`;
+        } else {
+            html += `<td style="background:#e8f5e9;font-weight:700;color:#2c5f2d;">${row.newPrice}</td>`;
+        }
+        if (row.newMargin === '' || row.newMargin === null) {
+            html += `<td style="background:#f5f5f5;color:#aaa;text-align:center;">—</td>`;
+        } else {
+            html += `<td style="font-weight:700;">${row.newMargin}%</td>`;
+        }
+        html += `<td>${row.dateChange}</td>`;
+        html += `<td><span class="badge ${row.condition === 'снижение' ? 'badge-red' : 'badge-green'}">${row.condition}</span></td>`;
+        html += `<td><span class="badge ${row.reduceIfNoSales === 'снижение' ? 'badge-yellow' : 'badge-gray'}">${row.reduceIfNoSales}</span></td>`;
+        
+        const statusClass = row.status === 'A' ? 'status-a' : row.status === 'B' ? 'status-b' : row.status === 'C' ? 'status-c' : row.status === 'I' ? 'status-i' : row.status === 'D' ? 'status-d' : '';
+        html += `<td class="${statusClass}">${row.status || ''}</td>`;
+        html += `<td class="${row.isAvs ? 'status-avs' : ''}" style="text-align:center;">${row.isAvs ? '💎 AVS' : ''}</td>`;
+
+        for (const store of activeStores) {
+            const sd = row.storeData[store] || { top: '', sales: '', stock: '', ts: '' };
+            const salesCls = sd.sales > 0 ? 'class="highlight-sales"' : '';
+            const stockCls = sd.stock > 0 ? 'class="highlight-stock"' : '';
+            const topCls = sd.top === '0' ? 'class="top-zero"' : '';
+            html += `<td ${topCls}>${sd.top}</td>`;
+            html += `<td ${salesCls}>${sd.sales}</td>`;
+            html += `<td ${stockCls}>${sd.stock}</td>`;
+            html += `<td>${sd.ts}</td>`;
+        }
+
+        html += `<td class="editable"><input type="text" value="${row.comment || ''}" placeholder="..." oninput="updateComment('${row.art}', this.value)" onclick="event.stopPropagation();" ondblclick="event.stopPropagation();"></td>`;
+        html += `<td>${row.supplier}</td>`;
+        html += `<td>${row.consent}</td>`;
+        html += `<td>${row.avs}</td>`;
+        html += `<td>${row.sumDpac}</td>`;
+        html += `</tr>`;
+    });
+
+    const totalCols = baseCols.length + activeStores.length * 4 + endCols.length;
+    const allSum = filteredRows.reduce((sum, r) => sum + r.sumDpac, 0);
+    html += `<tr class="total-row"><td colspan="${totalCols - 1}" style="text-align:right;font-weight:700;">ИТОГО (показано ${displayRows.length} из ${filteredRows.length}):</td><td style="font-weight:700;font-size:1rem;color:#2c5f2d;">${allSum.toLocaleString('ru-RU')}</td></tr>`;
+
+    tbody.innerHTML = html;
+    document.getElementById('tableInfo').textContent = `📊 Показано ${displayRows.length} из ${filteredRows.length} артикулов (всего: ${allCalculatedRows.length}) | Магазины: ${activeStores.join(', ')} | Итого: ${allSum.toLocaleString('ru-RU')} ₽`;
+
+    const loadMoreWrap = document.getElementById('loadMoreWrap');
+    if (filteredRows.length > DISPLAY_LIMIT) {
+        loadMoreWrap.style.display = 'flex';
+        document.getElementById('loadMoreInfo').textContent = `Показано ${displayRows.length} из ${filteredRows.length}`;
+    } else {
+        loadMoreWrap.style.display = 'none';
+    }
+
+    updateSelectionUI();
+}
+
+function loadMore() {
+    DISPLAY_LIMIT += DISPLAY_STEP;
+    renderTable();
+    showToast(`➕ Показано ${Math.min(DISPLAY_LIMIT, filteredRows.length)} из ${filteredRows.length}`, 'info', 2000);
+}
+
+function updateComment(key, val) {
+    commentsMap.set(key, val);
+    const row = allCalculatedRows.find(r => r.art === key);
+    if (row) row.comment = val;
+    const frow = filteredRows.find(r => r.art === key);
+    if (frow) frow.comment = val;
+}
+
+function toggleSelection(art, checked) {
+    if (checked) selectedArticles.add(art);
+    else selectedArticles.delete(art);
+    updateSelectionUI();
+    document.querySelectorAll('#tableBody tr').forEach(tr => {
+        const cb = tr.querySelector('.row-checkbox');
+        if (cb && cb.checked) tr.classList.add('selected-row');
+        else tr.classList.remove('selected-row');
+    });
+}
+
+function updateSelectionUI() {
+    document.getElementById('selectedCount').textContent = selectedArticles.size;
+    const btn = document.getElementById('applyDiscountBtn');
+    const marginVal = document.getElementById('marginInput').value;
+    if (selectedArticles.size > 0) {
+        btn.disabled = false;
+        btn.textContent = `⚡ ПРИМЕНИТЬ К ${selectedArticles.size} АРТ. (маржа ${marginVal}%)`;
+    } else {
+        btn.disabled = true;
+        btn.textContent = `⚡ ПРИМЕНИТЬ К ВЫДЕЛЕННЫМ`;
+    }
+}
+
+function applyDiscountToSelected() {
+    if (selectedArticles.size === 0) { showToast('⚠️ Сначала выделите артикулы', 'warning'); return; }
+    const margin = parseFloat(document.getElementById('marginInput').value) || 0;
+    
+    updateProgress(`Применяем маржу ${margin}% к ${selectedArticles.size} артикулам...`, 20);
+    const t0 = performance.now();
+    
+    selectedArticles.forEach(art => { articleParams.set(art, { margin: margin }); });
+    
+    setTimeout(() => {
+        try {
+            updateProgress('Пересчёт затронутых артикулов...', 50);
+            
+            selectedArticles.forEach(art => {
+                const row = allCalculatedRows.find(r => r.art === art);
+                if (!row) return;
+                
+                const zakupNds = row.zakupNds;
+                const userMargin = margin;
+                let newPrice = '';
+                let newMargin = '';
+                
+                if (zakupNds > 0) {
+                    const marginRatio = 1 - userMargin / 100;
+                    if (marginRatio > 0) {
+                        newPrice = Math.round(zakupNds / marginRatio);
+                    } else {
+                        newPrice = Math.round(zakupNds * 5);
+                    }
+                    newMargin = Math.round(((newPrice - zakupNds) / newPrice) * 1000) / 10;
+                }
+                
+                row.newPrice = newPrice;
+                row.newMargin = newMargin;
+                row.userMargin = userMargin;
+            });
+            
+            updateProgress('Применяем фильтры...', 80);
+            applyAllFilters();
+            updateProgress('Готово!', 100);
+            
+            const t1 = performance.now();
+            console.log(`⚡ Применение маржи: ${Math.round(t1 - t0)} мс`);
+            
+            showToast(`✅ Маржа ${margin}% применена к ${selectedArticles.size} артикулам (${Math.round(t1 - t0)} мс)`, 'success', 5000);
+        } catch (e) {
+            console.error(e);
+            updateProgress('Ошибка', 100);
+            showToast(`Ошибка: ${e.message}`, 'error');
+        }
+    }, 20);
+}
+
+function selectAllVisible() {
+    filteredRows.slice(0, DISPLAY_LIMIT).forEach(r => selectedArticles.add(r.art));
+    renderTable();
+}
+function deselectAll() { selectedArticles.clear(); renderTable(); }
+
+function updateSubdeptFilters() {
+    const set = new Set();
+    gammaData.forEach(r => { const s = String(pickVal(r, ["Подотдел"]) || "").trim(); if (s) set.add(s); });
+    const sel = document.getElementById('subdeptSelect');
+    sel.innerHTML = '<option value="all">Все</option>';
+    Array.from(set).sort().forEach(s => sel.innerHTML += `<option value="${s}">${s}</option>`);
+}
+
+function openMagPortal(art) {
+    if (art) window.open(`https://magportal.lemanapro.ru/catalogproducts/product/${String(art).replace(/\D/g,'')}`, '_blank');
+}
+
+function showToast(msg, type = 'info', duration = 5000) {
+    const container = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), duration);
+}
+
+// =========================== ЭКСПОРТ ===========================
+async function exportData() {
+    const rowsToExport = filteredRows.filter(r => r.userMargin !== null && r.userMargin !== undefined);
+    
+    if (!rowsToExport.length) { 
+        showToast('⚠️ Нет артикулов с применённой маржой. Выделите артикулы и примените маржу.', 'warning', 6000); 
+        return; 
+    }
+    
+    updateProgress('Формируем Excel...', 10);
+
+    try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'ТОП 0';
+        workbook.created = new Date();
+        
+        const worksheet = workbook.addWorksheet('Снижение цены', {
+            views: [{ state: 'frozen', ySplit: 2, xSplit: 2 }]
+        });
+
+        const baseColumns = [
+            { key: 'art',        header: 'Артикул',                       width: 15, color: 'FFE0DBD4' },
+            { key: 'name',       header: 'Наименование',                  width: 40, color: 'FFE0DBD4' },
+            { key: 'price',      header: 'ПЦ',                            width: 12, color: 'FFBBDEFB' },
+            { key: 'rrp',        header: 'РРЦ',                           width: 12, color: 'FFBBDEFB' },
+            { key: 'dpac',       header: 'Цена dpac',                     width: 12, color: 'FFBBDEFB' },
+            { key: 'zakupNds',   header: 'закуп + НДС',                   width: 14, color: 'FFFFE0B2' },
+            { key: 'margin',     header: 'Маржа %',                       width: 12, color: 'FFFFF9C4' },
+            { key: 'newPrice',   header: 'Нов ПЦ',                        width: 12, color: 'FFC8E6C9' },
+            { key: 'newMargin',  header: 'Нов МАРЖ',                      width: 12, color: 'FFC8E6C9' },
+            { key: 'dateChange', header: 'Дата изм.',                     width: 14, color: 'FFE0DBD4' },
+            { key: 'condition',  header: 'Условие',                       width: 12, color: 'FFFFCC80' },
+            { key: 'reduce',     header: 'Снижение если нет продаж',      width: 15, color: 'FFFFCC80' },
+            { key: 'status',     header: 'Статус',                        width: 10, color: 'FFE0DBD4' },
+            { key: 'avs',        header: 'AVS',                           width: 10, color: 'FFF3E5F5' }
+        ];
+
+        const storeBlockColors = {
+            '8': 'FFC8E6C9', '92': 'FFBBDEFB', '147': 'FFFFE0B2',
+            '150': 'FFE1BEE7', '165': 'FFF8BBD0', '258': 'FFB2EBF2'
+        };
+        const storeBlocks = activeStores.map(store => ({
+            store: store,
+            title: `🏬 Магазин ${store}`,
+            color: storeBlockColors[store] || 'FFE0DBD4'
+        }));
+        
+        const storeSubColumns = ['ТОП', 'Статус', 'Продажи', 'Сток', 'ТС'];
+        const SUB_COUNT = storeSubColumns.length;
+
+        const endColumns = [
+            { key: 'comment',    header: 'Комментарии',                   width: 25, color: 'FFFFF9C4' },
+            { key: 'supplier',   header: '№ Поставщика',                  width: 15, color: 'FFE0DBD4' },
+            { key: 'consent',    header: 'Согласие на возврат',           width: 18, color: 'FFE0DBD4' },
+            { key: 'avsColumn',  header: 'АВС',                           width: 10, color: 'FFE0DBD4' },
+            { key: 'sumDpac',    header: 'Сумма товара в dpac',           width: 18, color: 'FFE0DBD4' }
+        ];
+
+        const totalCols = baseColumns.length + storeBlocks.length * SUB_COUNT + endColumns.length;
+        const storeStartCol = baseColumns.length + 1;
+        const endStartCol = baseColumns.length + storeBlocks.length * SUB_COUNT + 1;
+
+        updateProgress('Формируем заголовки...', 30);
+
+        const headerRow1 = worksheet.getRow(1);
+        headerRow1.height = 32;
+
+        baseColumns.forEach((col, idx) => {
+            worksheet.mergeCells(1, idx + 1, 2, idx + 1);
+            const cell = headerRow1.getCell(idx + 1);
+            cell.value = col.header;
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: col.color } };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                bottom: { style: 'thin', color: { argb: 'FFB0A899' } },
+                right: { style: 'thin', color: { argb: 'FFB0A899' } }
+            };
+        });
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            const endCol = startCol + SUB_COUNT - 1;
+            worksheet.mergeCells(1, startCol, 1, endCol);
+            const cell = headerRow1.getCell(startCol);
+            cell.value = block.title;
+            cell.font = { bold: true, size: 11, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            for (let c = startCol; c <= endCol; c++) {
+                const c1 = headerRow1.getCell(c);
+                c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: block.color } };
+                c1.border = {
+                    top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    bottom: { style: 'medium', color: { argb: 'FFB0A899' } },
+                    right: { style: 'thin', color: { argb: 'FFB0A899' } }
+                };
+            }
+        });
+
+        endColumns.forEach((col, idx) => {
+            const colIdx = endStartCol + idx;
+            worksheet.mergeCells(1, colIdx, 2, colIdx);
+            const cell = headerRow1.getCell(colIdx);
+            cell.value = col.header;
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: col.color } };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                bottom: { style: 'thin', color: { argb: 'FFB0A899' } },
+                right: { style: 'thin', color: { argb: 'FFB0A899' } }
+            };
+        });
+
+        const headerRow2 = worksheet.getRow(2);
+        headerRow2.height = 22;
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            storeSubColumns.forEach((subHeader, subIdx) => {
+                const cell = headerRow2.getCell(startCol + subIdx);
+                cell.value = subHeader;
+                cell.font = { bold: true, size: 9, color: { argb: 'FF1E1E1E' } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: block.color } };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    bottom: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    right: { style: 'thin', color: { argb: 'FFB0A899' } }
+                };
+            });
+        });
+
+        baseColumns.forEach((col, idx) => { worksheet.getColumn(idx + 1).width = col.width; });
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            for (let i = 0; i < SUB_COUNT; i++) worksheet.getColumn(startCol + i).width = 10;
+        });
+        endColumns.forEach((col, idx) => { worksheet.getColumn(endStartCol + idx).width = col.width; });
+
+        updateProgress('Заполняем данными...', 50);
+
+        rowsToExport.forEach((r) => {
+            const sd = (store) => r.storeData[store] || { top: '', sales: '', stock: '', ts: '', status: '' };
+            
+            const rowData = [
+                r.art, r.name, r.price, r.rrp, r.dpac, r.zakupNds,
+                r.margin / 100, r.newPrice, r.newMargin / 100, r.dateChange,
+                r.condition, r.reduceIfNoSales, r.status, r.isAvs ? '💎 AVS' : ''
+            ];
+            
+            storeBlocks.forEach(block => {
+                const s = sd(block.store);
+                rowData.push(s.top || '', s.status || '', s.sales || '', s.stock || '', s.ts || '');
+            });
+            
+            rowData.push(
+                commentsMap.get(r.art) || r.comment || '',
+                r.supplier, r.consent, r.avs, r.sumDpac
+            );
+
+            const dataRow = worksheet.addRow(rowData);
+            dataRow.height = 18;
+
+            for (let colIdx = 1; colIdx <= totalCols; colIdx++) {
+                const cell = dataRow.getCell(colIdx);
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                    left: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                    right: { style: 'thin', color: { argb: 'FFE8E2DA' } }
+                };
+                cell.font = { size: 9 };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            }
+
+            baseColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(idx + 1);
+                if (col.key === 'art') { cell.font = { size: 9, bold: true }; cell.alignment = { vertical: 'middle', horizontal: 'left' }; }
+                if (col.key === 'name') { cell.alignment = { vertical: 'middle', horizontal: 'left' }; }
+                if (col.key === 'price') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBBDEFB' } };
+                    cell.font = { size: 9, bold: true, color: { argb: 'FF0D47A1' } };
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (col.key === 'rrp' || col.key === 'dpac') {
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (col.key === 'zakupNds') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE0B2' } };
+                    cell.font = { size: 9, bold: true, color: { argb: 'FFE65100' } };
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (col.key === 'margin') {
+                    cell.numFmt = '0.0%';
+                    if (r.margin < 0) cell.font = { size: 9, bold: true, color: { argb: 'FFC0392B' } };
+                    else cell.font = { size: 9, color: { argb: 'FF2E7D32' } };
+                }
+                if (col.key === 'newPrice') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8E6C9' } };
+                    cell.font = { size: 9, bold: true, color: { argb: 'FF1B5E20' } };
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (col.key === 'newMargin') { cell.numFmt = '0.0%'; cell.font = { size: 9, bold: true }; }
+                if (col.key === 'condition') {
+                    if (r.condition === 'снижение') {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FFB71C1C' } };
+                    } else {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8E6C9' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FF1B5E20' } };
+                    }
+                }
+                if (col.key === 'reduce') {
+                    if (r.reduceIfNoSales === 'снижение') {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE0B2' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FFE65100' } };
+                    } else {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
+                        cell.font = { size: 9, color: { argb: 'FF616161' } };
+                    }
+                }
+                if (col.key === 'status') {
+                    const sc = { 'A': { bg: 'FFE8F5E9', fg: 'FF1B5E20' }, 'B': { bg: 'FFFFF3E0', fg: 'FFE65100' }, 'C': { bg: 'FFF5F5F5', fg: 'FF616161' }, 'I': { bg: 'FFFFF9C4', fg: 'FFF57F17' }, 'D': { bg: 'FFFFEBEE', fg: 'FFB71C1C' } }[r.status] || { bg: 'FFFFFFFF', fg: 'FF1E1E1E' };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } };
+                    cell.font = { size: 9, bold: true, color: { argb: sc.fg } };
+                }
+                if (col.key === 'avs') {
+                    if (r.isAvs) {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3E5F5' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FF4A148C' } };
+                    }
+                }
+            });
+
+            storeBlocks.forEach((block, blockIdx) => {
+                const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                const s = sd(block.store);
+                
+                const topCell = dataRow.getCell(startCol);
+                if (s.top === '0') {
+                    topCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } };
+                    topCell.font = { size: 9, bold: true, color: { argb: 'FFB71C1C' } };
+                }
+                
+                const statusCell = dataRow.getCell(startCol + 1);
+                if (s.status) {
+                    const sc = { 'A': { bg: 'FFE8F5E9', fg: 'FF1B5E20' }, 'B': { bg: 'FFFFF3E0', fg: 'FFE65100' }, 'C': { bg: 'FFF5F5F5', fg: 'FF616161' }, 'I': { bg: 'FFFFF9C4', fg: 'FFF57F17' }, 'D': { bg: 'FFFFEBEE', fg: 'FFB71C1C' } }[s.status] || { bg: 'FFFFFFFF', fg: 'FF1E1E1E' };
+                    statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } };
+                    statusCell.font = { size: 9, bold: true, color: { argb: sc.fg } };
+                }
+                
+                const salesCell = dataRow.getCell(startCol + 2);
+                if (s.sales && parseInt(s.sales) > 0) {
+                    salesCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEDD5' } };
+                    salesCell.font = { size: 9, bold: true };
+                }
+            });
+
+            endColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(endStartCol + idx);
+                if (col.key === 'comment') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+                    cell.font = { size: 9, italic: true };
+                    cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                }
+                if (col.key === 'sumDpac') {
+                    cell.numFmt = '#,##0';
+                    cell.font = { size: 9, bold: true };
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+            });
+        });
+
+        updateProgress('Итоги...', 70);
+
+        const totalSum = rowsToExport.reduce((sum, r) => sum + r.sumDpac, 0);
+        const totalRow = worksheet.addRow([]);
+        totalRow.height = 22;
+        
+        const totalLabelCell = totalRow.getCell(totalCols - 1);
+        totalLabelCell.value = 'ИТОГО:';
+        totalLabelCell.font = { size: 10, bold: true };
+        totalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+        totalLabelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0DBD4' } };
+        
+        const totalCell = totalRow.getCell(totalCols);
+        totalCell.value = totalSum;
+        totalCell.font = { size: 11, bold: true, color: { argb: 'FF2C5F2D' } };
+        totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
+        totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0DBD4' } };
+        totalCell.numFmt = '#,##0';
+
+        worksheet.autoFilter = {
+            from: { row: 2, column: 1 },
+            to: { row: 2, column: totalCols }
+        };
+
+        const commentRows = [["Артикул", "Наименование", "Комментарий"]];
+        let commentCount = 0;
+        rowsToExport.forEach(r => {
+            const comment = commentsMap.get(r.art) || r.comment || '';
+            if (comment && comment.trim() !== '') {
+                commentRows.push([r.art, r.name, comment]);
+                commentCount++;
+            }
+        });
+        
+        if (commentCount > 0) {
+            const wsComments = workbook.addWorksheet('Комментарии');
+            wsComments.columns = [
+                { header: 'Артикул', key: 'art', width: 15 },
+                { header: 'Наименование', key: 'name', width: 40 },
+                { header: 'Комментарий', key: 'comment', width: 50 }
+            ];
+            const hr = wsComments.getRow(1);
+            hr.font = { bold: true, size: 10 };
+            hr.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+            hr.height = 25;
+            
+            commentRows.slice(1).forEach(row => {
+                const r = wsComments.addRow(row);
+                r.height = 18;
+                r.font = { size: 9 };
+                r.eachCell(c => {
+                    c.border = {
+                        top: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                        left: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                        right: { style: 'thin', color: { argb: 'FFE8E2DA' } }
+                    };
+                });
+            });
+        }
+
+        updateProgress('Сохраняем файл...', 90);
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const today = new Date().toISOString().slice(0,10);
+        link.download = `снижение_цены_${today}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        updateProgress('Готово!', 100);
+        showToast(`✅ Выгружено ${rowsToExport.length} артикулов с применённой маржой. Комментариев: ${commentCount}`, 'success', 6000);
+    } catch (err) {
+        console.error(err);
+        updateProgress('Ошибка', 100);
+        showToast(`❌ Ошибка выгрузки: ${err.message}`, 'error', 7000);
+    }
+}
+
+// =========================== ОБРАБОТЧИКИ ===========================
+function handleApplyFilter() {
+    if (!gammaData.length) { showToast('❌ Сначала загрузите Гамму', 'warning'); return; }
+    if (!allCalculatedRows.length) computeSummary();
+    else { applyAllFilters(); showToast('✅ Фильтры применены', 'success', 2000); }
+}
+
+document.getElementById('computeBtn').addEventListener('click', computeSummary);
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('applyFilterTopBtn').addEventListener('click', handleApplyFilter);
+document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
+
+document.getElementById('clearDataBtn').addEventListener('click', () => {
+    if (!confirm('Очистить все данные?')) return;
+    gammaData = []; supplierData = []; supplierMap.clear();
+    allCalculatedRows = []; filteredRows = []; commentsMap.clear();
+    selectedArticles.clear(); articleParams.clear();
+    activeStores = [];
+    DISPLAY_LIMIT = 200;
+    document.getElementById('tableHead').innerHTML = '';
+    document.getElementById('tableBody').innerHTML = '<tr><td colspan="40"><div class="empty-message"><span class="icon">🔍</span><div class="title">Данные очищены</div></div></td></tr>';
+    document.getElementById('tableInfo').textContent = '📊 Нет данных';
+    document.getElementById('fileStatus').textContent = 'Файлы не загружены';
+    document.getElementById('statusMsg').textContent = '⏳ Ожидание загрузки файлов...';
+    document.getElementById('loadMoreWrap').style.display = 'none';
+    updateSelectionUI();
+    showToast('🗑️ Данные очищены', 'info');
+});
+document.getElementById('applyDiscountBtn').addEventListener('click', applyDiscountToSelected);
+document.getElementById('selectAllBtn').addEventListener('click', selectAllVisible);
+document.getElementById('deselectAllBtn').addEventListener('click', deselectAll);
+
+document.getElementById('resetFilterBtn').addEventListener('click', () => {
+    document.getElementById('subdeptSelect').value = 'all';
+    document.getElementById('topSelect').value = 'all';
+    document.getElementById('conditionSelect').value = 'all';
+    document.getElementById('reduceSelect').value = 'all';
+    document.getElementById('statusSelect').value = 'all';
+    document.getElementById('articleSearch').value = '';
+    document.getElementById('marginSlider').value = 5;
+    document.getElementById('marginInput').value = 5;
+    document.getElementById('marginInput').classList.remove('negative');
+    document.querySelectorAll('.quick-filter').forEach(b => b.classList.remove('active'));
+    document.querySelector('.quick-filter[data-filter="all"]').classList.add('active');
+    allCalculatedRows = []; filteredRows = [];
+    selectedArticles.clear(); articleParams.clear();
+    DISPLAY_LIMIT = 200;
+    renderTable();
+    updateSelectionUI();
+});
+
+document.getElementById('helpBtn').addEventListener('click', () => {
+    document.getElementById('helpModal').classList.add('show');
+});
+document.getElementById('helpClose').addEventListener('click', () => {
+    document.getElementById('helpModal').classList.remove('show');
+});
+document.getElementById('helpModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+});
+
+function syncMarginInputs(source) {
+    const slider = document.getElementById('marginSlider');
+    const input = document.getElementById('marginInput');
+    if (source === 'slider') input.value = slider.value;
+    else {
+        let v = parseFloat(input.value) || 0;
+        if (v < -40) v = -40;
+        if (v > 40) v = 40;
+        input.value = v;
+        slider.value = v;
+    }
+    const v = parseFloat(input.value);
+    if (v < 0) input.classList.add('negative');
+    else input.classList.remove('negative');
+    updateSelectionUI();
+}
+
+document.getElementById('marginSlider').addEventListener('input', () => syncMarginInputs('slider'));
+document.getElementById('marginInput').addEventListener('input', () => syncMarginInputs('input'));
+document.getElementById('articleSearch').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleApplyFilter(); });
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    });
+});
+
+document.querySelectorAll('.quick-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.quick-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (!allCalculatedRows.length && gammaData.length) computeSummary();
+        else applyAllFilters();
+    });
+});
+
+document.addEventListener('dblclick', (e) => {
+    if (e.target.closest('.row-checkbox') || e.target.closest('input')) return;
+    const row = e.target.closest('tr');
+    if (row) {
+        const artCell = row.querySelector('td:nth-child(2) strong');
+        if (artCell) openMagPortal(artCell.textContent);
+    }
+});
+
+syncMarginInputs('input');
+updateSelectionUI();
+
+setTimeout(() => showToast('📌 Артикулы с нулевым запасом по всем магазинам исключаются из таблицы', 'info', 5000), 800);
+
+console.log('📉 ТОП 0 — Снижение цены готов');
+console.log('✅ Исключены артикулы с нулевым запасом по всем магазинам');
+console.log('✅ Динамические магазины из Гаммы');
+console.log('✅ Маржа НЕ применяется автоматически');
+console.log('✅ Условие: ПЦ >= РРЦ → "снижение"');
+</script>
+</body>
+</html>
