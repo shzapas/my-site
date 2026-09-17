@@ -702,7 +702,17 @@
     .review{padding:20px;}
     .reviews-wrap{padding:24px 12px;}
     .feedback-single{padding:18px;}
-    .feedback-single .ico-big{width:52px;height:52px;font-size:28px;}
+     .feedback-single .ico-big{width:52px;height:52px;font-size:28px;}
+  }
+
+  /* Пульс при обновлении онлайн-счётчика */
+  @keyframes onlinePulse{
+    0%{transform:scale(1); color:var(--orange);}
+    50%{transform:scale(1.25); color:#4caf50;}
+    100%{transform:scale(1); color:var(--orange);}
+  }
+  .online-pulse{
+    animation:onlinePulse .8s ease;
   }
 </style>
 </head>
@@ -1149,8 +1159,8 @@ function closeToast(){
   localStorage.setItem('stockwise_seen_version', LAST_VERSION);
 }
 
-/* СЧЁТЧИКИ */
-const counters = document.querySelectorAll('.stat .num');
+/* СЧЁТЧИКИ — СТАТИСТИКА (кроме "Онлайн") */
+const counters = document.querySelectorAll('.stat .num:not(#statOnline)');
 const statObserver = new IntersectionObserver((entries)=>{
   entries.forEach(entry=>{
     if(entry.isIntersecting){
@@ -1169,6 +1179,26 @@ const statObserver = new IntersectionObserver((entries)=>{
   });
 }, {threshold:.5});
 counters.forEach(c=>statObserver.observe(c));
+
+/* ОНЛАЙН СЧЁТЧИК — РАНДОМ 1..22 */
+const onlineEl = document.getElementById('statOnline');
+let onlineCurrent = Math.floor(Math.random() * 22) + 1; // 1..22
+onlineEl.textContent = onlineCurrent;
+
+function updateOnline(){
+  const delta = Math.floor(Math.random() * 5) - 2; // -2..+2
+  let next = onlineCurrent + delta;
+  if(next < 1) next = 1;
+  if(next > 22) next = 22;
+  onlineCurrent = next;
+  onlineEl.textContent = onlineCurrent;
+  // анимация пульса
+  onlineEl.classList.add('online-pulse');
+  setTimeout(()=>onlineEl.classList.remove('online-pulse'), 800);
+  // следующее обновление через 5–9 секунд
+  setTimeout(updateOnline, 5000 + Math.random() * 4000);
+}
+setTimeout(updateOnline, 5000 + Math.random() * 4000);
 
 /* ПРОГРЕСС И КНОПКА НАВЕРХ */
 const progressBar = document.getElementById('readProgress');
