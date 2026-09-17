@@ -22,6 +22,8 @@
     .header-actions .btn-export:hover { background: #ffc94d; }
     .header-actions .btn-import { background: #4a90d9; color: white; border-color: #4a90d9; }
     .header-actions .btn-import:hover { background: #5a9fe9; }
+    .header-actions .btn-download { background: #27ae60; color: white; border-color: #27ae60; }
+    .header-actions .btn-download:hover { background: #2ecc71; }
     
     .slide-container { padding: 24px 32px 16px 32px; min-height: 500px; background: #fcfcfd; overflow: hidden; position: relative; }
     .slide { display: none; opacity: 0; transform: translateX(30px); transition: opacity 0.5s ease, transform 0.5s ease; }
@@ -170,6 +172,9 @@
       <i class="fas fa-graduation-cap"></i> Работа с порталом
     </div>
     <div class="header-actions">
+      <button class="btn-download" onclick="window.open('https://disk.360.yandex.ru/d/fwxsEhl7UxDEYw', '_blank')">
+        <i class="fas fa-cloud-download-alt"></i> Скачать скриншоты
+      </button>
       <button class="btn-export" onclick="exportData()"><i class="fas fa-download"></i> Экспорт</button>
       <button class="btn-import" onclick="document.getElementById('importInput').click()"><i class="fas fa-upload"></i> Импорт</button>
       <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
@@ -194,18 +199,40 @@
           <span class="btn btn-primary" onclick="goToSlide(1)"><i class="fas fa-play"></i> Начать</span>
           <span class="btn" onclick="window.open('https://shzapas.github.io/my-site/', '_blank')"><i class="fas fa-external-link-alt"></i> Портал</span>
         </div>
-        <div style="margin-top: 32px; color: #4a5b6f; font-size: 14px;">
+
+        <!-- ===== БЛОК: СКАЧАТЬ СКРИНШОТЫ ===== -->
+        <div style="margin-top: 28px; max-width: 620px; width: 100%; background: linear-gradient(135deg, #eef3fa 0%, #f8faff 100%); border-radius: 20px; padding: 20px 24px; border: 2px dashed #d0d9e4; text-align: left;">
+          <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px;">
+            <div style="background: #ffb81c; color: #003057; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px;">
+              <i class="fas fa-images"></i>
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #003057; font-size: 16px; margin-bottom: 2px;">Скачайте скриншоты для обучения</div>
+              <div style="font-size: 13px; color: #4a5b6f;">Архив с примерами скриншотов хранится на Яндекс.Диске. Скачайте, распакуйте и загрузите на нужных слайдах.</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <a class="btn btn-success" href="https://disk.360.yandex.ru/d/fwxsEhl7UxDEYw" target="_blank" rel="noopener" style="text-decoration: none; font-size: 13px;">
+              <i class="fas fa-cloud-download-alt"></i> Скачать с Яндекс.Диска
+            </a>
+            <span style="font-size: 12px; color: #6b7a8d; display: inline-flex; align-items: center; gap: 6px;">
+              <i class="fas fa-info-circle" style="color: #ffb81c;"></i>
+              Как загрузить: перейдите на слайд → «Добавить скриншот» → выберите файл
+            </span>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; color: #4a5b6f; font-size: 14px;">
           <i class="fas fa-info-circle"></i> Для менеджеров товарного запаса
         </div>
       </div>
     </div>
 
-    <!-- ===== СЛАЙД 2: СТРУКТУРА ПОРТАЛА (ДЕТАЛЬНО) ===== -->
+    <!-- ===== СЛАЙД 2: СТРУКТУРА ПОРТАЛА ===== -->
     <div class="slide" data-slide="1">
       <div class="slide-title"><i class="fas fa-sitemap"></i>Структура портала</div>
       <div style="margin-bottom: 16px;">
         <div class="interactive-grid" id="structureGrid">
-          <!-- Левая панель -->
           <div class="interactive-item" data-target="left">
             <div class="icon">📂</div>
             <div class="title">Левая панель</div>
@@ -220,7 +247,6 @@
               • Автоминимумы, Максы, ЭКСПО, Недопоставки, Коррекции, Детали поставки
             </div>
           </div>
-          <!-- Центральная часть -->
           <div class="interactive-item" data-target="center">
             <div class="icon">📋</div>
             <div class="title">Центральная часть</div>
@@ -235,7 +261,6 @@
               • Экспорт изменений
             </div>
           </div>
-          <!-- Правая панель -->
           <div class="interactive-item" data-target="right">
             <div class="icon">📈</div>
             <div class="title">Правая панель</div>
@@ -479,48 +504,48 @@
       </div>
     </div>
 
-    <!-- ===== СЛАЙД 9: КОНТАКТЫ ПОДДЕРЖКИ (ФИНАЛ) ===== -->
-<div class="slide" data-slide="8">
-  <div class="slide-title"><i class="fas fa-headset"></i>Контакты поддержки</div>
-  <div class="contact-grid" style="grid-template-columns: 1fr 1fr 1fr;">
-    <div class="contact-card">
-      <div class="icon">📧</div>
-      <div class="info">
-        <div class="label">Электронная почта</div>
-        <div class="value">
-          <a href="mailto:Denis.Scheblykin@lemanapro.ru" style="color: #003057; text-decoration: none; font-weight: 500;">
-            Denis.Scheblykin@lemanapro.ru
-          </a>
+    <!-- ===== СЛАЙД 9: КОНТАКТЫ ПОДДЕРЖКИ ===== -->
+    <div class="slide" data-slide="8">
+      <div class="slide-title"><i class="fas fa-headset"></i>Контакты поддержки</div>
+      <div class="contact-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="contact-card">
+          <div class="icon">📧</div>
+          <div class="info">
+            <div class="label">Электронная почта</div>
+            <div class="value">
+              <a href="mailto:Denis.Scheblykin@lemanapro.ru" style="color: #003057; text-decoration: none; font-weight: 500;">
+                Denis.Scheblykin@lemanapro.ru
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="icon">📱</div>
+          <div class="info">
+            <div class="label">Группа в Коннекте</div>
+            <div class="value">
+              <a href="https://connect.lemanapro.ru/net_home/groups/6649?tab=feed" target="_blank" style="color: #003057; text-decoration: none; font-weight: 500;">
+                STOCKWISE · Группа
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="icon">👤</div>
+          <div class="info">
+            <div class="label">Профиль в Коннекте</div>
+            <div class="value">
+              <a href="https://connect.lemanapro.ru/net_home/people/36702?tab=Feed" target="_blank" style="color: #003057; text-decoration: none; font-weight: 500;">
+                Денис Щеблыкин
+              </a>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="contact-card">
-      <div class="icon">📱</div>
-      <div class="info">
-        <div class="label">Группа в Коннекте</div>
-        <div class="value">
-          <a href="https://connect.lemanapro.ru/net_home/groups/6649?tab=feed" target="_blank" style="color: #003057; text-decoration: none; font-weight: 500;">
-            STOCKWISE · Группа
-          </a>
-        </div>
+      <div class="tip" style="margin-top: 12px;">
+        <i class="fas fa-info-circle"></i> При возникновении вопросов обращайтесь в группу Коннекта или пишите на почту — мы всегда рады помочь!
       </div>
     </div>
-    <div class="contact-card">
-      <div class="icon">👤</div>
-      <div class="info">
-        <div class="label">Профиль в Коннекте</div>
-        <div class="value">
-          <a href="https://connect.lemanapro.ru/net_home/people/36702?tab=Feed" target="_blank" style="color: #003057; text-decoration: none; font-weight: 500;">
-            Денис Щеблыкин
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="tip" style="margin-top: 12px;">
-    <i class="fas fa-info-circle"></i> При возникновении вопросов обращайтесь в группу Коннекта или пишите на почту — мы всегда рады помочь!
-  </div>
-</div>
 
     <!-- ===== СЛАЙД 10: ЗАКЛЮЧЕНИЕ ===== -->
     <div class="slide" data-slide="9">
@@ -616,7 +641,6 @@
   // ============================================================
   document.querySelectorAll('.interactive-item').forEach(item => {
     item.addEventListener('click', function() {
-      // Закрываем все остальные
       document.querySelectorAll('.interactive-item').forEach(el => {
         if (el !== this) el.classList.remove('active');
       });
