@@ -417,9 +417,34 @@
     }
     loadHistory();
 
+    // ============================================================
+    // Утилиты (нормализация и поиск колонок)
+    // ============================================================
     function toNum(v) { const n = parseFloat(String(v).replace(/,/g, '.').replace(/\s/g, '')); return isNaN(n) ? 0 : n; }
     function toStr(v) { return v !== undefined && v !== null ? String(v).trim() : ''; }
     function extractStore(s) { const m = String(s).match(/^(\d+)/); return m ? m[1] : String(s).trim(); }
+
+    // Приводим заголовок к каноническому виду: убираем неразрывные пробелы, лишние пробелы, регистр
+    function normalizeHeader(h) {
+        return String(h)
+            .replace(/\u00A0/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+    }
+
+    // Ищем значение в объекте по любому из вариантов имён колонок
+    function findKey(obj, ...names) {
+        if (!obj) return undefined;
+        const keys = Object.keys(obj);
+        for (const name of names) {
+            const target = normalizeHeader(name);
+            for (const k of keys) {
+                if (normalizeHeader(k) === target) return obj[k];
+            }
+        }
+        return undefined;
+    }
 
     function showToast(msg, type = 'info') {
         const container = document.getElementById('toastContainer');
@@ -439,7 +464,7 @@
     }
 
     // ============================================================
-    // 2. Загрузка файлов
+    // 2. Загрузка файлов (с автоопределением строки заголовка)
     // ============================================================
     function loadFile(inputId, targetArray, statusId, label) {
         const input = document.getElementById(inputId);
@@ -455,9 +480,23 @@
                     const wb = XLSX.read(data, { type: 'array' });
                     const sheet = wb.Sheets[wb.SheetNames[0]];
                     const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                    const headers = raw[2] ? raw[2].map(h => toStr(h)) : [];
+
+                    // Автоопределение строки заголовка (ищем "Артикул", "ЛМ-код", "Магазин", "№ магазина")
+                    let headerRowIdx = -1;
+                    const markers = ['артикул', 'лм-код', 'магазин', '№ магазина', 'поставщик', 'подотдел'];
+                    for (let i = 0; i < Math.min(raw.length, 15); i++) {
+                        const row = raw[i] || [];
+                        const rowNorm = row.map(h => normalizeHeader(h)).join('|');
+                        if (markers.some(m => rowNorm.includes(m))) {
+                            headerRowIdx = i;
+                            break;
+                        }
+                    }
+                    if (headerRowIdx === -1) headerRowIdx = 2; // fallback как раньше
+
+                    const headers = (raw[headerRowIdx] || []).map(h => toStr(h));
                     const json = [];
-                    for (let i = 3; i < raw.length; i++) {
+                    for (let i = headerRowIdx + 1; i < raw.length; i++) {
                         const row = raw[i];
                         if (!row || row.length === 0) continue;
                         const obj = {};
@@ -536,17 +575,17 @@
 
                 let added = 0;
                 for (const row of imported) {
-                    let article = toStr(row['Артикул'] || row['article'] || row['Article']);
+                    let article = toStr(findKey(row, 'Артикул', 'article', 'Article'));
                     if (!article) {
                         const values = Object.values(row);
                         if (values.length > 0) article = toStr(values[0]);
                     }
-                    let store = toStr(row['Номер магазина'] || row['store'] || row['Store'] || row['Магазин']);
+                    let store = toStr(findKey(row, 'Номер магазина', 'store', 'Store', 'Магазин'));
                     if (!store) {
                         const values = Object.values(row);
                         if (values.length > 1) store = toStr(values[1]);
                     }
-                    let name = toStr(row['Наименование'] || row['name'] || row['Name'] || '');
+                    let name = toStr(findKey(row, 'Наименование', 'name', 'Name'));
                     if (article) article = article.replace(/[^0-9]/g, '');
                     if (store) store = store.replace(/[^0-9]/g, '');
                     
@@ -554,7 +593,7 @@
                         const key = `${store}|${article}`;
                         if (!state.appliedSet.has(key)) {
                             state.appliedSet.add(key);
-                            const dateStr = row['Дата'] || row['date'] || row['Date'] || new Date().toISOString();
+                            const dateStr = findKey(row, 'Дата', 'date', 'Date') || new Date().toISOString();
                             state.history.push({ store, article, date: new Date(dateStr).toISOString() || new Date().toISOString() });
                             if (name) state.historyNames.set(key, name);
                             added++;
@@ -628,7 +667,7 @@
     }
 
     // ============================================================
-    // 4. Сведение отчётов (исправленная логика)
+    // 4. Сведение отчётов (с устойчивым поиском колонок)
     // ============================================================
     function mergeReports() {
         if (!state.gamma.length) { showToast('Загрузите Гамму', 'error'); return; }
@@ -641,14 +680,14 @@
             try {
                 // Сохраняем историю УТО
                 for (const row of state.uto) {
-                    const lm = toStr(row['ЛМ-код']);
+                    const lm = toStr(findKey(row, 'ЛМ-код', 'ЛМ код', 'Артикул'));
                     if (lm) {
                         let store = '';
                         let name = '';
                         for (const g of state.gamma) {
-                            if (toStr(g['Артикул']) === lm) {
-                                store = extractStore(g['№ магазина']);
-                                name = toStr(g['Наименование']);
+                            if (toStr(findKey(g, 'Артикул')) === lm) {
+                                store = extractStore(findKey(g, '№ магазина', 'Магазин', 'Номер магазина'));
+                                name = toStr(findKey(g, 'Наименование'));
                                 break;
                             }
                         }
@@ -660,14 +699,14 @@
                                     store: store,
                                     firstSeen: new Date().toISOString(),
                                     lastSeen: new Date().toISOString(),
-                                    rub: toNum(row['Уп.GMV руб']),
-                                    days: toNum(row['Кол-во дней в перебое за 30 дней']),
+                                    rub: toNum(findKey(row, 'Уп.GMV руб', 'Уп. GMV руб', 'GMV руб')),
+                                    days: toNum(findKey(row, 'Кол-во дней в перебое за 30 дней', 'Кол-во дней в перебое', 'Дней в перебое')),
                                 });
                             } else {
                                 const existing = state.utoHistory.get(key);
                                 existing.lastSeen = new Date().toISOString();
-                                existing.rub = toNum(row['Уп.GMV руб']);
-                                existing.days = toNum(row['Кол-во дней в перебое за 30 дней']);
+                                existing.rub = toNum(findKey(row, 'Уп.GMV руб', 'Уп. GMV руб', 'GMV руб'));
+                                existing.days = toNum(findKey(row, 'Кол-во дней в перебое за 30 дней', 'Кол-во дней в перебое', 'Дней в перебое'));
                             }
                             if (name && !state.historyNames.has(key)) {
                                 state.historyNames.set(key, name);
@@ -679,11 +718,11 @@
 
                 const utoMap = new Map();
                 for (const row of state.uto) {
-                    const lm = toStr(row['ЛМ-код']);
+                    const lm = toStr(findKey(row, 'ЛМ-код', 'ЛМ код', 'Артикул'));
                     if (lm) {
                         utoMap.set(lm, {
-                            rub: toNum(row['Уп.GMV руб']),
-                            days: toNum(row['Кол-во дней в перебое за 30 дней']),
+                            rub: toNum(findKey(row, 'Уп.GMV руб', 'Уп. GMV руб', 'GMV руб')),
+                            days: toNum(findKey(row, 'Кол-во дней в перебое за 30 дней', 'Кол-во дней в перебое', 'Дней в перебое')),
                         });
                     }
                 }
@@ -702,14 +741,14 @@
 
                 const postavkiMap = new Map();
                 for (const row of state.postavki) {
-                    const store = extractStore(row['Магазин']);
-                    const supplier = toStr(row['Поставщик']);
+                    const store = extractStore(findKey(row, 'Магазин', '№ магазина', 'Номер магазина'));
+                    const supplier = toStr(findKey(row, 'Поставщик', 'Имя поставщика', '№ Поставщика'));
                     const key = `${store}|${supplier}`;
-                    let srok = row['Срок поставки в магазин'] || row['Срок поставки в магазин ↪'] || '';
+                    let srok = findKey(row, 'Срок поставки в магазин', 'Срок поставки в магазин ↪', 'Срок поставки') || '';
                     if (!postavkiMap.has(key)) {
                         postavkiMap.set(key, {
                             срок: toStr(srok),
-                            дниЗаказа: toStr(row['Дни заказа']),
+                            дниЗаказа: toStr(findKey(row, 'Дни заказа', 'Дни заказа ')),
                         });
                     }
                 }
@@ -718,9 +757,9 @@
                 const allStores = new Set();
                 const allSubdepts = new Set();
                 for (const g of state.gamma) {
-                    const store = extractStore(g['№ магазина']);
+                    const store = extractStore(findKey(g, '№ магазина', 'Магазин', 'Номер магазина'));
                     if (store) allStores.add(store);
-                    const sub = toStr(g['Подотдел']);
+                    const sub = toStr(findKey(g, 'Подотдел', 'Подотдел '));
                     if (sub) allSubdepts.add(sub);
                 }
                 buildMultiSelect('storeMultiSelect', allStores, state.selectedStores);
@@ -733,8 +772,8 @@
                 const processedKeys = new Set();
 
                 for (const g of state.gamma) {
-                    const article = toStr(g['Артикул']);
-                    const store = extractStore(g['№ магазина']);
+                    const article = toStr(findKey(g, 'Артикул', 'Артикул '));
+                    const store = extractStore(findKey(g, '№ магазина', 'Магазин', 'Номер магазина'));
                     if (!store || !article) continue;
                     const key = `${store}|${article}`;
                     processedKeys.add(key);
@@ -747,17 +786,29 @@
                     if (!isInTop2History && !isInUto) continue;
 
                     if (state.selectedStores.size > 0 && !state.selectedStores.has(store)) continue;
-                    const subdept = toStr(g['Подотдел']);
+                    const subdept = toStr(findKey(g, 'Подотдел', 'Подотдел '));
                     if (state.selectedSubdepts.size > 0 && !state.selectedSubdepts.has(subdept)) continue;
 
-                    const topInStore = toStr(g['Сумма Топ в магазине']).replace(/\.00$/, '');
-                    const topCo = toStr(g['Сумма TOP ЦО']).replace(/\.00$/, '');
+                    // ====== ЧТЕНИЕ КОЛОНОК ГАММЫ (устойчиво к регистру/пробелам) ======
+                    const topInStore = toStr(findKey(g,
+                        'Сумма Топ в магазине',
+                        'Сумма ТОП в магазине',
+                        'Сумма Top в магазине'
+                    )).replace(/\.00$/, '');
+
+                    const topCo = toStr(findKey(g,
+                        'Сумма TOP ЦО',
+                        'Сумма Топ ЦО',
+                        'Сумма ТОП ЦО',
+                        'Сумма TOP ЦО '
+                    )).replace(/\.00$/, '');
+
                     if (state.excludeTopCoOne && topCo === '1') { excludedByTopCo++; continue; }
 
-                    const inTransit = toNum(g['Сумма В пути, шт.']) > 0;
-                    const inTransitSht = toNum(g['Сумма В пути, шт.']);
-                    const stock = toNum(g['Сумма Кол-во в запасе']);
-                    const name = toStr(g['Наименование']);
+                    const inTransitSht = toNum(findKey(g, 'Сумма В пути, шт.', 'Сумма в пути, шт.', 'В пути, шт.'));
+                    const inTransit = inTransitSht > 0;
+                    const stock = toNum(findKey(g, 'Сумма Кол-во в запасе', 'Сумма кол-во в запасе', 'Кол-во в запасе'));
+                    const name = toStr(findKey(g, 'Наименование', 'Наименование товара'));
                     
                     // Сохраняем наименование
                     if (name && !state.historyNames.has(key)) {
@@ -770,11 +821,11 @@
                         if (state.excludeWithStock && stock > 0) excludedWithStock++;
                     }
 
-                    const supplierCode = toStr(g['№ Поставщика']);
+                    const supplierCode = toStr(findKey(g, '№ Поставщика', 'Поставщик'));
                     const postKey = `${store}|${supplierCode}`;
                     const postInfo = postavkiMap.get(postKey);
                     let postSrok = postInfo ? postInfo.срок : '';
-                    if (!postSrok) postSrok = toStr(g['Срок поставки в магазин']);
+                    if (!postSrok) postSrok = toStr(findKey(g, 'Срок поставки в магазин', 'Срок поставки'));
                     const postDni = postInfo ? postInfo.дниЗаказа : '';
                     
                     const utoInfo = utoMap.get(article) || { rub: 0, days: 0 };
@@ -813,7 +864,6 @@
                             }
                         }
                     } else if (!postSrok && isInTop2History) {
-                        // Если нет срока поставки, но артикул в истории ТОП2 — даём 5 дней
                         const d = new Date();
                         d.setDate(d.getDate() + 5);
                         removalDate = d;
@@ -821,7 +871,7 @@
                         periodDisplay = '5 дн. (по умолчанию)';
                     }
 
-                    // ====== НОВАЯ ЛОГИКА СНЯТИЯ ======
+                    // ====== ЛОГИКА СНЯТИЯ ======
                     const isApplied = state.appliedSet.has(key);
                     const isRemoved = state.removedSet.has(key);
                     const isExtended = state.extendedSet.has(key);
@@ -829,31 +879,25 @@
                     let shouldRemove = false;
                     let removeReasonsList = [];
 
-                    // Проверяем только для артикулов в истории ТОП2
                     if (isInTop2History && !isRemoved) {
-                        // ГЛАВНЫЙ КРИТЕРИЙ 1: есть запас > 0
                         if (stock > 0) {
                             shouldRemove = true;
                             removeReasonsList.push(`📦 Есть запас (${stock} шт)`);
                         }
-                        // ГЛАВНЫЙ КРИТЕРИЙ 2: нет в пути
                         if (!inTransit && inTransitSht === 0) {
                             shouldRemove = true;
                             removeReasonsList.push('🚚 Товар приехал');
                         }
-                        // ДОПОЛНИТЕЛЬНЫЙ КРИТЕРИЙ: срок истёк
                         if (isOverdue) {
                             shouldRemove = true;
                             removeReasonsList.push('📅 Срок истёк');
                         }
-                        // ДОПОЛНИТЕЛЬНЫЙ КРИТЕРИЙ: нет в УТО
                         if (!isInUto && !shouldRemove) {
                             shouldRemove = true;
                             removeReasonsList.push('📊 Нет в УТО');
                         }
                     }
 
-                    // Если артикул продлён — не показываем снятие
                     if (isExtended && shouldRemove) {
                         shouldRemove = false;
                         removeReasonsList = ['⏳ Продлён до ' + removalDateStr];
@@ -1031,9 +1075,10 @@
             const removedClass = row.isRemoved ? 'row-removed' : '';
             const extendedClass = row.isExtended ? 'row-extended' : '';
             
-            const topBadge = row.top === '2' ? '<span class="badge badge-top2">ТОП2</span>' : (row.top === '1' ? '<span class="badge badge-top1">ТОП1</span>' : row.top || '—');
+            const topBadge = row.top === '2' ? '<span class="badge badge-top2">ТОП2</span>' : (row.top === '1' ? '<span class="badge badge-top1">ТОП1</span>' : (row.top || '—'));
             let topCoBadge = '—';
             if (row.topCo === '1') topCoBadge = '<span class="badge" style="background:#e65100;">1</span>';
+            else if (row.topCo === '2') topCoBadge = '<span class="badge" style="background:#6a1b9a;">2</span>';
             else if (row.topCo) topCoBadge = `<span class="badge" style="background:#6a1b9a;">${row.topCo}</span>`;
             
             const appliedBadge = isApplied && !row.isRemoved ? '<span class="badge badge-applied">✅</span>' : '';
@@ -1220,7 +1265,6 @@
                 const isRemoved = state.removedSet.has(key);
                 const isActive = state.appliedSet.has(key);
                 const isExtended = state.extendedSet.has(key);
-                const name = state.historyNames.get(key) || '—';
                 let statusText = '🟢 Активен';
                 if (isRemoved) statusText = '❌ Снят';
                 else if (isExtended) statusText = '⏳ Продлён';
@@ -1252,7 +1296,6 @@
                 const isRemoved = state.removedSet.has(key);
                 const isActive = state.appliedSet.has(key);
                 const isExtended = state.extendedSet.has(key);
-                const name = state.historyNames.get(key) || '—';
                 let statusText = '🟢 Активен';
                 if (isRemoved) statusText = '❌ Снят';
                 else if (isExtended) statusText = '⏳ Продлён';
@@ -1286,16 +1329,7 @@
     }
 
     function updateHistoryStats() {
-        let active = 0, removed = 0, extended = 0;
-        for (const h of state.history) {
-            const key = `${h.store}|${h.article}`;
-            if (state.removedSet.has(key)) removed++;
-            else if (state.extendedSet.has(key)) extended++;
-            else if (state.appliedSet.has(key)) active++;
-        }
-        // Обновляем в историях
-        const total = state.history.length;
-        // Не обновляем отдельные элементы, они уже обновлены в renderHistory
+        // статистика отображается в renderHistory
     }
 
     // ============================================================
@@ -1455,19 +1489,19 @@
 
                 let added = 0;
                 for (const row of data) {
-                    let article = toStr(row['Артикул'] || row['article'] || row['Article']);
+                    let article = toStr(findKey(row, 'Артикул', 'article', 'Article'));
                     if (!article) {
                         const values = Object.values(row);
                         if (values.length > 0) article = toStr(values[0]);
                     }
                     
-                    let store = toStr(row['Номер магазина'] || row['store'] || row['Store'] || row['Магазин']);
+                    let store = toStr(findKey(row, 'Номер магазина', 'store', 'Store', 'Магазин'));
                     if (!store) {
                         const values = Object.values(row);
                         if (values.length > 1) store = toStr(values[1]);
                     }
                     
-                    let name = toStr(row['Наименование'] || row['name'] || row['Name'] || '');
+                    let name = toStr(findKey(row, 'Наименование', 'name', 'Name'));
                     
                     if (article) article = article.replace(/[^0-9]/g, '');
                     if (store) store = store.replace(/[^0-9]/g, '');
@@ -1555,7 +1589,6 @@
     document.getElementById('exportTemplateBtn').addEventListener('click', () => exportTemplate(true, 'ТОП2'));
     document.getElementById('exportRemoveBtn').addEventListener('click', exportRemoveTemplate);
     
-    // Импорт/Экспорт истории
     document.getElementById('importHistoryBtn').addEventListener('click', importHistoryFromFile);
     document.getElementById('exportHistoryBtn').addEventListener('click', exportHistoryToFile);
     document.getElementById('resetHistoryBtn').addEventListener('click', resetHistory);
@@ -1627,13 +1660,11 @@
         }
     }
 
-    // Обновляем статус загрузчика
     document.getElementById('top2ListStatus').textContent = 
         `Загружено: 0 артикулов (всего в истории: ${state.history.length})`;
 
     console.log('📦 УТО→ТОП2 (финальная версия) загружен.');
     console.log(`📊 В истории ${state.history.length} артикулов`);
-    console.log('🔴 Снятие: есть запас (главное) / нет в пути / нет в УТО');
 
     applyFilters();
     renderHistory();
