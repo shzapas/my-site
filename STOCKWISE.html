@@ -9,12 +9,12 @@
 <meta name="description" content="STOCKWISE — рабочий портал команды товарного запаса Лемана ПРО. Инструменты анализа запасов, резервов, токсичного стока и обучение в одном месте.">
 <meta name="theme-color" content="#ffa938">
 
-<!-- Open Graph (для красивых превью в мессенджерах) -->
+<!-- Open Graph -->
 <meta property="og:title" content="STOCKWISE · Лемана ПРО — Инструменты товарного запаса">
 <meta property="og:description" content="Все инструменты товарного запаса в одном месте: STOCKWISE, PROGNOZ, ТОП-2, ТС Аналитика и Обучение.">
 <meta property="og:type" content="website">
 
-<!-- Favicon: SVG-иконка с графиком в стиле портала -->
+<!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffa938'/%3E%3Cpath d='M7 22V10h3v12H7zm6 0V15h3v7h-3zm6 0v-9h3v9h-3z' fill='%23fff'/%3E%3C/svg%3E">
 
 <style>
@@ -100,7 +100,7 @@
   }
   .btn-header:hover{background:var(--orange);border-color:var(--orange);transform:translateY(-2px);}
 
-  /* HERO — СЖАТЫЙ */
+  /* HERO */
   .hero{
     max-width:1200px;margin:0 auto;
     padding:32px 20px 12px;
@@ -277,6 +277,16 @@
   }
   .card:hover .badge{background:var(--orange);color:#fff;}
 
+  /* БЕЙДЖ "БЕТА-ТЕСТ" — ЖЁЛТЫЙ */
+  .badge-beta{
+    background:#fff3cd !important;
+    color:#856404 !important;
+  }
+  .card-beta:hover .badge-beta{
+    background:#ffc107 !important;
+    color:#fff !important;
+  }
+
   /* КНОПКА "i" */
   .info-btn{
     position:absolute;top:14px;right:14px;
@@ -409,7 +419,7 @@
   .carousel-arrow.left{left:-19px;}
   .carousel-arrow.right{right:-19px;}
 
-  /* ОБРАТНАЯ СВЯЗЬ — КОМПАКТНАЯ */
+  /* ОБРАТНАЯ СВЯЗЬ */
   .feedback-single{
     background:linear-gradient(135deg, var(--white) 0%, var(--blue-light) 100%);
     border-radius:18px;
@@ -509,6 +519,101 @@
     font-size:10px;font-weight:700;
     color:var(--orange-dark);background:var(--blue-light);
     padding:2px 7px;border-radius:5px;
+  }
+
+  /* МОДАЛЬНОЕ ОКНО БЕТА-ТЕСТА */
+  .beta-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(44,62,80,.55);
+    backdrop-filter:blur(4px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .3s, visibility .3s;
+    padding:20px;
+  }
+  .beta-modal.show{
+    opacity:1;
+    visibility:visible;
+  }
+  .beta-modal-content{
+    background:var(--white);
+    border-radius:22px;
+    padding:36px 32px 28px;
+    max-width:460px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+    transform:translateY(20px) scale(.95);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1);
+    position:relative;
+    overflow:hidden;
+  }
+  .beta-modal-content::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:5px;
+    background:linear-gradient(90deg, var(--orange), var(--orange-light), var(--orange));
+    background-size:200% 100%;
+    animation:slide 3s linear infinite;
+  }
+  .beta-modal.show .beta-modal-content{
+    transform:translateY(0) scale(1);
+  }
+  .beta-modal-icon{
+    font-size:52px;
+    margin-bottom:14px;
+    display:block;
+    animation:float 3s ease-in-out infinite;
+  }
+  .beta-modal-content h3{
+    font-size:20px;
+    font-weight:800;
+    color:var(--blue-dark);
+    margin-bottom:14px;
+  }
+  .beta-modal-content p{
+    font-size:14.5px;
+    color:var(--gray);
+    line-height:1.6;
+    margin-bottom:12px;
+  }
+  .beta-modal-content p strong{color:var(--orange-dark);}
+  .beta-modal-sub{
+    font-size:13px !important;
+    background:var(--blue-light);
+    padding:12px 16px;
+    border-radius:12px;
+    color:var(--blue-dark) !important;
+  }
+  .beta-modal-sub a{
+    color:var(--orange-dark);
+    font-weight:700;
+    text-decoration:none;
+  }
+  .beta-modal-sub a:hover{text-decoration:underline;}
+  .beta-modal-btn{
+    margin-top:18px;
+    background:var(--orange);
+    color:#fff;
+    border:none;
+    padding:12px 32px;
+    border-radius:12px;
+    font-size:14.5px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+    box-shadow:0 6px 16px rgba(255,169,56,.45);
+    transition:.25s;
+  }
+  .beta-modal-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 9px 22px rgba(255,169,56,.6);
   }
 
   /* ТОСТ */
@@ -708,19 +813,21 @@
     <span class="badge">Основной</span>
   </a>
 
-  <a class="card" href="https://shzapas.github.io/my-site/index1.html" target="_blank" rel="noopener" style="--delay:.15s">
+  <!-- PROGNOZ — бета-тестирование -->
+  <a class="card card-beta" href="#" onclick="showBeta(event, 'PROGNOZ')" style="--delay:.15s">
     <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
     <div class="tooltip">
       <strong>PROGNOZ</strong><br>
       Управление резервами: 11 отчётов, прогноз «Алмаз» с коэффициентом сезонности,
-      статусы стока, расчёт срочности заказа.
+      статусы стока, расчёт срочности заказа.<br><br>
+      <span style="color:#ffcf7a;">⚠️ Сейчас в бета-тестировании</span>
     </div>
     <div class="card-icon">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
     </div>
     <h3>PROGNOZ</h3>
     <p>Управление резервами и прогноз «Алмаз»: сезонность, статусы стока, срочность заказа.</p>
-    <span class="badge">Резервы</span>
+    <span class="badge badge-beta">🧪 Бета-тест</span>
   </a>
 
   <a class="card" href="https://shzapas.github.io/my-site/%D0%A3%D0%A2%D0%9E" target="_blank" rel="noopener" style="--delay:.2s">
@@ -737,6 +844,7 @@
     <p>Работа с ТОП-2: фильтры УТО, управление снятием и продлением, полная история.</p>
     <span class="badge">ТОП-2</span>
   </a>
+
   <!-- ТОП0 -->
   <a class="card" href="https://shzapas.github.io/my-site/%D0%A2%D0%9E%D0%9F0" target="_blank" rel="noopener" style="--delay:.23s">
     <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
@@ -752,6 +860,7 @@
     <p>Работа с ТОП0: анализ позиций, приоритеты и решения по товарному запасу.</p>
     <span class="badge">ТОП0</span>
   </a>
+
   <a class="card" href="https://shzapas.github.io/my-site/index2.html" target="_blank" rel="noopener" style="--delay:.25s">
     <button class="info-btn" onclick="toggleTip(event, this)" aria-label="Подробнее">i</button>
     <div class="tooltip">
@@ -868,7 +977,7 @@
   </div>
 </div>
 
-<!-- ОБРАТНАЯ СВЯЗЬ — ОДНА КОМПАКТНАЯ КАРТОЧКА -->
+<!-- ОБРАТНАЯ СВЯЗЬ -->
 <div class="section">
   <div class="section-title"><span class="dot"></span> Обратная связь</div>
   <p class="section-sub">Есть идея или замечание — напишите нам.</p>
@@ -918,15 +1027,11 @@
 <div class="section">
   <div class="section-title"><span class="dot"></span> Журнал изменений и доработок</div>
   <div class="changelog" id="changelog">
-    <!-- ============================================================
-         РЕДАКТИРУЙТЕ ЗДЕСЬ. Новую запись вставляйте ПЕРВОЙ,
-         с классом "new". У предыдущей — класс убирайте.
-         ============================================================ -->
     <div class="log-item new">
       <div class="log-date">15.09.2026</div>
       <div class="log-body">
         <h4>Запуск рабочего портала <span class="log-ver">v1.0</span></h4>
-        <p>Собраны все инструменты в одном месте: STOCKWISE, PROGNOZ, ТОП-2, ТС Аналитика и Обучение. Добавлены карусель отзывов, обратная связь, FAQ и журнал изменений.</p>
+        <p>Собраны все инструменты в одном месте: STOCKWISE, PROGNOZ, ТОП-2, ТОП0, ТС Аналитика и Обучение. Добавлены карусель отзывов, обратная связь, FAQ и журнал изменений.</p>
       </div>
     </div>
     <div class="log-item">
@@ -961,6 +1066,23 @@
   <div style="margin-top:6px; font-size:11.5px; color:#6b7a8d;">Лемана ПРО · Внутренний портал</div>
 </footer>
 
+<!-- МОДАЛЬНОЕ ОКНО: БЕТА-ТЕСТ -->
+<div class="beta-modal" id="betaModal">
+  <div class="beta-modal-content">
+    <div class="beta-modal-icon">🧪</div>
+    <h3 id="betaModalTitle">Инструмент в бета-тестировании</h3>
+    <p id="betaModalText">
+      Инструмент <strong>PROGNOZ</strong> сейчас проходит стадию бета-тестирования.
+      Мы дорабатываем функциональность и проверяем стабильность.
+    </p>
+    <p class="beta-modal-sub">
+      💡 Если хотите принять участие в тестировании — напишите разработчику в
+      <a href="https://connect.lemanapro.ru/net_home/people/36702?tab=Feed" target="_blank" rel="noopener">Коннект</a>.
+    </p>
+    <button class="beta-modal-btn" onclick="closeBeta()">Понятно</button>
+  </div>
+</div>
+
 <!-- ТОСТ -->
 <div class="toast" id="toast">
   <div class="toast-icon">🔔</div>
@@ -989,6 +1111,26 @@ document.addEventListener('click', ()=>{
 });
 document.querySelectorAll('.tooltip').forEach(t=>{
   t.addEventListener('click', e=>e.stopPropagation());
+});
+
+/* БЕТА-ТЕСТ: ПОКАЗ И СКРЫТИЕ МОДАЛЬНОГО ОКНА */
+function showBeta(e, toolName){
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('betaModalTitle').textContent = '🧪 Инструмент в бета-тестировании';
+  document.getElementById('betaModalText').innerHTML =
+    'Инструмент <strong>' + toolName + '</strong> сейчас проходит стадию бета-тестирования. ' +
+    'Мы дорабатываем функциональность и проверяем стабильность.';
+  document.getElementById('betaModal').classList.add('show');
+}
+function closeBeta(){
+  document.getElementById('betaModal').classList.remove('show');
+}
+document.getElementById('betaModal').addEventListener('click', function(e){
+  if(e.target === this) closeBeta();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeBeta();
 });
 
 /* ТОСТ */
@@ -1092,6 +1234,7 @@ function toggleFaq(el){
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('click', function(e){
     if(e.target.classList.contains('info-btn')) return;
+    if(this.classList.contains('card-beta')) return;
     this.style.transition = 'transform .1s';
     this.style.transform = 'translateY(-1px) scale(.99)';
     setTimeout(()=>{ this.style.transform=''; this.style.transition=''; }, 150);
