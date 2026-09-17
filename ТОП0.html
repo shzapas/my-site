@@ -58,6 +58,21 @@
         .btn-warning:hover { background: #bf360c; }
         .btn-sm { padding: 4px 14px; font-size: 0.7rem; }
 
+        /* ✅ Стиль для кнопок выгрузки */
+        .btn-export-full {
+            background: linear-gradient(135deg, #2c5f2d 0%, #43a047 100%);
+            color: #fff;
+            padding: 8px 18px;
+        }
+        .btn-export-full:hover { background: linear-gradient(135deg, #1f4520 0%, #2c5f2d 100%); }
+
+        .btn-export-changes {
+            background: linear-gradient(135deg, #e65100 0%, #fb8c00 100%);
+            color: #fff;
+            padding: 8px 18px;
+        }
+        .btn-export-changes:hover { background: linear-gradient(135deg, #bf360c 0%, #e65100 100%); }
+
         .status-text {
             font-size: 0.72rem;
             color: #4a3f35;
@@ -206,7 +221,8 @@
         <div class="header-actions">
             <button class="btn-help" id="helpBtn" title="Краткая инструкция">?</button>
             <button class="btn" id="computeBtn">🧮 РАССЧИТАТЬ</button>
-            <button class="btn btn-outline" id="exportBtn">⬇️ ВЫГРУЗИТЬ С ИЗМЕНЕНИЯМИ</button>
+            <!-- ✅ 1-я кнопка: сводная БЕЗ изменений -->
+            <button class="btn btn-export-full" id="exportFullBtn">📤 ВЫГРУЗИТЬ СВОДНУЮ (без изменений)</button>
             <span class="status-text" id="statusMsg">⏳ Ожидание загрузки файлов...</span>
         </div>
     </div>
@@ -222,12 +238,19 @@
                 <ul>
                     <li><strong>1.</strong> Загрузите <strong>Гамму</strong> (и при необходимости <strong>Условия поставщиков</strong>)</li>
                     <li><strong>2.</strong> Нажмите <strong>🧮 РАССЧИТАТЬ</strong> — построится таблица</li>
-                    <li><strong>3.</strong> При необходимости примените фильтры: <strong>ТОП</strong>, <strong>Статус</strong>, <strong>Условие</strong>, <strong>Подотдел</strong></li>
-                    <li><strong>4.</strong> Отметьте чекбоксами нужные артикулы (или <strong>«Выделить все видимые»</strong>)</li>
-                    <li><strong>5.</strong> Задайте <strong>целевую маржу %</strong> — можно отрицательную</li>
+                    <li><strong>3.</strong> Примените фильтры: <strong>ТОП</strong>, <strong>Статус</strong>, <strong>Условие</strong>, <strong>Подотдел</strong></li>
+                    <li><strong>4.</strong> Отметьте чекбоксами нужные артикулы</li>
+                    <li><strong>5.</strong> Задайте <strong>целевую маржу %</strong></li>
                     <li><strong>6.</strong> Нажмите <strong>⚡ ПРИМЕНИТЬ К ВЫДЕЛЕННЫМ</strong></li>
-                    <li><strong>7.</strong> Колонки <strong>«Нов ПЦ»</strong> и <strong>«Нов МАРЖ»</strong> заполнятся для этих артикулов</li>
-                    <li><strong>8.</strong> Нажмите <strong>⬇️ ВЫГРУЗИТЬ С ИЗМЕНЕНИЯМИ</strong> — в Excel попадут только артикулы с применённой маржой</li>
+                    <li><strong>7.</strong> Колонки <strong>«Нов ПЦ»</strong> и <strong>«Нов МАРЖ»</strong> заполнятся</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>📤 Две кнопки выгрузки</h3>
+                <ul>
+                    <li><strong>📤 ВЫГРУЗИТЬ СВОДНУЮ (без изменений)</strong> — выгружает <strong>всю сводную таблицу</strong> как есть, без применённых цен. Пользователь может сам поковыряться в Excel.</li>
+                    <li><strong>⬇️ ВЫГРУЗИТЬ С ИЗМЕНЕНИЯМИ</strong> — выгружает <strong>только артикулы с применённой маржой</strong>. Кнопка находится в панели с ползунком.</li>
                 </ul>
             </div>
 
@@ -250,14 +273,12 @@
             </div>
 
             <div class="help-section">
-                <h3>🎯 Возможности</h3>
+                <h3>🎯 Особенности</h3>
                 <ul>
                     <li><strong>Магазины</strong> определяются автоматически из Гаммы</li>
                     <li><strong>Исключаются</strong> артикулы с нулевым запасом по всем магазинам</li>
-                    <li><strong>Поиск по артикулам</strong> — работает по всей Гамме</li>
                     <li><strong>+100 строк</strong> — кнопка внизу таблицы</li>
                     <li><strong>Разные проценты</strong> — можно применять к разным группам</li>
-                    <li><strong>Комментарии</strong> — вводятся в таблице, выгружаются в Excel</li>
                 </ul>
             </div>
         </div>
@@ -324,6 +345,8 @@
             <span class="pct-label">%</span>
         </div>
         <button class="btn btn-warning" id="applyDiscountBtn" disabled>⚡ ПРИМЕНИТЬ К ВЫДЕЛЕННЫМ</button>
+        <!-- ✅ 2-я кнопка: выгрузка С изменениями -->
+        <button class="btn btn-export-changes" id="exportChangesBtn">⬇️ ВЫГРУЗИТЬ С ИЗМЕНЕНИЯМИ</button>
         <button class="btn btn-sm btn-outline" id="resetFilterBtn">Сброс</button>
         <button class="btn btn-sm btn-danger" id="clearDataBtn">🗑️ Очистить</button>
     </div>
@@ -589,7 +612,6 @@ function calculateAllRows() {
     const entries = Array.from(grouped.entries());
 
     for (const [art, rows] of entries) {
-        // ✅ Ищем ЛУЧШУЮ строку
         let bestRow = rows.find(r => {
             const store = String(pickVal(r, ["№ магазина"])).trim();
             const p = toNum(pickVal(r, ["Сумма Продажная цена магазина", "Продажная цена магазина"]));
@@ -605,7 +627,6 @@ function calculateAllRows() {
         const dpac = toNum(pickVal(bestRow, ["Сумма Цена DPAC", "Цена DPAC"]));
         const zakupNds = dpac * 1.22;
 
-        // ✅ Маржа % = ((ПЦ - Закуп с НДС) / ПЦ) × 100%
         let margin = 0;
         if (price > 0) {
             margin = ((price - zakupNds) / price) * 100;
@@ -648,7 +669,7 @@ function calculateAllRows() {
             }
         }
 
-        // ✅ ПРОПУСКАЕМ артикул, если запас по ВСЕМ магазинам = 0
+        // ✅ Пропускаем артикул, если запас по всем магазинам = 0
         if (totalStock <= 0) {
             continue;
         }
@@ -656,7 +677,6 @@ function calculateAllRows() {
         const overallTop = minTop !== null ? minTop : '';
         const top0Stores = topByAll.filter(t => t.top === '0').map(t => t.store);
 
-        // ✅ ЕСЛИ пользователь применил маржу — считаем Нов ПЦ
         const params = articleParams.get(art);
         const userMargin = params ? params.margin : null;
 
@@ -672,7 +692,6 @@ function calculateAllRows() {
             newMargin = Math.round(((newPrice - zakupNds) / newPrice) * 1000) / 10;
         }
 
-        // ✅ УСЛОВИЕ: снижение если ПЦ >= РРЦ
         let condition = 'нет';
         if (rrp > 0 && price >= rrp) {
             condition = 'снижение';
@@ -997,8 +1016,335 @@ function showToast(msg, type = 'info', duration = 5000) {
     setTimeout(() => el.remove(), duration);
 }
 
-// =========================== ЭКСПОРТ ===========================
-async function exportData() {
+// =========================== ЭКСПОРТ СВОДНОЙ (БЕЗ ИЗМЕНЕНИЙ) ===========================
+async function exportFullData() {
+    if (!filteredRows.length) { 
+        showToast('⚠️ Нет данных для выгрузки', 'warning'); 
+        return; 
+    }
+    
+    updateProgress('Формируем полную сводную таблицу...', 10);
+
+    try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'ТОП 0';
+        workbook.created = new Date();
+        
+        const worksheet = workbook.addWorksheet('Сводная', {
+            views: [{ state: 'frozen', ySplit: 2, xSplit: 2 }]
+        });
+
+        // ✅ Полная структура с базовыми + активными магазинами
+        const baseColumns = [
+            { key: 'art',        header: 'Артикул',                       width: 15, color: 'FFE0DBD4' },
+            { key: 'name',       header: 'Наименование',                  width: 40, color: 'FFE0DBD4' },
+            { key: 'price',      header: 'ПЦ',                            width: 12, color: 'FFBBDEFB' },
+            { key: 'rrp',        header: 'РРЦ',                           width: 12, color: 'FFBBDEFB' },
+            { key: 'dpac',       header: 'Цена dpac',                     width: 12, color: 'FFBBDEFB' },
+            { key: 'zakupNds',   header: 'закуп + НДС',                   width: 14, color: 'FFFFE0B2' },
+            { key: 'margin',     header: 'Маржа %',                       width: 12, color: 'FFFFF9C4' },
+            { key: 'newPrice',   header: 'Нов ПЦ',                        width: 12, color: 'FFC8E6C9' },
+            { key: 'newMargin',  header: 'Нов МАРЖ',                      width: 12, color: 'FFC8E6C9' },
+            { key: 'dateChange', header: 'Дата изм.',                     width: 14, color: 'FFE0DBD4' },
+            { key: 'condition',  header: 'Условие',                       width: 12, color: 'FFFFCC80' },
+            { key: 'reduce',     header: 'Снижение если нет продаж',      width: 15, color: 'FFFFCC80' },
+            { key: 'status',     header: 'Статус',                        width: 10, color: 'FFE0DBD4' },
+            { key: 'avs',        header: 'AVS',                           width: 10, color: 'FFF3E5F5' }
+        ];
+
+        const storeBlockColors = {
+            '8': 'FFC8E6C9', '92': 'FFBBDEFB', '147': 'FFFFE0B2',
+            '150': 'FFE1BEE7', '165': 'FFF8BBD0', '258': 'FFB2EBF2'
+        };
+        const storeBlocks = activeStores.map(store => ({
+            store: store,
+            title: `🏬 Магазин ${store}`,
+            color: storeBlockColors[store] || 'FFE0DBD4'
+        }));
+        
+        const storeSubColumns = ['ТОП', 'Статус', 'Продажи', 'Сток', 'ТС'];
+        const SUB_COUNT = storeSubColumns.length;
+
+        const endColumns = [
+            { key: 'comment',    header: 'Комментарии',                   width: 25, color: 'FFFFF9C4' },
+            { key: 'supplier',   header: '№ Поставщика',                  width: 15, color: 'FFE0DBD4' },
+            { key: 'consent',    header: 'Согласие на возврат',           width: 18, color: 'FFE0DBD4' },
+            { key: 'avsColumn',  header: 'АВС',                           width: 10, color: 'FFE0DBD4' },
+            { key: 'sumDpac',    header: 'Сумма товара в dpac',           width: 18, color: 'FFE0DBD4' }
+        ];
+
+        const totalCols = baseColumns.length + storeBlocks.length * SUB_COUNT + endColumns.length;
+        const storeStartCol = baseColumns.length + 1;
+        const endStartCol = baseColumns.length + storeBlocks.length * SUB_COUNT + 1;
+
+        updateProgress('Формируем заголовки...', 30);
+
+        const headerRow1 = worksheet.getRow(1);
+        headerRow1.height = 32;
+
+        baseColumns.forEach((col, idx) => {
+            worksheet.mergeCells(1, idx + 1, 2, idx + 1);
+            const cell = headerRow1.getCell(idx + 1);
+            cell.value = col.header;
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: col.color } };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                bottom: { style: 'thin', color: { argb: 'FFB0A899' } },
+                right: { style: 'thin', color: { argb: 'FFB0A899' } }
+            };
+        });
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            const endCol = startCol + SUB_COUNT - 1;
+            worksheet.mergeCells(1, startCol, 1, endCol);
+            const cell = headerRow1.getCell(startCol);
+            cell.value = block.title;
+            cell.font = { bold: true, size: 11, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            for (let c = startCol; c <= endCol; c++) {
+                const c1 = headerRow1.getCell(c);
+                c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: block.color } };
+                c1.border = {
+                    top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    bottom: { style: 'medium', color: { argb: 'FFB0A899' } },
+                    right: { style: 'thin', color: { argb: 'FFB0A899' } }
+                };
+            }
+        });
+
+        endColumns.forEach((col, idx) => {
+            const colIdx = endStartCol + idx;
+            worksheet.mergeCells(1, colIdx, 2, colIdx);
+            const cell = headerRow1.getCell(colIdx);
+            cell.value = col.header;
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: col.color } };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                bottom: { style: 'thin', color: { argb: 'FFB0A899' } },
+                right: { style: 'thin', color: { argb: 'FFB0A899' } }
+            };
+        });
+
+        const headerRow2 = worksheet.getRow(2);
+        headerRow2.height = 22;
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            storeSubColumns.forEach((subHeader, subIdx) => {
+                const cell = headerRow2.getCell(startCol + subIdx);
+                cell.value = subHeader;
+                cell.font = { bold: true, size: 9, color: { argb: 'FF1E1E1E' } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: block.color } };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    left: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    bottom: { style: 'thin', color: { argb: 'FFB0A899' } },
+                    right: { style: 'thin', color: { argb: 'FFB0A899' } }
+                };
+            });
+        });
+
+        baseColumns.forEach((col, idx) => { worksheet.getColumn(idx + 1).width = col.width; });
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            for (let i = 0; i < SUB_COUNT; i++) worksheet.getColumn(startCol + i).width = 10;
+        });
+        endColumns.forEach((col, idx) => { worksheet.getColumn(endStartCol + idx).width = col.width; });
+
+        updateProgress('Заполняем данными...', 50);
+
+        // ✅ Выгружаем ВСЕ отфильтрованные строки БЕЗ применённых цен
+        filteredRows.forEach((r) => {
+            const sd = (store) => r.storeData[store] || { top: '', sales: '', stock: '', ts: '', status: '' };
+            
+            const rowData = [
+                r.art, r.name, r.price, r.rrp, r.dpac, r.zakupNds,
+                r.margin / 100, 
+                '',   // Нов ПЦ — ПУСТО
+                '',   // Нов МАРЖ — ПУСТО
+                r.dateChange,
+                r.condition, r.reduceIfNoSales, r.status, r.isAvs ? '💎 AVS' : ''
+            ];
+            
+            storeBlocks.forEach(block => {
+                const s = sd(block.store);
+                rowData.push(s.top || '', s.status || '', s.sales || '', s.stock || '', s.ts || '');
+            });
+            
+            rowData.push(
+                commentsMap.get(r.art) || r.comment || '',
+                r.supplier, r.consent, r.avs, r.sumDpac
+            );
+
+            const dataRow = worksheet.addRow(rowData);
+            dataRow.height = 18;
+
+            for (let colIdx = 1; colIdx <= totalCols; colIdx++) {
+                const cell = dataRow.getCell(colIdx);
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                    left: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE8E2DA' } },
+                    right: { style: 'thin', color: { argb: 'FFE8E2DA' } }
+                };
+                cell.font = { size: 9 };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            }
+
+            baseColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(idx + 1);
+                if (col.key === 'art') { cell.font = { size: 9, bold: true }; cell.alignment = { vertical: 'middle', horizontal: 'left' }; }
+                if (col.key === 'name') { cell.alignment = { vertical: 'middle', horizontal: 'left' }; }
+                if (col.key === 'price') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBBDEFB' } };
+                    cell.font = { size: 9, bold: true, color: { argb: 'FF0D47A1' } };
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (col.key === 'rrp' || col.key === 'dpac') {
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (col.key === 'zakupNds') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE0B2' } };
+                    cell.font = { size: 9, bold: true, color: { argb: 'FFE65100' } };
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+                if (col.key === 'margin') {
+                    cell.numFmt = '0.0%';
+                    if (r.margin < 0) cell.font = { size: 9, bold: true, color: { argb: 'FFC0392B' } };
+                    else cell.font = { size: 9, color: { argb: 'FF2E7D32' } };
+                }
+                if (col.key === 'newPrice' || col.key === 'newMargin') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
+                    cell.font = { size: 9, color: { argb: 'FFAAAAAA' } };
+                }
+                if (col.key === 'condition') {
+                    if (r.condition === 'снижение') {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FFB71C1C' } };
+                    } else {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8E6C9' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FF1B5E20' } };
+                    }
+                }
+                if (col.key === 'reduce') {
+                    if (r.reduceIfNoSales === 'снижение') {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE0B2' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FFE65100' } };
+                    } else {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
+                        cell.font = { size: 9, color: { argb: 'FF616161' } };
+                    }
+                }
+                if (col.key === 'status') {
+                    const sc = { 'A': { bg: 'FFE8F5E9', fg: 'FF1B5E20' }, 'B': { bg: 'FFFFF3E0', fg: 'FFE65100' }, 'C': { bg: 'FFF5F5F5', fg: 'FF616161' }, 'I': { bg: 'FFFFF9C4', fg: 'FFF57F17' }, 'D': { bg: 'FFFFEBEE', fg: 'FFB71C1C' } }[r.status] || { bg: 'FFFFFFFF', fg: 'FF1E1E1E' };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } };
+                    cell.font = { size: 9, bold: true, color: { argb: sc.fg } };
+                }
+                if (col.key === 'avs') {
+                    if (r.isAvs) {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3E5F5' } };
+                        cell.font = { size: 9, bold: true, color: { argb: 'FF4A148C' } };
+                    }
+                }
+            });
+
+            storeBlocks.forEach((block, blockIdx) => {
+                const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                const s = sd(block.store);
+                
+                const topCell = dataRow.getCell(startCol);
+                if (s.top === '0') {
+                    topCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } };
+                    topCell.font = { size: 9, bold: true, color: { argb: 'FFB71C1C' } };
+                }
+                
+                const statusCell = dataRow.getCell(startCol + 1);
+                if (s.status) {
+                    const sc = { 'A': { bg: 'FFE8F5E9', fg: 'FF1B5E20' }, 'B': { bg: 'FFFFF3E0', fg: 'FFE65100' }, 'C': { bg: 'FFF5F5F5', fg: 'FF616161' }, 'I': { bg: 'FFFFF9C4', fg: 'FFF57F17' }, 'D': { bg: 'FFFFEBEE', fg: 'FFB71C1C' } }[s.status] || { bg: 'FFFFFFFF', fg: 'FF1E1E1E' };
+                    statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } };
+                    statusCell.font = { size: 9, bold: true, color: { argb: sc.fg } };
+                }
+                
+                const salesCell = dataRow.getCell(startCol + 2);
+                if (s.sales && parseInt(s.sales) > 0) {
+                    salesCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEDD5' } };
+                    salesCell.font = { size: 9, bold: true };
+                }
+            });
+
+            endColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(endStartCol + idx);
+                if (col.key === 'comment') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+                    cell.font = { size: 9, italic: true };
+                    cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                }
+                if (col.key === 'sumDpac') {
+                    cell.numFmt = '#,##0';
+                    cell.font = { size: 9, bold: true };
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+            });
+        });
+
+        updateProgress('Итоги...', 70);
+
+        const totalSum = filteredRows.reduce((sum, r) => sum + r.sumDpac, 0);
+        const totalRow = worksheet.addRow([]);
+        totalRow.height = 22;
+        
+        const totalLabelCell = totalRow.getCell(totalCols - 1);
+        totalLabelCell.value = 'ИТОГО:';
+        totalLabelCell.font = { size: 10, bold: true };
+        totalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+        totalLabelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0DBD4' } };
+        
+        const totalCell = totalRow.getCell(totalCols);
+        totalCell.value = totalSum;
+        totalCell.font = { size: 11, bold: true, color: { argb: 'FF2C5F2D' } };
+        totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
+        totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0DBD4' } };
+        totalCell.numFmt = '#,##0';
+
+        worksheet.autoFilter = {
+            from: { row: 2, column: 1 },
+            to: { row: 2, column: totalCols }
+        };
+
+        updateProgress('Сохраняем файл...', 90);
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const today = new Date().toISOString().slice(0,10);
+        link.download = `ТОП0_сводная_полная_${today}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        updateProgress('Готово!', 100);
+        showToast(`✅ Выгружено ${filteredRows.length} артикулов (сводная БЕЗ применённых цен)`, 'success', 6000);
+    } catch (err) {
+        console.error(err);
+        updateProgress('Ошибка', 100);
+        showToast(`❌ Ошибка выгрузки: ${err.message}`, 'error', 7000);
+    }
+}
+
+// =========================== ЭКСПОРТ С ИЗМЕНЕНИЯМИ ===========================
+async function exportChanges() {
     const rowsToExport = filteredRows.filter(r => r.userMargin !== null && r.userMargin !== undefined);
     
     if (!rowsToExport.length) { 
@@ -1006,7 +1352,7 @@ async function exportData() {
         return; 
     }
     
-    updateProgress('Формируем Excel...', 10);
+    updateProgress('Формируем Excel с изменениями...', 10);
 
     try {
         const workbook = new ExcelJS.Workbook();
@@ -1348,12 +1694,12 @@ async function exportData() {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         const today = new Date().toISOString().slice(0,10);
-        link.download = `снижение_цены_${today}.xlsx`;
+        link.download = `ТОП0_с_изменениями_${today}.xlsx`;
         link.click();
         URL.revokeObjectURL(link.href);
 
         updateProgress('Готово!', 100);
-        showToast(`✅ Выгружено ${rowsToExport.length} артикулов с применённой маржой. Комментариев: ${commentCount}`, 'success', 6000);
+        showToast(`✅ Выгружено ${rowsToExport.length} артикулов с применённой маржой`, 'success', 6000);
     } catch (err) {
         console.error(err);
         updateProgress('Ошибка', 100);
@@ -1369,7 +1715,8 @@ function handleApplyFilter() {
 }
 
 document.getElementById('computeBtn').addEventListener('click', computeSummary);
-document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('exportFullBtn').addEventListener('click', exportFullData);       // ✅ 1-я кнопка — полная сводная
+document.getElementById('exportChangesBtn').addEventListener('click', exportChanges);    // ✅ 2-я кнопка — только с изменениями
 document.getElementById('applyFilterTopBtn').addEventListener('click', handleApplyFilter);
 document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
 
@@ -1473,13 +1820,12 @@ document.addEventListener('dblclick', (e) => {
 syncMarginInputs('input');
 updateSelectionUI();
 
-setTimeout(() => showToast('📌 Артикулы с нулевым запасом по всем магазинам исключаются из таблицы', 'info', 5000), 800);
+setTimeout(() => showToast('📌 Две кнопки выгрузки: 📤 СВОДНАЯ (без изменений) и ⬇️ С ИЗМЕНЕНИЯМИ', 'info', 6000), 800);
 
 console.log('📉 ТОП 0 — Снижение цены готов');
-console.log('✅ Исключены артикулы с нулевым запасом по всем магазинам');
-console.log('✅ Динамические магазины из Гаммы');
-console.log('✅ Маржа НЕ применяется автоматически');
-console.log('✅ Условие: ПЦ >= РРЦ → "снижение"');
+console.log('✅ 2 кнопки выгрузки:');
+console.log('   📤 ВЫГРУЗИТЬ СВОДНУЮ (без изменений) — вся сводная');
+console.log('   ⬇️ ВЫГРУЗИТЬ С ИЗМЕНЕНИЯМИ — только с применённой маржой');
 </script>
 </body>
 </html>
