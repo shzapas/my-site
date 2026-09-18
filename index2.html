@@ -1,29 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТС Аналитика — Токсичный сток</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { background: #f0f7f0; color: #1e2e1e; padding: 16px 20px; min-height: 100vh; }
+        .app-container { max-width: 1600px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1a4a1a 0%, #2d6b2d 100%); border-radius: 14px 14px 0 0; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; color: white; border-bottom: 4px solid #0d3d0d; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .header h1 small { font-size: 0.65rem; background: rgba(255, 255, 255, 0.12); padding: 2px 12px; border-radius: 30px; font-weight: 400; }
+        .header-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn { padding: 5px 16px; border: none; border-radius: 30px; font-weight: 600; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #4caf50; color: white; }
+        .btn-primary:hover { background: #388e3c; }
+        .btn-success { background: #2e7d32; color: white; }
+        .btn-success:hover { background: #1b5e20; }
+        .btn-warning { background: #f9a825; color: #1e1e1e; }
+        .btn-warning:hover { background: #f57f17; }
+        .btn-danger { background: #c62828; color: white; }
+        .btn-danger:hover { background: #b71c1c; }
+        .btn-outline { background: transparent; color: white; border: 1.5px solid rgba(255, 255, 255, 0.3); }
+        .btn-outline:hover { background: rgba(255, 255, 255, 0.1); }
+        .btn-sm { padding: 3px 12px; font-size: 0.6rem; }
+        .dashboard { display: flex; gap: 16px; margin-top: 16px; }
+        .left-panel { width: 300px; flex-shrink: 0; background: white; border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #c8e6c9; max-height: calc(100vh - 140px); overflow-y: auto; }
+        .left-panel::-webkit-scrollbar { width: 4px; }
+        .left-panel::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 4px; }
+        .right-panel { flex: 1; background: white; border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #c8e6c9; min-width: 0; }
+        .upload-section .btn { width: 100%; padding: 8px; font-size: 0.75rem; margin-bottom: 4px; }
+        .folder-path { font-size: 0.6rem; color: #666; word-break: break-all; padding: 3px 8px; background: #f5f5f5; border-radius: 6px; margin: 4px 0; }
+        .upload-status { font-size: 0.65rem; padding: 4px 10px; background: #e8f5e9; border-radius: 8px; margin: 4px 0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+        .upload-status .count { font-weight: 700; color: #2e7d32; }
+        .auto-load-result-container { margin-top: 4px; border: 1px solid #c8e6c9; border-radius: 8px; overflow: hidden; }
+        .auto-load-result-header { background: #e8f5e9; padding: 4px 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.6rem; font-weight: 600; color: #2e5e2e; }
+        .auto-load-result-header:hover { background: #c8e6c9; }
+        .auto-load-result { max-height: 200px; overflow-y: auto; font-size: 0.55rem; padding: 4px 10px; background: #fafffa; transition: max-height 0.3s ease; }
+        .auto-load-result.collapsed { max-height: 0; padding: 0; overflow: hidden; }
+        .auto-load-result .result-item { padding: 2px 0; border-bottom: 1px solid #e8f5e9; display: flex; justify-content: space-between; align-items: center; }
+        .auto-load-result .result-item:last-child { border-bottom: none; }
+        .auto-load-result .result-item .status-ok { color: #2e7d32; }
+        .auto-load-result .result-item .status-fail { color: #c62828; }
+        .auto-load-result .result-item .copyable { cursor: pointer; border-bottom: 1px dashed #a5d6a7; font-size: 0.5rem; }
+        .auto-load-result .result-item .copyable:hover { color: #2e7d32; }
+        .toggle-icon { font-size: 0.6rem; transition: transform 0.2s; }
+        .toggle-icon.rotated { transform: rotate(180deg); }
+        .filters-section { margin-top: 10px; padding-top: 10px; border-top: 2px dashed #c8e6c9; }
+        .filter-group { margin-bottom: 6px; }
+        .filter-group label { display: block; font-weight: 600; font-size: 0.65rem; color: #2e5e2e; margin-bottom: 2px; }
+        .filter-group select, .filter-group input { width: 100%; padding: 5px 10px; border-radius: 20px; border: 1px solid #a5d6a7; background: #fafffa; font-size: 0.65rem; color: #1e2e1e; transition: 0.2s; }
+        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #2e7d32; box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12); }
+        .filter-row { display: flex; gap: 6px; }
+        .filter-row .filter-group { flex: 1; }
+        .filter-actions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+        .filter-actions .btn { flex: 1; padding: 4px 8px; font-size: 0.6rem; text-align: center; min-width: 60px; }
+        .store-filter-group { display: flex; flex-wrap: wrap; gap: 3px; margin: 4px 0; }
+        .store-filter-group label { display: flex; align-items: center; gap: 2px; font-size: 0.55rem; cursor: pointer; padding: 1px 6px; border-radius: 10px; border: 1px solid #c8e6c9; background: #fafffa; transition: 0.2s; }
+        .store-filter-group label:hover { border-color: #4caf50; }
+        .store-filter-group label.active { border-color: #2e7d32; background: #e8f5e9; }
+        .store-filter-group label input[type="checkbox"] { width: 10px; height: 10px; accent-color: #2e7d32; cursor: pointer; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .stat-card { background: #fafffa; border-radius: 10px; padding: 10px 12px; border: 1px solid #c8e6c9; cursor: pointer; transition: 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); border-color: #4caf50; }
+        .stat-card .value { font-size: 1.4rem; font-weight: 700; color: #2e7d32; }
+        .stat-card .label { font-size: 0.5rem; color: #666; margin-top: 2px; }
+        .stat-card .hint { font-size: 0.4rem; color: #999; margin-top: 1px; }
+        .stat-card.danger .value { color: #c62828; }
+        .stat-card.warning .value { color: #f57f17; }
+        .stat-card.purple .value { color: #6a1b9a; }
+        .stat-card.success .value { color: #2e7d32; }
+        .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid #c8e6c9; max-height: 350px; overflow-y: auto; }
+        .table-wrapper::-webkit-scrollbar { width: 4px; height: 4px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.55rem; min-width: 700px; }
+        table th { position: sticky; top: 0; background: #2e7d32; color: white; padding: 4px 6px; text-align: left; font-weight: 600; font-size: 0.5rem; white-space: nowrap; z-index: 5; }
+        table td { padding: 3px 6px; border-bottom: 1px solid #e8f5e9; vertical-align: top; }
+        table tbody tr:nth-child(even) td { background: #fafffa; }
+        table tbody tr:hover td { background: #e8f5e9; }
+        .badge { padding: 1px 6px; border-radius: 8px; font-size: 0.45rem; font-weight: 600; display: inline-block; }
+        .badge-danger { background: #c62828; color: white; }
+        .badge-warning { background: #f57f17; color: white; }
+        .badge-success { background: #2e7d32; color: white; }
+        .badge-ts { background: #c62828; color: white; }
+        .badge-uto { background: #6a1b9a; color: white; }
+        .export-btn { background: #2e7d32; border: none; border-radius: 10px; padding: 1px 8px; font-size: 0.45rem; cursor: pointer; color: white; font-weight: 600; transition: 0.2s; }
+        .export-btn:hover { background: #1b5e20; }
+        .export-btn.small { padding: 1px 5px; font-size: 0.4rem; }
+        .article-link { color: #2e7d32; font-weight: 600; cursor: pointer; text-decoration: underline dotted; }
+        .article-link:hover { color: #1b5e20; }
+        .right-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .right-header h3 { font-size: 0.85rem; color: #2e5e2e; }
+        .action-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
+        .toast-container { position: fixed; bottom: 16px; right: 16px; z-index: 9999; max-width: 360px; width: 100%; }
+        .toast { background: #1e2e1e; color: white; padding: 8px 14px; border-radius: 8px; margin-bottom: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 0.75rem; }
+        .toast.success { background: #2e7d32; border-left: 4px solid #4caf50; }
+        .toast.error { background: #c62828; border-left: 4px solid #ef5350; }
+        .toast.warning { background: #e65100; border-left: 4px solid #ffa726; }
+        .toast.info { background: #0d47a1; border-left: 4px solid #42a5f5; }
+        .toast-close { cursor: pointer; margin-left: auto; font-weight: bold; opacity: 0.7; }
+        .toast-close:hover { opacity: 1; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px; }
+        .modal-overlay.show { display: flex; }
+        .modal-content { background: white; border-radius: 14px; max-width: 650px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 20px 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); border: 2px solid #c8e6c9; }
+        .modal-content h2 { color: #2e7d32; font-size: 1.1rem; }
+        .modal-content .subtitle { color: #666; font-size: 0.75rem; border-bottom: 2px solid #c8e6c9; padding-bottom: 8px; margin-bottom: 12px; }
+        .modal-close { float: right; background: none; border: none; font-size: 22px; cursor: pointer; color: #666; }
+        .modal-close:hover { color: #c62828; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+        footer { margin-top: 16px; text-align: center; font-size: 0.5rem; color: #999; border-top: 1px solid #c8e6c9; padding-top: 10px; }
+
+        /* === ЦВЕТА ДЛЯ ТОПОВ === */
+        .top-0 { background: #eceff1 !important; color: #607d8b !important; font-weight: 700 !important; text-align: center; }
+        .top-1 { background: #c8e6c9 !important; color: #1b5e20 !important; font-weight: 700 !important; text-align: center; }
+        .top-2 { background: #ffe0b2 !important; color: #e65100 !important; font-weight: 700 !important; text-align: center; }
+        .top-other { background: #fff9c4 !important; color: #827717 !important; font-weight: 600 !important; text-align: center; }
+
+        /* === ТС-ячейки === */
+        .ts-cell-1 { background: #c62828 !important; color: white !important; font-weight: 700 !important; text-align: center; }
+        .ts-cell-0 { background: #f5f5f5 !important; color: #bbb !important; text-align: center; }
+
+        /* === ЦВЕТА МАГАЗИНОВ (динамически) === */
+        .store-header-even { background: #2e7d32 !important; }
+        .store-header-odd { background: #1565c0 !important; }
+
+        /* Сводная таблица: цвета колонок магазинов */
+        .store-col-even { background: #f1f8e9 !important; }
+        .store-col-odd { background: #e3f2fd !important; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <h1>📊 ТС Аналитика <small>Токсичный сток</small></h1>
+            <div class="header-controls">
+                <button class="btn btn-outline" onclick="toggleHelp()">❓ Помощь</button>
+                <button class="btn btn-outline" onclick="toggleTheme()">🌙 Тёмная</button>
+            </div>
+        </div>
+
+        <div id="helpModal" class="modal-overlay">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeHelp()">✕</button>
+                <h2>📊 ТС Аналитика</h2>
+                <div class="subtitle">Управление токсичным стоком</div>
+                <div style="font-size:0.8rem; line-height:1.6;">
+                    <p><strong>1. 📁 Загрузка</strong> — выберите папку с отчётами (Гамма + Резервы + УТО).</p>
+                    <p><strong>2. 🧮 Расчёт</strong> — нажмите "ВЫЧИСЛИТЬ".</p>
+                    <p><strong>3. 📊 ТС</strong> — аналитика по токсичному стоку.</p>
+                    <p style="color:#2e7d32; margin-top:6px;">💡 Клик по артикулу → MagPortal</p>
+                    <p style="color:#666; margin-top:6px; font-size:0.7rem;">
+                        🎨 Цвета ТОП: <span class="badge top-0" style="padding:2px 8px;">0</span>
+                        <span class="badge top-1" style="padding:2px 8px;">1</span>
+                        <span class="badge top-2" style="padding:2px 8px;">2</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="left-panel">
+                <div class="upload-section">
+                    <button class="btn btn-success" onclick="selectFolder()">📁 Загрузить отчёты из папки</button>
+                    <button class="btn btn-primary" onclick="loadSingleReport()">📎 Загрузить файлы</button>
+                    <div id="folderPath" class="folder-path"></div>
+                </div>
+
+                <div class="upload-status">
+                    <span>📁 Загружено: <span class="count" id="loadedCount">0</span>/3</span>
+                    <span id="statusMessage">⏳ Ожидание</span>
+                </div>
+
+                <div id="autoLoadResultContainer" class="auto-load-result-container" style="display:none;">
+                    <div class="auto-load-result-header" onclick="toggleAutoLoadResult()">
+                        <span>📋 Результат автозагрузки</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div id="autoLoadResult" class="auto-load-result collapsed"></div>
+                </div>
+
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label>🏬 Магазин</label>
+                        <select id="storeFilter"><option value="all">Все магазины</option></select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>📌 Подотдел</label>
+                        <select id="subdepartmentFilter"><option value="all">Все подотделы</option></select>
+                    </div>
+
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label>⭐ ТОП</label>
+                            <select id="topFilter">
+                                <option value="all">Все</option>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>📅 Запас (дн)</label>
+                            <input type="text" id="stockRange" placeholder="0-999" value="0-999">
+                        </div>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button class="btn btn-primary" onclick="applyFilters()">✅ Применить</button>
+                        <button class="btn btn-warning" onclick="resetFilters()">🔄 Сбросить</button>
+                        <button class="btn btn-success" onclick="computeSummary()">🧮 ВЫЧИСЛИТЬ</button>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px; padding-top:10px; border-top:2px dashed #c8e6c9;">
+                    <div style="font-weight:600; font-size:0.65rem; color:#2e5e2e; margin-bottom:3px;">🏪 Фильтр магазинов для ТС:</div>
+                    <div class="store-filter-group" id="tsStoreFilter"></div>
+                    <div style="display:flex; gap:4px; margin-top:3px;">
+                        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="applyTsFilter()">✅ Применить</button>
+                        <button class="btn btn-warning btn-sm" style="flex:1;" onclick="resetTsFilter()">🗑️ Сбросить</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="right-header">
+                    <h3>📊 Токсичный сток</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-success btn-sm" onclick="exportTsAll()">📤 Выгрузить ТС</button>
+                        <button class="btn btn-primary btn-sm" onclick="exportTsTop10()">📤 ТОП-10</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card danger" onclick="exportTsAll()">
+                        <div class="value" id="tsTotal">0</div>
+                        <div class="label">📦 Всего ТС</div>
+                        <div class="hint">Клик для выгрузки</div>
+                    </div>
+                    <div class="stat-card warning" onclick="exportTransferCandidates()">
+                        <div class="value" id="tsTransfer">0</div>
+                        <div class="label">🔄 Рекомендаций</div>
+                        <div class="hint">Клик для выгрузки</div>
+                    </div>
+                    <div class="stat-card purple" onclick="exportTsByStore('all')">
+                        <div class="value" id="tsStores">0</div>
+                        <div class="label">🏪 Магазинов с ТС</div>
+                        <div class="hint">Клик для выгрузки</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="value" id="tsTopArticle">-</div>
+                        <div class="label">🏆 Самый токсичный</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <div class="flex-between">
+                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔴 ТОП-10 токсичных артикулов</span>
+                        <button class="btn btn-success btn-sm" onclick="exportTsTop10()">📤 Выгрузить</button>
+                    </div>
+                    <div class="table-wrapper" style="max-height:220px;">
+                        <table id="tsTopTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Артикул</th>
+                                    <th>Наименование</th>
+                                    <th>Магазинов</th>
+                                    <th>ТС</th>
+                                    <th>Запас (дн)</th>
+                                    <th>Цена (руб)</th>
+                                    <th>Детали</th>
+                                    <th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tsTopBody">
+                                <tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <div class="flex-between">
+                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Рекомендации по трансферу (ТС → УТО)</span>
+                        <button class="btn btn-success btn-sm" onclick="exportTransferCandidates()">📤 Выгрузить</button>
+                    </div>
+                    <div class="table-wrapper" style="max-height:160px;">
+                        <table id="tsTransferTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Артикул</th>
+                                    <th>ТС магазины</th>
+                                    <th>УТО магазины</th>
+                                    <th>Продажи (шт)</th>
+                                    <th>Рекомендация</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tsTransferBody">
+                                <tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <div class="flex-between">
+                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Трансфер между магазинами (ТС в одном, нет в другом)</span>
+                        <button class="btn btn-success btn-sm" onclick="exportCrossTransfer()">📤 Выгрузить</button>
+                    </div>
+                    <div class="table-wrapper" style="max-height:160px;">
+                        <table id="tsCrossTransferTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Артикул</th>
+                                    <th>ТС магазин</th>
+                                    <th>Нет ТС магазин</th>
+                                    <th>Продажи (шт)</th>
+                                    <th>Рекомендация</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tsCrossTransferBody">
+                                <tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex-between">
+                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">📋 Сводная таблица ТС по магазинам</span>
+                        <button class="btn btn-success btn-sm" onclick="exportTsPivot()">📤 Выгрузить</button>
+                    </div>
+                    <div class="table-wrapper" style="max-height:280px;">
+                        <table id="tsPivotTable">
+                            <thead id="tsPivotHeader"></thead>
+                            <tbody id="tsPivotBody">
+                                <tr><td style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>ТС Аналитика — Управление токсичным стоком</footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
         // ============================================================
         // ==================== ОСНОВНАЯ ЛОГИКА ====================
         // ============================================================
 
-        // ---- Переменные ----
         let fullData = [];
         let filteredData = [];
         let gammaData = [];
         let reservyData = [];
-        let gammaRawData = [];
+        let utoData = [];
 
         let tsSelectedStores = new Set();
         let isDark = false;
 
-        // Кеш резервов
         const reservyMap = new Map();
+        const utoMap = new Map();
 
         const reportFilePatterns = {
             "Гамма": ["гамма", "gamma"],
-            "Резервы": ["резервы", "резерв"]
+            "Резервы": ["резервы", "резерв"],
+            "УТО": ["УТО", "uto"]
         };
 
         const reportNames = Object.keys(reportFilePatterns);
         let loadedReports = {};
         reportNames.forEach(n => loadedReports[n] = false);
+
+        // ---- Палитра для магазинов (чередование) ----
+        const STORE_COLORS = [
+            '#e8f5e9', // светло-зелёный
+            '#e3f2fd', // светло-синий
+            '#fff3e0', // светло-оранжевый
+            '#f3e5f5', // светло-фиолетовый
+            '#e0f7fa', // светло-циан
+            '#fce4ec', // светло-розовый
+            '#f1f8e9', // салатовый
+            '#fff8e1', // светло-жёлтый
+            '#ede7f6', // лавандовый
+            '#fbe9e7'  // персиковый
+        ];
+        const STORE_HEADER_COLORS = [
+            '#2e7d32', // тёмно-зелёный
+            '#1565c0', // синий
+            '#e65100', // оранжевый
+            '#6a1b9a', // фиолетовый
+            '#00838f', // циан
+            '#ad1457', // малиновый
+            '#558b2f', // оливковый
+            '#f9a825', // жёлтый
+            '#4527a0', // индиго
+            '#bf360c'  // тёмно-оранжевый
+        ];
+
+        function getStoreColor(store, stores, light = true) {
+            const idx = stores.indexOf(String(store));
+            const palette = light ? STORE_COLORS : STORE_HEADER_COLORS;
+            return palette[(idx >= 0 ? idx : 0) % palette.length];
+        }
+
+        function getStoreColorRGB(store, stores, light = true) {
+            const hex = getStoreColor(store, stores, light).replace('#', '');
+            return {
+                rgb: hex,
+                argb: 'FF' + hex.toUpperCase()
+            };
+        }
 
         // ---- Toast ----
         function showToast(msg, type = 'info', duration = 3000) {
@@ -44,16 +440,13 @@
             }, duration);
         }
 
-        // ---- Help ----
         function toggleHelp() {
             document.getElementById('helpModal').classList.toggle('show');
         }
-
         function closeHelp() {
             document.getElementById('helpModal').classList.remove('show');
         }
 
-        // ---- Theme ----
         function toggleTheme() {
             isDark = !isDark;
             document.body.style.background = isDark ? '#1a2a1a' : '#f0f7f0';
@@ -62,20 +455,9 @@
                 el.style.background = isDark ? '#1e2e1e' : 'white';
                 el.style.borderColor = isDark ? '#2d4a2d' : '#c8e6c9';
             });
-            document.querySelectorAll('.stat-card, .upload-status, .auto-load-result-container, .auto-load-result-header')
-                .forEach(el => {
-                    el.style.background = isDark ? '#1e2e1e' : '';
-                    el.style.borderColor = isDark ? '#2d4a2d' : '';
-                });
-            document.querySelectorAll('.filter-group select, .filter-group input').forEach(el => {
-                el.style.background = isDark ? '#1e2e1e' : '#fafffa';
-                el.style.color = isDark ? '#e0e8e0' : '#1e2e1e';
-                el.style.borderColor = isDark ? '#2d4a2d' : '#a5d6a7';
-            });
             showToast(isDark ? '🌙 Тёмная тема' : '☀️ Светлая тема', 'info');
         }
 
-        // ---- Utils ----
         function toNumber(v, def = 0) {
             if (v === undefined || v === null || v === '') return def;
             if (typeof v === 'number') return isNaN(v) ? def : v;
@@ -154,7 +536,6 @@
             return '';
         }
 
-        // ---- Build Maps (только резервы) ----
         function buildMaps() {
             reservyMap.clear();
             for (const item of reservyData) {
@@ -166,7 +547,17 @@
                     reservyMap.get(key).push(item);
                 }
             }
-            console.log('✅ Кеш резервов построен:', reservyMap.size, 'записей');
+
+            utoMap.clear();
+            for (const item of utoData) {
+                const store = getStoreValue(item, ['Магазин', '№ магазина']);
+                const art = String(item['Артикул'] || item['ЛМ-код'] || '').trim();
+                if (store && art) {
+                    utoMap.set(`${store}|${art}`, item);
+                }
+            }
+
+            console.log('✅ Кеши: резервы =', reservyMap.size, ', УТО =', utoMap.size);
         }
 
         // ---- Calculate Row ----
@@ -178,23 +569,23 @@
 
             const bestGamma = (toNumber(gammaItem['Сумма Best Seller']) + toNumber(gammaItem['Сумма Мертвый сток']) >= 1) ? 1 : '';
 
-            // ТОП — берём из "Сумма Топ в магазине"
-            let top = getFieldValue(gammaItem, ['Сумма Топ в магазине', 'Топ в магазине', 'ТОП', 'Top', 'топ']);
-            if (top !== undefined && top !== null && top !== '') {
-                const ts = String(top).trim();
-                if (ts.match(/^\d+\.00$/)) top = ts.replace(/\.00$/, '');
-            } else {
-                top = '';
+            // ТОП — из "Сумма Топ в магазине". ВАЖНО: 0 сохраняем как "0"!
+            let topRaw = getFieldValue(gammaItem, ['Сумма Топ в магазине', 'Топ в магазине', 'ТОП', 'Top', 'топ']);
+            let top = '';
+            if (topRaw !== undefined && topRaw !== null && topRaw !== '') {
+                let ts = String(topRaw).trim();
+                if (ts.match(/^\d+\.00$/)) ts = ts.replace(/\.00$/, '');
+                ts = ts.replace(/\.0+$/, '');
+                // Сохраняем 0 как "0"
+                top = ts;
             }
 
-            // Продажная цена — "Сумма Продажная цена магазина"
             const salePrice = toNumber(
                 gammaItem['Сумма Продажная цена магазина'] ||
                 gammaItem['Продажная цена магазина'] ||
                 gammaItem['Цена магазина'] || 0
             );
 
-            // MIN-данные из резервов
             const minDn = getMaxReserve(store, art);
 
             const minTsProekt = getSumByReserve(store, art, 'Мин ЦО Амбиция проекта шт');
@@ -213,7 +604,6 @@
             const ulichn = getSumByReserve(store, art, 'Уличн. торговля');
             const dopPrez = getSumByReserve(store, art, 'Резерв F');
 
-            // Наибольший MIN
             const minTypes = {
                 'min ЦО Проект': toNumber(minTsProekt),
                 'min ЦО ПАК-Подиум': toNumber(minTsPak),
@@ -224,13 +614,9 @@
                 'min 902 B2B': toNumber(min902)
             };
 
-            let maxMinVal = 0,
-                maxMinType = '';
+            let maxMinVal = 0, maxMinType = '';
             for (const [t, v] of Object.entries(minTypes)) {
-                if (v > maxMinVal) {
-                    maxMinVal = v;
-                    maxMinType = t;
-                }
+                if (v > maxMinVal) { maxMinVal = v; maxMinType = t; }
             }
 
             const typeNames = {
@@ -270,6 +656,12 @@
 
             const vmesimost = toNumber(gammaItem['Вместимость полки']);
             const zapasBolsheVmes = (zapasSht >= vmesimost && vmesimost > 0) ? 'да' : 'нет';
+
+            const utoItem = utoMap.get(key);
+            const utoRub = utoItem ? toNumber(utoItem['Уп.GMV руб']) || 0 : 0;
+            const utoSht = utoItem ? toNumber(utoItem['Уп.GMV шт']) || 0 : 0;
+            const pereboiCount = utoItem ? toNumber(utoItem['Кол-во случаев перебоя за 30 дней']) || 0 : 0;
+            const pereboiDays = utoItem ? toNumber(utoItem['Кол-во дней в перебое за 30 дней']) || 0 : 0;
 
             const supplierCode = String(gammaItem['Номер поставщика'] || gammaItem['№ Поставщика'] || '').trim();
 
@@ -319,10 +711,10 @@
                 'В пути, шт.': cleanZero(vPutishSht, 'В пути, шт.'),
                 'В пути, дн.': vPutishDn === 999 ? 999 : cleanZero(vPutishDn, 'В пути, дн.'),
                 'Размер упаковки': gammaItem['Размер упаковки'] || '',
-                'УТО, руб.': '',
-                'УТО, шт.': '',
-                'Кол-во случаев перебоя за 30 дн': '',
-                'Кол-во дней в перебое': '',
+                'УТО, руб.': cleanZero(utoRub, 'УТО, руб.'),
+                'УТО, шт.': cleanZero(utoSht, 'УТО, шт.'),
+                'Кол-во случаев перебоя за 30 дн': cleanZero(pereboiCount, 'Кол-во случаев перебоя за 30 дн'),
+                'Кол-во дней в перебое': cleanZero(pereboiDays, 'Кол-во дней в перебое'),
                 '20/80': gammaItem['Сумма 20/80'] || '',
                 'ТС': gammaItem['Токсичный сток'] || '',
                 'МС': gammaItem['Сумма Мертвый сток'] || '',
@@ -340,7 +732,6 @@
             };
         }
 
-        // ---- Compute ----
         async function computeSummary() {
             if (!gammaData.length) {
                 showToast('⚠️ Сначала загрузите файл "Гамма"', 'warning');
@@ -366,10 +757,8 @@
             showToast(`✅ Расчёт завершён! Найдено ${fullData.length} товаров`, 'success');
         }
 
-        // ---- Update Filters ----
         function updateFilters() {
-            const stores = new Set(),
-                subdepts = new Set();
+            const stores = new Set(), subdepts = new Set();
             for (const row of fullData) {
                 if (row['№ магазина']) stores.add(String(row['№ магазина']));
                 if (row['Подотдел']) subdepts.add(String(row['Подотдел']));
@@ -388,14 +777,12 @@
             });
         }
 
-        // ---- Apply Filters ----
         function applyFilters() {
             const store = document.getElementById('storeFilter').value;
             const subdept = document.getElementById('subdepartmentFilter').value;
             const top = document.getElementById('topFilter').value;
             const range = document.getElementById('stockRange').value.trim();
-            let minD = 0,
-                maxD = 999;
+            let minD = 0, maxD = 999;
             if (range.includes('-')) {
                 const parts = range.split('-');
                 minD = parseInt(parts[0]) || 0;
@@ -416,7 +803,7 @@
             }
             if (top !== 'all') {
                 data = data.filter(r => {
-                    const t = String(r['ТОП'] || '').replace(/\.00$/, '');
+                    const t = String(r['ТОП'] ?? '').replace(/\.00$/, '').replace(/\.0+$/, '');
                     return t === top;
                 });
             }
@@ -429,7 +816,6 @@
             buildTsData();
         }
 
-        // ---- Reset Filters ----
         function resetFilters() {
             document.getElementById('storeFilter').value = 'all';
             document.getElementById('subdepartmentFilter').value = 'all';
@@ -439,7 +825,6 @@
             showToast('🔄 Фильтры сброшены', 'info');
         }
 
-        // ---- Open MagPortal ----
         function openMagPortal(article) {
             if (!article) return;
             const clean = String(article).replace(/[^\d]/g, '');
@@ -451,7 +836,6 @@
             showToast(`🔗 Открываем ${clean} в MagPortal`, 'info', 1500);
         }
 
-        // ---- Toggle AutoLoad Result ----
         function toggleAutoLoadResult() {
             const resultDiv = document.getElementById('autoLoadResult');
             const icon = document.querySelector('.auto-load-result-header .toggle-icon');
@@ -466,13 +850,8 @@
         // ============================================================
 
         let tsData = {
-            items: [],
-            byStore: {},
-            byArticle: {},
-            topArticles: [],
-            stores: [],
-            transferCandidates: [],
-            crossTransfer: []
+            items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [],
+            transferCandidates: [], crossTransfer: []
         };
 
         function buildTsStoreFilter() {
@@ -543,8 +922,7 @@
         function buildTsData() {
             const data = filteredData.length ? filteredData : fullData;
             if (!data.length) {
-                tsData = { items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [], transferCandidates: [],
-                    crossTransfer: [] };
+                tsData = { items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [], transferCandidates: [], crossTransfer: [] };
                 renderTsTable();
                 return;
             }
@@ -556,8 +934,7 @@
             }
 
             if (!tsItems.length) {
-                tsData = { items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [], transferCandidates: [],
-                    crossTransfer: [] };
+                tsData = { items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [], transferCandidates: [], crossTransfer: [] };
                 renderTsTable();
                 return;
             }
@@ -592,19 +969,9 @@
 
                 if (!byArticle[art]) {
                     byArticle[art] = {
-                        name: name,
-                        stores: new Set(),
-                        total: 0,
-                        hasUto: false,
-                        utoStores: new Set(),
-                        tsStores: new Set(),
-                        storeDetails: {},
-                        min441: 0,
-                        min500: 0,
-                        min401: 0,
-                        naibMin: '',
-                        salePrice: 0,
-                        avgSales: 0
+                        name: name, stores: new Set(), total: 0, hasUto: false,
+                        utoStores: new Set(), tsStores: new Set(), storeDetails: {},
+                        min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0
                     };
                 }
 
@@ -624,65 +991,39 @@
                 aData.avgSales += otgruzhenoSred;
 
                 aData.storeDetails[store] = {
-                    days,
-                    transit,
-                    zapasSht,
-                    utoRub,
-                    utoSht,
-                    hasUto,
-                    top,
-                    min441,
-                    min500,
-                    min401,
-                    naibMin,
-                    salePrice,
-                    otgruzhenoSred
+                    days, transit, zapasSht, utoRub, utoSht, hasUto, top,
+                    min441, min500, min401, naibMin, salePrice, otgruzhenoSred
                 };
             }
 
-            // Средние продажи
             for (const [art, data] of Object.entries(byArticle)) {
                 data.avgSales = data.stores.size > 0 ? round(data.avgSales / data.stores.size, 1) : 0;
             }
 
             const topArticles = Object.entries(byArticle)
                 .map(([art, data]) => ({
-                    article: art,
-                    name: data.name,
-                    storeCount: data.stores.size,
-                    total: data.total,
-                    stores: Array.from(data.stores),
-                    naibMin: data.naibMin,
-                    min441: data.min441,
-                    min500: data.min500,
-                    min401: data.min401,
-                    storeDetails: data.storeDetails,
-                    hasUto: data.hasUto,
-                    utoStores: Array.from(data.utoStores),
-                    salePrice: data.salePrice,
-                    avgSales: data.avgSales,
+                    article: art, name: data.name, storeCount: data.stores.size,
+                    total: data.total, stores: Array.from(data.stores),
+                    naibMin: data.naibMin, min441: data.min441, min500: data.min500, min401: data.min401,
+                    storeDetails: data.storeDetails, hasUto: data.hasUto,
+                    utoStores: Array.from(data.utoStores), salePrice: data.salePrice, avgSales: data.avgSales,
                     avgDays: Object.values(data.storeDetails).reduce((s, d) => s + d.days, 0) / data.stores.size
                 }))
                 .sort((a, b) => b.storeCount - a.storeCount || b.total - a.total)
                 .slice(0, 10);
 
-            // Трансфер: ТС в одних магазинах, УТО в других
             const transferCandidates = Object.entries(byArticle)
                 .map(([art, data]) => ({
-                    article: art,
-                    name: data.name,
+                    article: art, name: data.name,
                     tsStores: Array.from(data.tsStores),
                     utoStores: Array.from(data.utoStores),
-                    total: data.total,
-                    hasUto: data.hasUto,
-                    avgSales: data.avgSales,
-                    storeDetails: data.storeDetails
+                    total: data.total, hasUto: data.hasUto,
+                    avgSales: data.avgSales, storeDetails: data.storeDetails
                 }))
                 .filter(item => item.tsStores.length > 0 && item.utoStores.length > 0)
                 .sort((a, b) => b.utoStores.length - a.utoStores.length || b.tsStores.length - a.tsStores.length)
                 .slice(0, 10);
 
-            // Кросс-трансфер: ТС в одном магазине, НЕТ ТС в другом (где есть продажи)
             const crossTransfer = [];
             const allArticles = Object.keys(byArticle);
 
@@ -690,7 +1031,6 @@
                 const data = byArticle[art];
                 const tsStores = Array.from(data.tsStores);
                 const allStores = Array.from(data.stores);
-
                 const noTsStores = allStores.filter(s => !tsStores.includes(s));
 
                 for (const tsStore of tsStores) {
@@ -699,16 +1039,12 @@
                         const noTsDetails = data.storeDetails[noTsStore] || {};
                         if (noTsDetails.otgruzhenoSred > 0) {
                             crossTransfer.push({
-                                article: art,
-                                name: data.name,
-                                tsStore: tsStore,
-                                noTsStore: noTsStore,
+                                article: art, name: data.name,
+                                tsStore: tsStore, noTsStore: noTsStore,
                                 tsSales: tsDetails.otgruzhenoSred || 0,
                                 noTsSales: noTsDetails.otgruzhenoSred || 0,
-                                tsDays: tsDetails.days || 0,
-                                noTsDays: noTsDetails.days || 0,
-                                tsZapas: tsDetails.zapasSht || 0,
-                                noTsZapas: noTsDetails.zapasSht || 0,
+                                tsDays: tsDetails.days || 0, noTsDays: noTsDetails.days || 0,
+                                tsZapas: tsDetails.zapasSht || 0, noTsZapas: noTsDetails.zapasSht || 0,
                                 avgSales: data.avgSales
                             });
                         }
@@ -720,12 +1056,8 @@
             tsData.crossTransfer = crossTransfer.slice(0, 10);
 
             tsData = {
-                items: tsItems,
-                byStore,
-                byArticle,
-                topArticles,
-                stores: Object.keys(byStore),
-                transferCandidates,
+                items: tsItems, byStore, byArticle, topArticles,
+                stores: Object.keys(byStore), transferCandidates,
                 crossTransfer: tsData.crossTransfer || []
             };
 
@@ -743,8 +1075,7 @@
         function renderTsStats() {
             document.getElementById('tsTotal').textContent = tsData.items.length;
             document.getElementById('tsStores').textContent = tsData.stores.length;
-            document.getElementById('tsTransfer').textContent = (tsData.transferCandidates.length || 0) + (tsData
-            .crossTransfer.length || 0);
+            document.getElementById('tsTransfer').textContent = (tsData.transferCandidates.length || 0) + (tsData.crossTransfer.length || 0);
 
             if (tsData.topArticles.length) {
                 const top = tsData.topArticles[0];
@@ -759,8 +1090,7 @@
             tbody.innerHTML = '';
 
             if (!tsData.topArticles.length) {
-                tbody.innerHTML =
-                    '<tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет токсичного стока</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет токсичного стока</td></tr>';
                 return;
             }
 
@@ -805,30 +1135,21 @@
 
             const candidates = tsData.transferCandidates || [];
             if (!candidates.length) {
-                tbody.innerHTML =
-                    '<tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
                 return;
             }
 
             for (const item of candidates) {
                 const tr = document.createElement('tr');
-                let bestUtoStore = '';
-                let bestSales = 0;
+                let bestUtoStore = '', bestSales = 0;
                 for (const s of item.utoStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
-                    if (sales > bestSales) {
-                        bestSales = sales;
-                        bestUtoStore = s;
-                    }
+                    if (sales > bestSales) { bestSales = sales; bestUtoStore = s; }
                 }
-                let worstTsStore = '';
-                let worstSales = Infinity;
+                let worstTsStore = '', worstSales = Infinity;
                 for (const s of item.tsStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
-                    if (sales < worstSales) {
-                        worstSales = sales;
-                        worstTsStore = s;
-                    }
+                    if (sales < worstSales) { worstSales = sales; worstTsStore = s; }
                 }
 
                 const rec = bestUtoStore && worstTsStore ?
@@ -853,8 +1174,7 @@
 
             const items = tsData.crossTransfer || [];
             if (!items.length) {
-                tbody.innerHTML =
-                    '<tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
                 return;
             }
 
@@ -877,6 +1197,19 @@
             }
         }
 
+        // ============================================================
+        // ==================== СВОДНАЯ ТАБЛИЦА ====================
+        // ============================================================
+
+        function getTopClass(top) {
+            const t = String(top ?? '').replace(/\.00$/, '').replace(/\.0+$/, '').trim();
+            if (t === '0') return 'top-0';
+            if (t === '1') return 'top-1';
+            if (t === '2') return 'top-2';
+            if (t === '') return '';
+            return 'top-other';
+        }
+
         function renderTsPivot() {
             const thead = document.getElementById('tsPivotHeader');
             const tbody = document.getElementById('tsPivotBody');
@@ -886,57 +1219,63 @@
 
             thead.innerHTML = '';
             if (!stores.length || !articles.length) {
-                tbody.innerHTML =
-                    '<tr><td style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>';
+                tbody.innerHTML = '<tr><td style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>';
                 return;
             }
 
-            const hRow1 = document.createElement('tr');
-            const baseCols = ['Артикул', 'Наименование'];
             const subCols = ['ТОП', 'Запас(шт)', 'ТС', 'Запас(дн)', 'В пути(дн)'];
 
-            baseCols.forEach(c => {
+            // Верхняя строка заголовков — магазины (своим цветом)
+            const hRow1 = document.createElement('tr');
+            const thArt = document.createElement('th');
+            thArt.textContent = 'Артикул';
+            thArt.rowSpan = 2;
+            thArt.style.position = 'sticky';
+            thArt.style.left = '0';
+            thArt.style.zIndex = '11';
+            thArt.style.background = '#1e2e1e';
+            hRow1.appendChild(thArt);
+
+            const thName = document.createElement('th');
+            thName.textContent = 'Наименование';
+            thName.rowSpan = 2;
+            thName.style.position = 'sticky';
+            thName.style.left = '80px';
+            thName.style.zIndex = '11';
+            thName.style.background = '#1e2e1e';
+            hRow1.appendChild(thName);
+
+            stores.forEach((s, idx) => {
                 const th = document.createElement('th');
-                th.textContent = c;
-                th.style.position = 'sticky';
-                th.style.left = '0';
-                th.style.zIndex = '11';
-                th.style.background = '#2e7d32';
-                hRow1.appendChild(th);
-            });
-            stores.forEach(s => {
-                const th = document.createElement('th');
-                th.colSpan = 5;
-                th.textContent = `Магазин ${s}`;
+                th.colSpan = subCols.length;
+                th.textContent = `🏪 Магазин ${s}`;
                 th.style.textAlign = 'center';
-                th.style.background = '#2e7d32';
+                th.style.background = STORE_HEADER_COLORS[idx % STORE_HEADER_COLORS.length];
+                th.style.color = 'white';
+                th.style.borderLeft = '2px solid white';
+                th.style.borderRight = '2px solid white';
                 hRow1.appendChild(th);
             });
             thead.appendChild(hRow1);
 
+            // Вторая строка — подколонки
             const hRow2 = document.createElement('tr');
-            baseCols.forEach(c => {
-                const th = document.createElement('th');
-                th.textContent = c;
-                th.style.position = 'sticky';
-                th.style.left = '0';
-                th.style.zIndex = '11';
-                th.style.background = '#388e3c';
-                hRow2.appendChild(th);
-            });
-            stores.forEach(() => {
+            stores.forEach((s, idx) => {
                 subCols.forEach(c => {
                     const th = document.createElement('th');
                     th.textContent = c;
                     th.style.fontSize = '0.4rem';
-                    th.style.background = '#388e3c';
+                    th.style.background = STORE_HEADER_COLORS[idx % STORE_HEADER_COLORS.length];
+                    th.style.color = 'white';
+                    th.style.opacity = '0.85';
+                    th.style.borderLeft = '1px solid white';
                     hRow2.appendChild(th);
                 });
             });
             thead.appendChild(hRow2);
 
             tbody.innerHTML = '';
-            const displayArts = articles.slice(0, 30);
+            const displayArts = articles.slice(0, 50);
 
             for (const art of displayArts) {
                 const tr = document.createElement('tr');
@@ -953,40 +1292,70 @@
 
                 const tdName = document.createElement('td');
                 tdName.style.position = 'sticky';
-                tdName.style.left = '0';
+                tdName.style.left = '80px';
                 tdName.style.zIndex = '5';
                 tdName.style.background = 'white';
-                tdName.textContent = (data.name || '').substring(0, 18);
+                tdName.style.maxWidth = '140px';
+                tdName.style.overflow = 'hidden';
+                tdName.style.textOverflow = 'ellipsis';
+                tdName.style.whiteSpace = 'nowrap';
+                tdName.textContent = (data.name || '').substring(0, 22);
+                tdName.title = data.name || '';
                 tr.appendChild(tdName);
 
-                for (const store of stores) {
+                stores.forEach((store, storeIdx) => {
                     const details = data.storeDetails[store] || {};
                     const isTs = data.tsStores?.has(store) || false;
-                    const vals = [
-                        details.top || '-',
-                        details.zapasSht || 0,
-                        isTs ? 1 : 0,
-                        details.days || 0,
-                        details.transit || 0
-                    ];
-                    for (let i = 0; i < vals.length; i++) {
-                        const td = document.createElement('td');
-                        td.textContent = vals[i];
-                        td.style.textAlign = 'center';
-                        if (i === 2 && vals[i] === 1) {
-                            td.classList.add('ts-cell-1');
-                        }
-                        tr.appendChild(td);
-                    }
-                }
+                    const storeBg = STORE_COLORS[storeIdx % STORE_COLORS.length];
+
+                    // ТОП
+                    const tdTop = document.createElement('td');
+                    const topClass = getTopClass(details.top);
+                    tdTop.textContent = (details.top !== undefined && details.top !== null && details.top !== '') ? details.top : '-';
+                    if (topClass) tdTop.className = topClass;
+                    else { tdTop.style.textAlign = 'center'; tdTop.style.background = storeBg; }
+                    tr.appendChild(tdTop);
+
+                    // Запас(шт)
+                    const tdZap = document.createElement('td');
+                    tdZap.textContent = details.zapasSht || 0;
+                    tdZap.style.textAlign = 'center';
+                    tdZap.style.background = storeBg;
+                    tr.appendChild(tdZap);
+
+                    // ТС
+                    const tdTs = document.createElement('td');
+                    tdTs.textContent = isTs ? 1 : 0;
+                    tdTs.className = isTs ? 'ts-cell-1' : 'ts-cell-0';
+                    tr.appendChild(tdTs);
+
+                    // Запас(дн)
+                    const tdDays = document.createElement('td');
+                    tdDays.textContent = details.days || 0;
+                    tdDays.style.textAlign = 'center';
+                    tdDays.style.background = storeBg;
+                    // Подсветка запаса в днях
+                    const dNum = toNumber(details.days, 0);
+                    if (dNum >= 100 && dNum < 999) tdDays.style.color = '#e65100';
+                    if (dNum >= 999) tdDays.style.color = '#c62828';
+                    if (dNum > 0 && dNum < 30) tdDays.style.color = '#2e7d32';
+                    tr.appendChild(tdDays);
+
+                    // В пути(дн)
+                    const tdTransit = document.createElement('td');
+                    tdTransit.textContent = details.transit || 0;
+                    tdTransit.style.textAlign = 'center';
+                    tdTransit.style.background = storeBg;
+                    tr.appendChild(tdTransit);
+                });
                 tbody.appendChild(tr);
             }
 
-            if (articles.length > 30) {
+            if (articles.length > 50) {
                 const tr = document.createElement('tr');
                 const td = document.createElement('td');
-                td.colSpan = 2 + stores.length * 5;
-                td.textContent = `... и ещё ${articles.length - 30}`;
+                td.colSpan = 2 + stores.length * subCols.length;
+                td.textContent = `... и ещё ${articles.length - 50}`;
                 td.style.textAlign = 'center';
                 td.style.color = '#999';
                 td.style.padding = '6px';
@@ -1000,19 +1369,10 @@
         // ============================================================
 
         function exportTsAll() {
-            if (!tsData.items.length) {
-                showToast('Нет ТС-позиций', 'warning');
-                return;
-            }
-
-            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ТС',
-                'Продажная цена магазина'
-            ];
+            if (!tsData.items.length) { showToast('Нет ТС-позиций', 'warning'); return; }
+            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ТС', 'Продажная цена магазина'];
             const wsData = [cols];
-            for (const row of tsData.items) {
-                wsData.push(cols.map(c => row[c] ?? ''));
-            }
-
+            for (const row of tsData.items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'ТС_все');
@@ -1022,14 +1382,8 @@
         }
 
         function exportTsTop10() {
-            if (!tsData.topArticles.length) {
-                showToast('Нет данных', 'warning');
-                return;
-            }
-
-            const wsData = [
-                ['#', 'Артикул', 'Наименование', 'Магазинов', 'Всего ТС', 'Запас (дн)', 'Цена (руб)', 'Магазины', 'MIN информация']
-            ];
+            if (!tsData.topArticles.length) { showToast('Нет данных', 'warning'); return; }
+            const wsData = [['#', 'Артикул', 'Наименование', 'Магазинов', 'Всего ТС', 'Запас (дн)', 'Цена (руб)', 'Магазины', 'MIN информация']];
             for (const item of tsData.topArticles) {
                 let minInfo = item.naibMin || '';
                 if (item.min441 > 0 || item.min500 > 0 || item.min401 > 0) {
@@ -1040,18 +1394,11 @@
                     if (mins.length) minInfo += (minInfo ? ' | ' : '') + mins.join(', ');
                 }
                 wsData.push([
-                    tsData.topArticles.indexOf(item) + 1,
-                    item.article,
-                    item.name || '',
-                    item.storeCount,
-                    item.total,
-                    item.avgDays || 0,
-                    item.salePrice || 0,
-                    item.stores.join(', '),
-                    minInfo
+                    tsData.topArticles.indexOf(item) + 1, item.article, item.name || '',
+                    item.storeCount, item.total, item.avgDays || 0, item.salePrice || 0,
+                    item.stores.join(', '), minInfo
                 ]);
             }
-
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'ТОП10_ТС');
@@ -1062,19 +1409,10 @@
 
         function exportTsArticle(article) {
             const items = tsData.items.filter(r => String(r['Артикул'] || '') === article);
-            if (!items.length) {
-                showToast('Артикул не найден', 'warning');
-                return;
-            }
-
-            const cols = ['№ магазина', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ТС', 'min 441 ПМ',
-                'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'
-            ];
+            if (!items.length) { showToast('Артикул не найден', 'warning'); return; }
+            const cols = ['№ магазина', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ТС', 'min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'];
             const wsData = [cols];
-            for (const row of items) {
-                wsData.push(cols.map(c => row[c] ?? ''));
-            }
-
+            for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `ТС_${article}`);
@@ -1086,14 +1424,10 @@
         function exportTsByStore(type) {
             if (type === 'all') {
                 const stores = tsData.stores.sort((a, b) => parseInt(a) - parseInt(b));
-                const wsData = [
-                    ['Магазин', 'Кол-во ТС', 'Уникальных артикулов']
-                ];
+                const wsData = [['Магазин', 'Кол-во ТС', 'Уникальных артикулов']];
                 for (const s of stores) {
                     const d = tsData.byStore[s];
-                    if (d) {
-                        wsData.push([s, d.total, d.articles.size]);
-                    }
+                    if (d) wsData.push([s, d.total, d.articles.size]);
                 }
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
                 const wb = XLSX.utils.book_new();
@@ -1103,18 +1437,11 @@
                 showToast(`✅ Выгружена сводка по ${stores.length} магазинам`, 'success');
                 return;
             }
-
             const items = tsData.byStore[type]?.items || [];
-            if (!items.length) {
-                showToast(`Нет данных для магазина ${type}`, 'warning');
-                return;
-            }
-
+            if (!items.length) { showToast(`Нет данных для магазина ${type}`, 'warning'); return; }
             const cols = ['Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'Продажная цена магазина'];
             const wsData = [cols];
-            for (const row of items) {
-                wsData.push(cols.map(c => row[c] ?? ''));
-            }
+            for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `ТС_магазин_${type}`);
@@ -1125,48 +1452,28 @@
 
         function exportTransferCandidates() {
             const items = tsData.transferCandidates || [];
-            if (!items.length) {
-                showToast('Нет рекомендаций', 'warning');
-                return;
-            }
-
-            const wsData = [
-                ['#', 'Артикул', 'Наименование', 'ТС магазины', 'УТО магазины', 'Средние продажи', 'Рекомендация']
-            ];
+            if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
+            const wsData = [['#', 'Артикул', 'Наименование', 'ТС магазины', 'УТО магазины', 'Средние продажи', 'Рекомендация']];
             for (const item of items) {
-                let bestUtoStore = '';
-                let bestSales = 0;
+                let bestUtoStore = '', bestSales = 0;
                 for (const s of item.utoStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
-                    if (sales > bestSales) {
-                        bestSales = sales;
-                        bestUtoStore = s;
-                    }
+                    if (sales > bestSales) { bestSales = sales; bestUtoStore = s; }
                 }
-                let worstTsStore = '';
-                let worstSales = Infinity;
+                let worstTsStore = '', worstSales = Infinity;
                 for (const s of item.tsStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
-                    if (sales < worstSales) {
-                        worstSales = sales;
-                        worstTsStore = s;
-                    }
+                    if (sales < worstSales) { worstSales = sales; worstTsStore = s; }
                 }
                 const rec = bestUtoStore && worstTsStore ?
                     `Трансфер из ${worstTsStore} (продажи ${worstSales}) → ${bestUtoStore} (продажи ${bestSales})` :
                     `Переместить в магазины с УТО: ${item.utoStores.join(', ')}`;
-
                 wsData.push([
-                    items.indexOf(item) + 1,
-                    item.article,
-                    item.name || '',
-                    item.tsStores.join(', '),
-                    item.utoStores.join(', '),
-                    item.avgSales || 0,
-                    rec
+                    items.indexOf(item) + 1, item.article, item.name || '',
+                    item.tsStores.join(', '), item.utoStores.join(', '),
+                    item.avgSales || 0, rec
                 ]);
             }
-
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Трансфер_ТС');
@@ -1177,35 +1484,19 @@
 
         function exportCrossTransfer() {
             const items = tsData.crossTransfer || [];
-            if (!items.length) {
-                showToast('Нет рекомендаций', 'warning');
-                return;
-            }
-
-            const wsData = [
-                ['#', 'Артикул', 'Наименование', 'ТС магазин', 'Нет ТС магазин', 'Продажи в ТС', 'Продажи в нет ТС', 'Разница',
-                    'Рекомендация'
-                ]
-            ];
+            if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
+            const wsData = [['#', 'Артикул', 'Наименование', 'ТС магазин', 'Нет ТС магазин', 'Продажи в ТС', 'Продажи в нет ТС', 'Разница', 'Рекомендация']];
             for (const item of items) {
                 const diff = item.noTsSales - item.tsSales;
                 const rec = diff > 0 ?
                     `Переместить из ${item.tsStore} → ${item.noTsStore} (прирост +${diff})` :
                     `Рассмотреть перемещение из ${item.tsStore} → ${item.noTsStore}`;
-
                 wsData.push([
-                    items.indexOf(item) + 1,
-                    item.article,
-                    item.name || '',
-                    item.tsStore,
-                    item.noTsStore,
-                    item.tsSales || 0,
-                    item.noTsSales || 0,
-                    diff,
-                    rec
+                    items.indexOf(item) + 1, item.article, item.name || '',
+                    item.tsStore, item.noTsStore, item.tsSales || 0, item.noTsSales || 0,
+                    diff, rec
                 ]);
             }
-
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Кросс_трансфер');
@@ -1214,38 +1505,216 @@
             showToast(`✅ Выгружено ${items.length} рекомендаций`, 'success');
         }
 
+        // ==== ЭКСПОРТ СВОДНОЙ ТАБЛИЦЫ С ЦВЕТАМИ ====
         function exportTsPivot() {
             const stores = tsData.stores.sort((a, b) => parseInt(a) - parseInt(b));
             const articles = Object.keys(tsData.byArticle).sort();
+            if (!stores.length || !articles.length) { showToast('Нет данных', 'warning'); return; }
 
-            if (!stores.length || !articles.length) {
-                showToast('Нет данных', 'warning');
-                return;
-            }
+            const subCols = ['ТОП', 'Запас(шт)', 'ТС', 'Запас(дн)', 'В пути(дн)'];
 
+            // Заголовок (одна строка)
             const header = ['Артикул', 'Наименование'];
-            for (const s of stores) {
-                header.push(`ТОП ${s}`, `Запас(шт) ${s}`, `ТС ${s}`, `Запас(дн) ${s}`, `В пути(дн) ${s}`);
-            }
+            stores.forEach(s => {
+                subCols.forEach(c => {
+                    header.push(`${c} ${s}`);
+                });
+            });
 
             const wsData = [header];
+            const dataRows = [];
+
             for (const art of articles) {
                 const data = tsData.byArticle[art];
                 const row = [art, data.name || ''];
-                for (const s of stores) {
-                    const d = data.storeDetails[s] || {};
-                    const isTs = data.tsStores?.has(s) || false;
-                    row.push(d.top || '-', d.zapasSht || 0, isTs ? 1 : 0, d.days || 0, d.transit || 0);
-                }
+                stores.forEach(store => {
+                    const d = data.storeDetails[store] || {};
+                    const isTs = data.tsStores?.has(store) || false;
+                    row.push(
+                        (d.top !== undefined && d.top !== null && d.top !== '') ? d.top : '-',
+                        d.zapasSht || 0,
+                        isTs ? 1 : 0,
+                        d.days || 0,
+                        d.transit || 0
+                    );
+                });
+                dataRows.push(row);
                 wsData.push(row);
             }
 
             const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Устанавливаем ширину колонок
+            ws['!cols'] = header.map((h, i) => {
+                if (i === 0) return { wch: 14 };
+                if (i === 1) return { wch: 28 };
+                return { wch: 10 };
+            });
+
+            // ==== ЗАЛИВКА ЦВЕТАМИ ====
+            const xlsxRange = XLSX.utils.decode_range(ws['!ref']);
+
+            // 1. Заливка заголовков магазинов + ТОП-подколонок
+            // Колонки магазинов: начиная с колонки 2 (C), группы по 5
+            for (let storeIdx = 0; storeIdx < stores.length; storeIdx++) {
+                const startCol = 2 + storeIdx * subCols.length;
+                const headerColor = STORE_HEADER_COLORS[storeIdx % STORE_HEADER_COLORS.length]
+                    .replace('#', '').toUpperCase();
+
+                for (let c = 0; c < subCols.length; c++) {
+                    const colIdx = startCol + c;
+                    const addr = XLSX.utils.encode_cell({ r: 0, c: colIdx });
+                    if (!ws[addr]) ws[addr] = { t: 's', v: header[colIdx] };
+                    ws[addr].s = {
+                        fill: { fgColor: { rgb: 'FF' + headerColor } },
+                        font: { color: { rgb: 'FFFFFFFF' }, bold: true, sz: 10 },
+                        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+                        border: {
+                            top: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                            bottom: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                            left: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                            right: { style: 'thin', color: { rgb: 'FFFFFFFF' } }
+                        }
+                    };
+                }
+            }
+
+            // Заливка первых 2 колонок заголовка
+            [0, 1].forEach(c => {
+                const addr = XLSX.utils.encode_cell({ r: 0, c });
+                if (!ws[addr]) ws[addr] = { t: 's', v: header[c] };
+                ws[addr].s = {
+                    fill: { fgColor: { rgb: 'FF1E2E1E' } },
+                    font: { color: { rgb: 'FFFFFFFF' }, bold: true, sz: 11 },
+                    alignment: { horizontal: 'center', vertical: 'center' },
+                    border: {
+                        top: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                        bottom: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                        left: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                        right: { style: 'thin', color: { rgb: 'FFFFFFFF' } }
+                    }
+                };
+            });
+
+            // 2. Заливка строк данных
+            for (let r = 1; r <= dataRows.length; r++) {
+                // Артикул и Наименование — нейтральные
+                [0, 1].forEach(c => {
+                    const addr = XLSX.utils.encode_cell({ r, c });
+                    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                    ws[addr].s = {
+                        fill: { fgColor: { rgb: 'FFFFFFFF' } },
+                        font: { bold: c === 0, sz: 10 },
+                        alignment: { vertical: 'center', horizontal: c === 0 ? 'left' : 'left' }
+                    };
+                });
+
+                for (let storeIdx = 0; storeIdx < stores.length; storeIdx++) {
+                    const startCol = 2 + storeIdx * subCols.length;
+                    const storeBg = STORE_COLORS[storeIdx % STORE_COLORS.length].replace('#', '').toUpperCase();
+
+                    const top = dataRows[r - 1][startCol];
+                    const zapSht = dataRows[r - 1][startCol + 1];
+                    const tsVal = dataRows[r - 1][startCol + 2];
+                    const zapDn = dataRows[r - 1][startCol + 3];
+                    const transit = dataRows[r - 1][startCol + 4];
+
+                    // ТОП — особый цвет
+                    const topAddr = XLSX.utils.encode_cell({ r, c: startCol });
+                    if (!ws[topAddr]) ws[topAddr] = { t: 'n', v: top };
+                    let topFill = storeBg;
+                    let topFont = 'FF1E2E1E';
+                    const topStr = String(top ?? '').replace(/\.00$/, '').replace(/\.0+$/, '').trim();
+                    if (topStr === '0') { topFill = 'FFECEFF1'; topFont = 'FF607D8B'; }
+                    else if (topStr === '1') { topFill = 'FFC8E6C9'; topFont = 'FF1B5E20'; }
+                    else if (topStr === '2') { topFill = 'FFFFE0B2'; topFont = 'FFE65100'; }
+                    else if (topStr === '' || topStr === '-') { topFill = storeBg; }
+                    else { topFill = 'FFFFF9C4'; topFont = 'FF827717'; }
+
+                    ws[topAddr].s = {
+                        fill: { fgColor: { rgb: topFill } },
+                        font: { color: { rgb: topFont }, bold: true, sz: 10 },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        border: {
+                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
+                        }
+                    };
+
+                    // Запас(шт)
+                    const zapAddr = XLSX.utils.encode_cell({ r, c: startCol + 1 });
+                    if (!ws[zapAddr]) ws[zapAddr] = { t: 'n', v: zapSht };
+                    ws[zapAddr].s = {
+                        fill: { fgColor: { rgb: storeBg } },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        border: {
+                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
+                        }
+                    };
+
+                    // ТС
+                    const tsAddr = XLSX.utils.encode_cell({ r, c: startCol + 2 });
+                    if (!ws[tsAddr]) ws[tsAddr] = { t: 'n', v: tsVal };
+                    ws[tsAddr].s = {
+                        fill: { fgColor: { rgb: tsVal === 1 ? 'FFC62828' : 'FFF5F5F5' } },
+                        font: { color: { rgb: tsVal === 1 ? 'FFFFFFFF' : 'FFBBBBBB' }, bold: tsVal === 1, sz: 10 },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        border: {
+                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
+                        }
+                    };
+
+                    // Запас(дн)
+                    const daysAddr = XLSX.utils.encode_cell({ r, c: startCol + 3 });
+                    if (!ws[daysAddr]) ws[daysAddr] = { t: 'n', v: zapDn };
+                    let daysFont = 'FF1E2E1E';
+                    const dNum = toNumber(zapDn, 0);
+                    if (dNum >= 999) daysFont = 'FFC62828';
+                    else if (dNum >= 100) daysFont = 'FFE65100';
+                    else if (dNum > 0 && dNum < 30) daysFont = 'FF2E7D32';
+                    ws[daysAddr].s = {
+                        fill: { fgColor: { rgb: storeBg } },
+                        font: { color: { rgb: daysFont }, bold: dNum >= 100 },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        border: {
+                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
+                        }
+                    };
+
+                    // В пути(дн)
+                    const transAddr = XLSX.utils.encode_cell({ r, c: startCol + 4 });
+                    if (!ws[transAddr]) ws[transAddr] = { t: 'n', v: transit };
+                    ws[transAddr].s = {
+                        fill: { fgColor: { rgb: storeBg } },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        border: {
+                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
+                        }
+                    };
+                }
+            }
+
+            // Включаем стили в книгу
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Сводная_ТС');
+
             const today = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, `Сводная_ТС_${today}.xlsx`);
-            showToast('✅ Сводная таблица выгружена', 'success');
+            XLSX.writeFile(wb, `Сводная_ТС_${today}.xlsx`, { cellStyles: true });
+            showToast('✅ Сводная таблица с цветами выгружена', 'success');
         }
 
         // ============================================================
@@ -1261,12 +1730,10 @@
             input.onchange = async (e) => {
                 const files = Array.from(e.target.files);
                 if (!files.length) return;
-
                 const first = files[0];
                 const path = first.webkitRelativePath.split('/');
                 const folder = path.length > 1 ? path[0] : 'Папка';
                 document.getElementById('folderPath').textContent = `📁 ${folder} (${files.length} файлов)`;
-
                 await autoLoadFiles(files);
             };
             input.click();
@@ -1298,20 +1765,15 @@
                         const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
                         if (!rawData || rawData.length < 2) { resolve(false); return; }
 
-                        // Пытаемся найти строку заголовков: ищем среди первых 10 строк ту, где есть "Артикул"
                         let headerRowIdx = -1;
                         for (let i = 0; i < Math.min(10, rawData.length); i++) {
                             const row = rawData[i] || [];
                             const hasArticle = row.some(cell => String(cell || '').trim().toLowerCase() === 'артикул');
-                            if (hasArticle) {
-                                headerRowIdx = i;
-                                break;
-                            }
+                            if (hasArticle) { headerRowIdx = i; break; }
                         }
-                        if (headerRowIdx === -1) headerRowIdx = 2; // fallback
+                        if (headerRowIdx === -1) headerRowIdx = 2;
 
                         const headers = (rawData[headerRowIdx] || []).map(h => String(h || '').trim());
-
                         const jsonData = [];
                         for (let i = headerRowIdx + 1; i < rawData.length; i++) {
                             const row = rawData[i];
@@ -1350,10 +1812,10 @@
             resultDiv.innerHTML = '';
             resultDiv.classList.remove('collapsed');
 
-            // Сбрасываем загрузку
             reportNames.forEach(n => loadedReports[n] = false);
             gammaData = [];
             reservyData = [];
+            utoData = [];
 
             const loadedFiles = {};
             let loadedCount = 0;
@@ -1367,14 +1829,10 @@
                         if (name.includes(p.toLowerCase())) {
                             let targetArray;
                             switch (report) {
-                                case 'Гамма':
-                                    targetArray = gammaData;
-                                    break;
-                                case 'Резервы':
-                                    targetArray = reservyData;
-                                    break;
-                                default:
-                                    continue;
+                                case 'Гамма': targetArray = gammaData; break;
+                                case 'Резервы': targetArray = reservyData; break;
+                                case 'УТО': targetArray = utoData; break;
+                                default: continue;
                             }
                             const ok = await loadExcelFileFromFile(file, report, targetArray);
                             if (ok) {
@@ -1390,7 +1848,6 @@
                 }
             }
 
-            // Формируем результат
             let resultHtml = '';
             for (const report of reportNames) {
                 const status = loadedReports[report] ? '✅' : '❌';
@@ -1399,11 +1856,9 @@
                 const copyable = loadedReports[report] ?
                     `<span class="copyable" onclick="copyToClipboard('${fileName}')" title="Кликните чтобы скопировать">${fileName} 📋</span>` :
                     fileName;
-                resultHtml +=
-                    `<div class="result-item"><span class="${statusClass}">${status}</span> <strong>${report}</strong>: ${copyable}</div>`;
+                resultHtml += `<div class="result-item"><span class="${statusClass}">${status}</span> <strong>${report}</strong>: ${copyable}</div>`;
             }
-            resultHtml +=
-                `<div style="margin-top:6px;font-weight:700;color:#2e7d32;">✅ Загружено ${loadedCount} из ${reportNames.length} отчётов</div>`;
+            resultHtml += `<div style="margin-top:6px;font-weight:700;color:#2e7d32;">✅ Загружено ${loadedCount} из ${reportNames.length} отчётов</div>`;
 
             resultDiv.innerHTML = resultHtml;
 
@@ -1417,14 +1872,11 @@
             }
         }
 
-        // ---- Copy to clipboard ----
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
                     showToast(`📋 Скопировано: ${text}`, 'success', 1500);
-                }).catch(() => {
-                    fallbackCopy(text);
-                });
+                }).catch(() => fallbackCopy(text));
             } else {
                 fallbackCopy(text);
             }
@@ -1463,21 +1915,17 @@
             const origApply = applyTsFilter;
             applyTsFilter = function() {
                 origApply();
-                try {
-                    localStorage.setItem('ts_stores', JSON.stringify(Array.from(tsSelectedStores)));
-                } catch (e) {}
+                try { localStorage.setItem('ts_stores', JSON.stringify(Array.from(tsSelectedStores))); } catch (e) {}
             };
 
             const origReset = resetTsFilter;
             resetTsFilter = function() {
                 origReset();
-                try {
-                    localStorage.setItem('ts_stores', JSON.stringify([]));
-                } catch (e) {}
+                try { localStorage.setItem('ts_stores', JSON.stringify([])); } catch (e) {}
             };
 
-            console.log('📊 ТС Аналитика v2.2');
-            console.log('💡 Загрузите отчёты "Гамма" и "Резервы", затем нажмите "ВЫЧИСЛИТЬ"');
+            console.log('📊 ТС Аналитика v2.4');
+            console.log('💡 Загрузите "Гамма", "Резервы", "УТО", нажмите "ВЫЧИСЛИТЬ"');
         });
 
         window.openMagPortal = openMagPortal;
@@ -1501,3 +1949,6 @@
         window.toggleAutoLoadResult = toggleAutoLoadResult;
         window.copyToClipboard = copyToClipboard;
     </script>
+
+</body>
+</html>
