@@ -93,7 +93,7 @@
         .quick-actions .btn.danger-outline { border-color: #c62828; color: #c62828; }
         .quick-actions .btn.danger-outline.active { background: #c62828; color: white; }
         .table-wrap { overflow-x: auto; max-height: 500px; overflow-y: auto; border: 1px solid #ddd0e8; border-radius: 12px; background: white; margin-top: 6px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.6rem; min-width: 900px; }
         th { background: #f0e8f5; color: #4a148c; font-weight: 700; padding: 5px 4px; border-bottom: 2px solid #d0c0d8; position: sticky; top: 0; z-index: 5; white-space: nowrap; text-align: left; font-size: 0.55rem; }
         td { padding: 4px 4px; border-bottom: 1px solid #eee8f0; vertical-align: middle; }
         tr:hover td { background: #f8f4fc; }
@@ -196,6 +196,8 @@
         .upload-section .btn { background: #2e7d32; color: white; padding: 3px 12px; font-size: 0.65rem; }
         .upload-section .btn:hover { background: #1b5e20; }
         .upload-section label { font-size: 0.7rem; font-weight: 500; color: #2e7d32; }
+        .supplier-cell { font-size: 0.55rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .days-cell { text-align: center; font-weight: 700; color: #1565c0; }
     </style>
 </head>
 <body>
@@ -337,11 +339,12 @@
                                     <th class="cb-column"><input type="checkbox" id="headerCheckbox" title="Выбрать все"></th>
                                     <th>№ маг</th><th>Артикул</th><th>Наименование</th><th>Подотдел</th>
                                     <th>ТОП</th><th>TOP ЦО</th><th>УТО руб</th><th>Перебой</th>
-                                    <th>В пути</th><th>Запас</th><th>Срок пост</th><th>План снятия</th><th>Статус</th><th>Действие</th>
+                                    <th>В пути</th><th>Запас</th><th>Срок пост</th><th>Поставщик</th><th>Дни заказа</th>
+                                    <th>План снятия</th><th>Статус</th><th>Действие</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                                <tr><td colspan="15" style="text-align:center;padding:15px;color:#9e9e9e;font-size:0.7rem;">Загрузите отчёты и нажмите «Свести»</td></tr>
+                                <tr><td colspan="17" style="text-align:center;padding:15px;color:#9e9e9e;font-size:0.7rem;">Загрузите отчёты и нажмите «Свести»</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -749,16 +752,21 @@
                     }
                 }
 
+                // ✅ Карта поставок: ключ = магазин|поставщик -> {срок, дниЗаказа, имяПоставщика}
                 const postavkiMap = new Map();
                 for (const row of state.postavki) {
                     const store = extractStore(row['Магазин']);
                     const supplier = toStr(row['Поставщик']);
+                    const supplierName = toStr(
+                        pickField(row, 'Имя поставщика', 'Наименование поставщика', 'Поставщик наименование')
+                    );
                     const key = `${store}|${supplier}`;
                     let srok = row['Срок поставки в магазин'] || row['Срок поставки в магазин ↪'] || '';
                     if (!postavkiMap.has(key)) {
                         postavkiMap.set(key, {
                             срок: toStr(srok),
                             дниЗаказа: toStr(row['Дни заказа']),
+                            имяПоставщика: supplierName,
                         });
                     }
                 }
@@ -775,9 +783,6 @@
                 buildMultiSelect('subdeptMultiSelect', allSubdepts, state.selectedSubdepts);
 
                 const merged = [];
-                let excludedByTopCo = 0;
-                let excludedNotInTransit = 0;
-                let excludedWithStock = 0;
                 const processedKeys = new Set();
 
                 for (const g of state.gamma) {
@@ -808,20 +813,19 @@
                     const topCo = toStr(
                         pickField(g, 'TOP ЦО', 'Сумма TOP ЦО')
                     ).replace(/\.00$/, '');
-                    if (state.excludeTopCoOne && topCo === '1') { excludedByTopCo++; continue; }
+                    if (state.excludeTopCoOne && topCo === '1') continue;
 
                     const inTransit = toNum(g['Сумма В пути, шт.']) > 0;
                     const inTransitSht = toNum(g['Сумма В пути, шт.']);
                     const stock = toNum(g['Сумма Кол-во в запасе']);
                     const name = toStr(g['Наименование']);
+                    // ✅ Имя поставщика из Гаммы
+                    const supplierNameFromGamma = toStr(
+                        pickField(g, 'Имя поставщика', 'Наименование поставщика')
+                    );
                     
                     if (name && !state.historyNames.has(key)) {
                         state.historyNames.set(key, name);
-                    }
-
-                    if (isInUto) {
-                        if (!inTransit) excludedNotInTransit++;
-                        if (state.excludeWithStock && stock > 0) excludedWithStock++;
                     }
 
                     const supplierCode = toStr(g['№ Поставщика']);
@@ -829,7 +833,10 @@
                     const postInfo = postavkiMap.get(postKey);
                     let postSrok = postInfo ? postInfo.срок : '';
                     if (!postSrok) postSrok = toStr(g['Срок поставки в магазин']);
+                    // ✅ Дни заказа из "Деталей поставки"
                     const postDni = postInfo ? postInfo.дниЗаказа : '';
+                    // ✅ Имя поставщика: сначала из Гаммы, иначе из Поставок
+                    const supplierName = supplierNameFromGamma || (postInfo ? postInfo.имяПоставщика : '');
                     
                     const utoInfo = utoMap.get(article) || { rub: 0, days: 0 };
 
@@ -938,6 +945,7 @@
                         stock: stock,
                         postavkaSrok: postSrokDisplay,
                         postavkaDni: postDni || '',
+                        supplierName: supplierName || '',
                         hasActiveOrder: (postSrok && postSrok !== '') || (postDni && postDni !== ''),
                         hasUto: isInUto,
                         removalDate: removalDateStr || periodDisplay || '—',
@@ -986,6 +994,7 @@
                             stock: 0,
                             postavkaSrok: '—',
                             postavkaDni: '',
+                            supplierName: '',
                             hasActiveOrder: false,
                             hasUto: false,
                             removalDate: savedRemovalDate,
@@ -1097,7 +1106,7 @@
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
         if (!data.length) {
-            tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:15px;color:#9e9e9e;">Нет записей</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:15px;color:#9e9e9e;">Нет записей</td></tr>`;
             updateSelectedActions();
             updateHeaderCheckbox();
             return;
@@ -1167,6 +1176,9 @@
                 actionBtns = `<button class="btn-small disabled" title="Условия не выполнены">⛔</button>`;
             }
 
+            const supplierDisplay = row.supplierName ? row.supplierName.substring(0, 20) : '—';
+            const daysDisplay = row.postavkaDni ? row.postavkaDni : '—';
+
             html += `<tr class="${trClass} ${overdueClass} ${transitClass} ${removedClass} ${extendedClass}">
                 <td class="cb-column"><input type="checkbox" class="row-checkbox" data-key="${key}" ${isChecked}></td>
                 <td>${row.store}</td>
@@ -1180,6 +1192,8 @@
                 <td>${row.inTransitSht > 0 ? row.inTransitSht + ' ' + transitBadge : '—'}</td>
                 <td>${stockBadge}</td>
                 <td>${row.postavkaSrok || '—'}</td>
+                <td class="supplier-cell" title="${row.supplierName || ''}">${supplierDisplay}</td>
+                <td class="days-cell">${daysDisplay}</td>
                 <td>${row.removalDate || '—'}</td>
                 <td>${statusBadge}</td>
                 <td style="white-space:nowrap;">${actionBtns}</td>
@@ -1334,7 +1348,7 @@
         if (!selected.length) { showToast('Нет выбранных артикулов', 'warning'); return; }
         
         const wsData = [
-            ['Магазин', 'Артикул', 'Наименование', 'Подотдел', 'ТОП', 'TOP ЦО', 'УТО руб', 'Перебой', 'В пути', 'Запас', 'Срок поставки', 'План снятия', 'Статус']
+            ['Магазин', 'Артикул', 'Наименование', 'Подотдел', 'ТОП', 'TOP ЦО', 'УТО руб', 'Перебой', 'В пути', 'Запас', 'Срок поставки', 'Поставщик', 'Дни заказа', 'План снятия', 'Статус']
         ];
         
         for (const r of selected) {
@@ -1350,6 +1364,8 @@
                 r.inTransitSht || 0,
                 r.stock || 0,
                 r.postavkaSrok || '',
+                r.supplierName || '',
+                r.postavkaDni || '',
                 r.removalDate || '',
                 r.status || ''
             ]);
