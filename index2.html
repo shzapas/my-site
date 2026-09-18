@@ -1,994 +1,3 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ТС Аналитика — Токсичный сток</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-
-        body {
-            background: #f0f7f0;
-            color: #1e2e1e;
-            padding: 16px 20px;
-            min-height: 100vh;
-        }
-
-        .app-container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #1a4a1a 0%, #2d6b2d 100%);
-            border-radius: 14px 14px 0 0;
-            padding: 14px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            color: white;
-            border-bottom: 4px solid #0d3d0d;
-        }
-
-        .header h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .header h1 small {
-            font-size: 0.65rem;
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 12px;
-            border-radius: 30px;
-            font-weight: 400;
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 5px 16px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-primary {
-            background: #4caf50;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #388e3c;
-        }
-
-        .btn-success {
-            background: #2e7d32;
-            color: white;
-        }
-        .btn-success:hover {
-            background: #1b5e20;
-        }
-
-        .btn-warning {
-            background: #f9a825;
-            color: #1e1e1e;
-        }
-        .btn-warning:hover {
-            background: #f57f17;
-        }
-
-        .btn-danger {
-            background: #c62828;
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #b71c1c;
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: white;
-            border: 1.5px solid rgba(255, 255, 255, 0.3);
-        }
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-sm {
-            padding: 3px 12px;
-            font-size: 0.6rem;
-        }
-
-        .dashboard {
-            display: flex;
-            gap: 16px;
-            margin-top: 16px;
-        }
-
-        .left-panel {
-            width: 300px;
-            flex-shrink: 0;
-            background: white;
-            border-radius: 12px;
-            padding: 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            border: 1px solid #c8e6c9;
-            max-height: calc(100vh - 140px);
-            overflow-y: auto;
-        }
-
-        .left-panel::-webkit-scrollbar {
-            width: 4px;
-        }
-        .left-panel::-webkit-scrollbar-thumb {
-            background: #4caf50;
-            border-radius: 4px;
-        }
-
-        .right-panel {
-            flex: 1;
-            background: white;
-            border-radius: 12px;
-            padding: 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            border: 1px solid #c8e6c9;
-            min-width: 0;
-        }
-
-        .upload-section .btn {
-            width: 100%;
-            padding: 8px;
-            font-size: 0.75rem;
-            margin-bottom: 4px;
-        }
-
-        .folder-path {
-            font-size: 0.6rem;
-            color: #666;
-            word-break: break-all;
-            padding: 3px 8px;
-            background: #f5f5f5;
-            border-radius: 6px;
-            margin: 4px 0;
-        }
-
-        .upload-status {
-            font-size: 0.65rem;
-            padding: 4px 10px;
-            background: #e8f5e9;
-            border-radius: 8px;
-            margin: 4px 0;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .upload-status .count {
-            font-weight: 700;
-            color: #2e7d32;
-        }
-
-        .file-list {
-            max-height: 100px;
-            overflow-y: auto;
-            font-size: 0.55rem;
-            background: #fafafa;
-            border-radius: 6px;
-            padding: 3px 8px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .file-list .file-item {
-            padding: 2px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .file-list .file-item:last-child {
-            border-bottom: none;
-        }
-        .file-list .ok {
-            color: #2e7d32;
-        }
-        .file-list .fail {
-            color: #c62828;
-        }
-
-        .auto-load-result-container {
-            margin-top: 4px;
-            border: 1px solid #c8e6c9;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .auto-load-result-header {
-            background: #e8f5e9;
-            padding: 4px 10px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.6rem;
-            font-weight: 600;
-            color: #2e5e2e;
-        }
-
-        .auto-load-result-header:hover {
-            background: #c8e6c9;
-        }
-
-        .auto-load-result {
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 0.55rem;
-            padding: 4px 10px;
-            background: #fafffa;
-            transition: max-height 0.3s ease;
-        }
-
-        .auto-load-result.collapsed {
-            max-height: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-
-        .auto-load-result .result-item {
-            padding: 2px 0;
-            border-bottom: 1px solid #e8f5e9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .auto-load-result .result-item:last-child {
-            border-bottom: none;
-        }
-
-        .auto-load-result .result-item .status-ok {
-            color: #2e7d32;
-        }
-
-        .auto-load-result .result-item .status-fail {
-            color: #c62828;
-        }
-
-        .auto-load-result .result-item .copyable {
-            cursor: pointer;
-            border-bottom: 1px dashed #a5d6a7;
-            font-size: 0.5rem;
-        }
-
-        .auto-load-result .result-item .copyable:hover {
-            color: #2e7d32;
-        }
-
-        .toggle-icon {
-            font-size: 0.6rem;
-            transition: transform 0.2s;
-        }
-        .toggle-icon.rotated {
-            transform: rotate(180deg);
-        }
-
-        .filters-section {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 2px dashed #c8e6c9;
-        }
-
-        .filter-group {
-            margin-bottom: 6px;
-        }
-
-        .filter-group label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.65rem;
-            color: #2e5e2e;
-            margin-bottom: 2px;
-        }
-
-        .filter-group select,
-        .filter-group input {
-            width: 100%;
-            padding: 5px 10px;
-            border-radius: 20px;
-            border: 1px solid #a5d6a7;
-            background: #fafffa;
-            font-size: 0.65rem;
-            color: #1e2e1e;
-            transition: 0.2s;
-        }
-
-        .filter-group select:focus,
-        .filter-group input:focus {
-            outline: none;
-            border-color: #2e7d32;
-            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12);
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 6px;
-        }
-        .filter-row .filter-group {
-            flex: 1;
-        }
-
-        .filter-actions {
-            display: flex;
-            gap: 4px;
-            margin-top: 6px;
-            flex-wrap: wrap;
-        }
-        .filter-actions .btn {
-            flex: 1;
-            padding: 4px 8px;
-            font-size: 0.6rem;
-            text-align: center;
-            min-width: 60px;
-        }
-
-        .store-filter-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            margin: 4px 0;
-        }
-
-        .store-filter-group label {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            font-size: 0.55rem;
-            cursor: pointer;
-            padding: 1px 6px;
-            border-radius: 10px;
-            border: 1px solid #c8e6c9;
-            background: #fafffa;
-            transition: 0.2s;
-        }
-
-        .store-filter-group label:hover {
-            border-color: #4caf50;
-        }
-
-        .store-filter-group label.active {
-            border-color: #2e7d32;
-            background: #e8f5e9;
-        }
-
-        .store-filter-group label input[type="checkbox"] {
-            width: 10px;
-            height: 10px;
-            accent-color: #2e7d32;
-            cursor: pointer;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 2px;
-            border-bottom: 2px solid #c8e6c9;
-            margin-bottom: 10px;
-            padding-bottom: 2px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 5px 16px;
-            border: none;
-            background: transparent;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            border-radius: 16px 16px 0 0;
-            color: #666;
-            transition: 0.2s;
-        }
-
-        .tab-btn:hover {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .tab-btn.active {
-            color: #2e7d32;
-            background: #e8f5e9;
-        }
-
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .stat-card {
-            background: #fafffa;
-            border-radius: 10px;
-            padding: 10px 12px;
-            border: 1px solid #c8e6c9;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-            border-color: #4caf50;
-        }
-
-        .stat-card .value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #2e7d32;
-        }
-
-        .stat-card .label {
-            font-size: 0.5rem;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .stat-card .hint {
-            font-size: 0.4rem;
-            color: #999;
-            margin-top: 1px;
-        }
-
-        .stat-card.danger .value {
-            color: #c62828;
-        }
-        .stat-card.warning .value {
-            color: #f57f17;
-        }
-        .stat-card.purple .value {
-            color: #6a1b9a;
-        }
-        .stat-card.success .value {
-            color: #2e7d32;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid #c8e6c9;
-            max-height: 350px;
-            overflow-y: auto;
-        }
-
-        .table-wrapper::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        .table-wrapper::-webkit-scrollbar-thumb {
-            background: #4caf50;
-            border-radius: 4px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.55rem;
-            min-width: 700px;
-        }
-
-        table th {
-            position: sticky;
-            top: 0;
-            background: #2e7d32;
-            color: white;
-            padding: 4px 6px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.5rem;
-            white-space: nowrap;
-            z-index: 5;
-        }
-
-        table td {
-            padding: 3px 6px;
-            border-bottom: 1px solid #e8f5e9;
-            vertical-align: top;
-        }
-
-        table tbody tr:nth-child(even) td {
-            background: #fafffa;
-        }
-
-        table tbody tr:hover td {
-            background: #e8f5e9;
-        }
-
-        .badge {
-            padding: 1px 6px;
-            border-radius: 8px;
-            font-size: 0.45rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .badge-danger {
-            background: #c62828;
-            color: white;
-        }
-        .badge-warning {
-            background: #f57f17;
-            color: white;
-        }
-        .badge-success {
-            background: #2e7d32;
-            color: white;
-        }
-        .badge-ts {
-            background: #c62828;
-            color: white;
-        }
-        .badge-uto {
-            background: #6a1b9a;
-            color: white;
-        }
-
-        .ts-highlight {
-            background: #ffebee !important;
-            color: #c62828 !important;
-            font-weight: 700 !important;
-        }
-
-        .export-btn {
-            background: #2e7d32;
-            border: none;
-            border-radius: 10px;
-            padding: 1px 8px;
-            font-size: 0.45rem;
-            cursor: pointer;
-            color: white;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .export-btn:hover {
-            background: #1b5e20;
-        }
-
-        .export-btn.small {
-            padding: 1px 5px;
-            font-size: 0.4rem;
-        }
-
-        .article-link {
-            color: #2e7d32;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: underline dotted;
-        }
-
-        .article-link:hover {
-            color: #1b5e20;
-        }
-
-        .right-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-
-        .right-header h3 {
-            font-size: 0.85rem;
-            color: #2e5e2e;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-
-        .toast-container {
-            position: fixed;
-            bottom: 16px;
-            right: 16px;
-            z-index: 9999;
-            max-width: 360px;
-            width: 100%;
-        }
-
-        .toast {
-            background: #1e2e1e;
-            color: white;
-            padding: 8px 14px;
-            border-radius: 8px;
-            margin-bottom: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.75rem;
-        }
-
-        .toast.success {
-            background: #2e7d32;
-            border-left: 4px solid #4caf50;
-        }
-        .toast.error {
-            background: #c62828;
-            border-left: 4px solid #ef5350;
-        }
-        .toast.warning {
-            background: #e65100;
-            border-left: 4px solid #ffa726;
-        }
-        .toast.info {
-            background: #0d47a1;
-            border-left: 4px solid #42a5f5;
-        }
-
-        .toast-close {
-            cursor: pointer;
-            margin-left: auto;
-            font-weight: bold;
-            opacity: 0.7;
-        }
-        .toast-close:hover {
-            opacity: 1;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 14px;
-            max-width: 650px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 20px 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            border: 2px solid #c8e6c9;
-        }
-
-        .modal-content h2 {
-            color: #2e7d32;
-            font-size: 1.1rem;
-        }
-
-        .modal-content .subtitle {
-            color: #666;
-            font-size: 0.75rem;
-            border-bottom: 2px solid #c8e6c9;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-
-        .modal-close {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .modal-close:hover {
-            color: #c62828;
-        }
-
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .text-muted {
-            color: #999;
-            font-size: 0.5rem;
-        }
-
-        footer {
-            margin-top: 16px;
-            text-align: center;
-            font-size: 0.5rem;
-            color: #999;
-            border-top: 1px solid #c8e6c9;
-            padding-top: 10px;
-        }
-
-        .ts-cell-1 {
-            background: #ffebee !important;
-            color: #c62828 !important;
-            font-weight: 700 !important;
-        }
-
-        .ts-cell-0 {
-            background: transparent !important;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard {
-                flex-direction: column;
-            }
-            .left-panel {
-                width: 100%;
-                max-height: none;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .header h1 {
-                font-size: 1.1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="app-container">
-        <div class="header">
-            <h1>📊 ТС Аналитика <small>Токсичный сток</small></h1>
-            <div class="header-controls">
-                <button class="btn btn-outline" onclick="toggleHelp()">❓ Помощь</button>
-                <button class="btn btn-outline" onclick="toggleTheme()">🌙 Тёмная</button>
-            </div>
-        </div>
-
-        <div id="helpModal" class="modal-overlay">
-            <div class="modal-content">
-                <button class="modal-close" onclick="closeHelp()">✕</button>
-                <h2>📊 ТС Аналитика</h2>
-                <div class="subtitle">Управление токсичным стоком</div>
-                <div style="font-size:0.8rem; line-height:1.6;">
-                    <p><strong>1. 📁 Загрузка</strong> — выберите папку с отчётами.</p>
-                    <p><strong>2. 🧮 Расчёт</strong> — нажмите "ВЫЧИСЛИТЬ".</p>
-                    <p><strong>3. 📊 ТС</strong> — аналитика по токсичному стоку.</p>
-                    <p style="color:#2e7d32; margin-top:6px;">💡 Двойной клик по артикулу → MagPortal</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="dashboard">
-            <div class="left-panel">
-                <div class="upload-section">
-                    <button class="btn btn-success" onclick="selectFolder()">📁 Загрузить отчёты из папки</button>
-                    <button class="btn btn-primary" onclick="loadSingleReport()">📎 Загрузить файлы</button>
-                    <div id="folderPath" class="folder-path"></div>
-                </div>
-
-                <div class="upload-status">
-                    <span>📁 Загружено: <span class="count" id="loadedCount">0</span>/10</span>
-                    <span id="statusMessage">⏳ Ожидание</span>
-                </div>
-
-                <div id="autoLoadResultContainer" class="auto-load-result-container" style="display:none;">
-                    <div class="auto-load-result-header" onclick="toggleAutoLoadResult()">
-                        <span>📋 Результат автозагрузки</span>
-                        <span class="toggle-icon">▼</span>
-                    </div>
-                    <div id="autoLoadResult" class="auto-load-result collapsed"></div>
-                </div>
-
-                <div class="filters-section">
-                    <div class="filter-group">
-                        <label>🏬 Магазин</label>
-                        <select id="storeFilter"><option value="all">Все магазины</option></select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label>📌 Подотдел</label>
-                        <select id="subdepartmentFilter"><option value="all">Все подотделы</option></select>
-                    </div>
-
-                    <div class="filter-row">
-                        <div class="filter-group">
-                            <label>⭐ ТОП</label>
-                            <select id="topFilter"><option value="all">Все</option><option value="1">1</option><option value="2">2</option><option value="0">0</option></select>
-                        </div>
-                        <div class="filter-group">
-                            <label>📅 Запас (дн)</label>
-                            <input type="text" id="stockRange" placeholder="0-999" value="0-999">
-                        </div>
-                    </div>
-
-                    <div class="filter-actions">
-                        <button class="btn btn-primary" onclick="applyFilters()">✅ Применить</button>
-                        <button class="btn btn-warning" onclick="resetFilters()">🔄 Сбросить</button>
-                        <button class="btn btn-success" onclick="computeSummary()">🧮 ВЫЧИСЛИТЬ</button>
-                    </div>
-                </div>
-
-                <div style="margin-top:10px; padding-top:10px; border-top:2px dashed #c8e6c9;">
-                    <div style="font-weight:600; font-size:0.65rem; color:#2e5e2e; margin-bottom:3px;">🏪 Фильтр магазинов для ТС:</div>
-                    <div class="store-filter-group" id="tsStoreFilter"></div>
-                    <div style="display:flex; gap:4px; margin-top:3px;">
-                        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="applyTsFilter()">✅ Применить</button>
-                        <button class="btn btn-warning btn-sm" style="flex:1;" onclick="resetTsFilter()">🗑️ Сбросить</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="right-panel">
-                <div class="right-header">
-                    <h3>📊 Токсичный сток</h3>
-                    <div class="action-buttons">
-                        <button class="btn btn-success btn-sm" onclick="exportTsAll()">📤 Выгрузить ТС</button>
-                        <button class="btn btn-primary btn-sm" onclick="exportTsTop10()">📤 ТОП-10</button>
-                    </div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card danger" onclick="exportTsAll()">
-                        <div class="value" id="tsTotal">0</div>
-                        <div class="label">📦 Всего ТС</div>
-                        <div class="hint">Клик для выгрузки</div>
-                    </div>
-                    <div class="stat-card warning" onclick="exportTransferCandidates()">
-                        <div class="value" id="tsTransfer">0</div>
-                        <div class="label">🔄 Рекомендаций</div>
-                        <div class="hint">Клик для выгрузки</div>
-                    </div>
-                    <div class="stat-card purple" onclick="exportTsByStore('all')">
-                        <div class="value" id="tsStores">0</div>
-                        <div class="label">🏪 Магазинов с ТС</div>
-                        <div class="hint">Клик для выгрузки</div>
-                    </div>
-                    <div class="stat-card success">
-                        <div class="value" id="tsTopArticle">-</div>
-                        <div class="label">🏆 Самый токсичный</div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:10px;">
-                    <div class="flex-between">
-                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔴 ТОП-10 токсичных артикулов</span>
-                        <button class="btn btn-success btn-sm" onclick="exportTsTop10()">📤 Выгрузить</button>
-                    </div>
-                    <div class="table-wrapper" style="max-height:220px;">
-                        <table id="tsTopTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Артикул</th>
-                                    <th>Наименование</th>
-                                    <th>Магазинов</th>
-                                    <th>ТС</th>
-                                    <th>Запас (дн)</th>
-                                    <th>Цена (руб)</th>
-                                    <th>Детали</th>
-                                    <th>Действие</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tsTopBody">
-                                <tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:10px;">
-                    <div class="flex-between">
-                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Рекомендации по трансферу (ТС → УТО)</span>
-                        <button class="btn btn-success btn-sm" onclick="exportTransferCandidates()">📤 Выгрузить</button>
-                    </div>
-                    <div class="table-wrapper" style="max-height:160px;">
-                        <table id="tsTransferTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Артикул</th>
-                                    <th>ТС магазины</th>
-                                    <th>УТО магазины</th>
-                                    <th>Продажи (шт)</th>
-                                    <th>Рекомендация</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tsTransferBody">
-                                <tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:10px;">
-                    <div class="flex-between">
-                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Трансфер между магазинами (ТС в одном, нет в другом)</span>
-                        <button class="btn btn-success btn-sm" onclick="exportCrossTransfer()">📤 Выгрузить</button>
-                    </div>
-                    <div class="table-wrapper" style="max-height:160px;">
-                        <table id="tsCrossTransferTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Артикул</th>
-                                    <th>ТС магазин</th>
-                                    <th>Нет ТС магазин</th>
-                                    <th>Продажи (шт)</th>
-                                    <th>Рекомендация</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tsCrossTransferBody">
-                                <tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex-between">
-                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">📋 Сводная таблица ТС по магазинам</span>
-                        <button class="btn btn-success btn-sm" onclick="exportTsPivot()">📤 Выгрузить</button>
-                    </div>
-                    <div class="table-wrapper" style="max-height:250px;">
-                        <table id="tsPivotTable">
-                            <thead id="tsPivotHeader"></thead>
-                            <tbody id="tsPivotBody">
-                                <tr><td style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <footer>ТС Аналитика — Управление токсичным стоком</footer>
-    </div>
-
-    <div class="toast-container" id="toastContainer"></div>
-
     <script>
         // ============================================================
         // ==================== ОСНОВНАЯ ЛОГИКА ====================
@@ -999,41 +8,17 @@
         let filteredData = [];
         let gammaData = [];
         let reservyData = [];
-        let utoData = [];
-        let bestsData = [];
-        let avtoMinData = [];
-        let maxData = [];
-        let ekspoData = [];
-        let postavkiData = [];
-        let korrekciiData = [];
-        let nedopostavkiData = [];
         let gammaRawData = [];
 
         let tsSelectedStores = new Set();
         let isDark = false;
 
-        // Кеши
+        // Кеш резервов
         const reservyMap = new Map();
-        const maxMap = new Map();
-        const avtoMinMap = new Map();
-        const bestsMap = new Map();
-        const utoMap = new Map();
-        const postavkiMap = new Map();
-        const korrekciiMap = new Map();
-        const nedopostavkiMap = new Map();
-        const ekspoMap = new Map();
 
         const reportFilePatterns = {
             "Гамма": ["гамма", "gamma"],
-            "Резервы": ["резервы", "резерв"],
-            "УТО": ["УТО", "uto", "UTO"],
-            "БЭСТ": ["бэст", "бест", "best"],
-            "Автоминимумы": ["автоминимум", "avto"],
-            "Максы": ["максы", "max", "MAX"],
-            "ЭКСПО": ["экспо", "expo"],
-            "Детали поставки": ["детали поставки", "поставки"],
-            "Коррекции": ["коррекции", "korrek"],
-            "Недопоставки": ["недопоставки", "nedopostav"]
+            "Резервы": ["резервы", "резерв"]
         };
 
         const reportNames = Object.keys(reportFilePatterns);
@@ -1169,7 +154,7 @@
             return '';
         }
 
-        // ---- Build Maps ----
+        // ---- Build Maps (только резервы) ----
         function buildMaps() {
             reservyMap.clear();
             for (const item of reservyData) {
@@ -1181,113 +166,7 @@
                     reservyMap.get(key).push(item);
                 }
             }
-
-            utoMap.clear();
-            for (const item of utoData) {
-                const store = getStoreValue(item, ['Магазин', '№ магазина']);
-                const art = String(item['Артикул'] || item['ЛМ-код'] || '').trim();
-                if (store && art) {
-                    utoMap.set(`${store}|${art}`, item);
-                }
-            }
-
-            maxMap.clear();
-            for (const item of maxData) {
-                const store = getStoreValue(item, ['Магазин', '№ магазина']);
-                const art = String(item['Артикул'] || '').trim();
-                if (store && art) {
-                    maxMap.set(`${store}|${art}`, {
-                        'Штуки, значение': item['Штуки, значение'] || '',
-                        'Дни, значение': item['Дни, значение'] || ''
-                    });
-                }
-            }
-
-            avtoMinMap.clear();
-            for (const item of avtoMinData) {
-                const store = getStoreValue(item, ['Магазин', '№ магазина']);
-                const art = String(item['Артикул'] || '').trim();
-                if (store && art) {
-                    avtoMinMap.set(`${store}|${art}`, item['Кол-во автоминимума'] || '');
-                }
-            }
-
-            bestsMap.clear();
-            for (const item of bestsData) {
-                let store = '';
-                for (const k of Object.keys(item)) {
-                    if (k.includes('Магазин') || k.includes('Store')) {
-                        store = extractStore(item[k]);
-                        if (store) break;
-                    }
-                }
-                const art = String(item['Артикул'] || '').trim();
-                if (store && art) bestsMap.set(`${store}|${art}`, '1');
-            }
-
-            ekspoMap.clear();
-            for (const item of ekspoData) {
-                const store = getStoreValue(item, ['№ Магазина', 'Магазин']);
-                const art = String(item['Артикул'] || '').trim();
-                if (store && art) {
-                    ekspoMap.set(`${store}|${art}`, toNumber(item['Кол-во EXPO']));
-                }
-            }
-
-            postavkiMap.clear();
-            for (const item of postavkiData) {
-                const code = String(item['Поставщик'] || item['№ поставщика'] || '').trim();
-                const days = String(item['Дни заказа'] || item['Дни выхода заказа'] || '').trim();
-                if (code && days) postavkiMap.set(code, days);
-            }
-
-            korrekciiMap.clear();
-            for (const item of korrekciiData) {
-                let store = '';
-                if (item['Магазин']) store = extractStore(item['Магазин']);
-                else if (item['№ магазина']) store = extractStore(item['№ магазина']);
-                else {
-                    for (const k of Object.keys(item)) {
-                        if (k.includes('Магазин') || k.includes('Store')) {
-                            store = extractStore(item[k]);
-                            if (store) break;
-                        }
-                    }
-                }
-                let art = '';
-                if (item['Артикул']) art = String(item['Артикул']).trim();
-                else if (item['SKU']) art = String(item['SKU']).trim();
-                else {
-                    for (const k of Object.keys(item)) {
-                        if (k.includes('Артикул') || k.includes('SKU')) {
-                            art = String(item[k]).trim();
-                            if (art) break;
-                        }
-                    }
-                }
-                const sum = toNumber(item['Сумма Количество'] || item['Количество'] || 0);
-                if (store && art) {
-                    const key = `${store}|${art}`;
-                    korrekciiMap.set(key, (korrekciiMap.get(key) || 0) + sum);
-                }
-            }
-
-            nedopostavkiMap.clear();
-            const orderSet = new Set();
-            for (const item of nedopostavkiData) {
-                const store = getStoreValue(item, ['Магазин', '№ магазина']);
-                const art = String(item['Артикул'] || '').trim();
-                const order = String(item['Заказ'] || '').trim();
-                if (store && art && order) {
-                    const key = `${store}|${art}`;
-                    const orderKey = `${key}|${order}`;
-                    if (!orderSet.has(orderKey)) {
-                        orderSet.add(orderKey);
-                        nedopostavkiMap.set(key, (nedopostavkiMap.get(key) || 0) + 1);
-                    }
-                }
-            }
-            console.log('✅ Кеши построены');
+            console.log('✅ Кеш резервов построен:', reservyMap.size, 'записей');
         }
 
         // ---- Calculate Row ----
@@ -1297,11 +176,10 @@
             if (!art) return null;
             const key = `${store}|${art}`;
 
-            const bestGamma = (toNumber(gammaItem['Сумма Best Seller']) + toNumber(gammaItem['Сумма Мертвый сток']) >= 1) ? 1 :
-            '';
-            const bestNext = bestsMap.has(key) ? 1 : '';
+            const bestGamma = (toNumber(gammaItem['Сумма Best Seller']) + toNumber(gammaItem['Сумма Мертвый сток']) >= 1) ? 1 : '';
 
-            let top = getFieldValue(gammaItem, ['Топ в магазине', 'ТОП', 'Top', 'топ']);
+            // ТОП — берём из "Сумма Топ в магазине"
+            let top = getFieldValue(gammaItem, ['Сумма Топ в магазине', 'Топ в магазине', 'ТОП', 'Top', 'топ']);
             if (top !== undefined && top !== null && top !== '') {
                 const ts = String(top).trim();
                 if (ts.match(/^\d+\.00$/)) top = ts.replace(/\.00$/, '');
@@ -1309,14 +187,15 @@
                 top = '';
             }
 
-            // Продажная цена магазина (столбец AG)
-            const salePrice = toNumber(gammaItem['Продажная цена магазина'] || gammaItem['Цена магазина'] || 0);
+            // Продажная цена — "Сумма Продажная цена магазина"
+            const salePrice = toNumber(
+                gammaItem['Сумма Продажная цена магазина'] ||
+                gammaItem['Продажная цена магазина'] ||
+                gammaItem['Цена магазина'] || 0
+            );
 
+            // MIN-данные из резервов
             const minDn = getMaxReserve(store, art);
-            const maxItem = maxMap.get(key);
-            const maxDn = maxItem ? (maxItem['Дни, значение'] || 0) : 0;
-            const maxSht = maxItem ? (maxItem['Штуки, значение'] || 0) : 0;
-            const avtoMin = avtoMinMap.get(key) || 0;
 
             const minTsProekt = getSumByReserve(store, art, 'Мин ЦО Амбиция проекта шт');
             const minTsPak = getSumByReserve(store, art, 'Мин ЦО Пак-Подиум шт');
@@ -1327,15 +206,15 @@
             const min902 = getSumByReserve(store, art, 'Мин Магазин В2В шт');
 
             const brak = getSumByReserve(store, art, 'Брак');
-            const ekspo = ekspoMap.get(key) || getSumByReserve(store, art, 'ЭКСПО') || 0;
+            const ekspo = getSumByReserve(store, art, 'ЭКСПО');
             const prezMin = getSumByReserve(store, art, 'През. минимум');
             const tjPak = getSumByReserve(store, art, 'ТЖ/ПАК');
             const podium = getSumByReserve(store, art, 'Подиум магазина');
             const ulichn = getSumByReserve(store, art, 'Уличн. торговля');
             const dopPrez = getSumByReserve(store, art, 'Резерв F');
 
+            // Наибольший MIN
             const minTypes = {
-                'Авто min': toNumber(avtoMin),
                 'min ЦО Проект': toNumber(minTsProekt),
                 'min ЦО ПАК-Подиум': toNumber(minTsPak),
                 'min ЦО коорд': toNumber(minTsKoord),
@@ -1355,7 +234,6 @@
             }
 
             const typeNames = {
-                'Авто min': 'Авто min',
                 'min ЦО Проект': 'min ЦО Проект',
                 'min ЦО ПАК-Подиум': 'min ЦО ПАК-Подиум',
                 'min ЦО коорд': 'min ЦО коорд',
@@ -1393,16 +271,7 @@
             const vmesimost = toNumber(gammaItem['Вместимость полки']);
             const zapasBolsheVmes = (zapasSht >= vmesimost && vmesimost > 0) ? 'да' : 'нет';
 
-            const utoItem = utoMap.get(key);
-            const utoRub = utoItem ? toNumber(utoItem['Уп.GMV руб']) || 0 : 0;
-            const utoSht = utoItem ? toNumber(utoItem['Уп.GMV шт']) || 0 : 0;
-            const pereboiCount = utoItem ? toNumber(utoItem['Кол-во случаев перебоя за 30 дней']) || 0 : 0;
-            const pereboiDays = utoItem ? toNumber(utoItem['Кол-во дней в перебое за 30 дней']) || 0 : 0;
-
             const supplierCode = String(gammaItem['Номер поставщика'] || gammaItem['№ Поставщика'] || '').trim();
-            const dniZakaza = postavkiMap.get(supplierCode) || '';
-            const korrekcii = korrekciiMap.get(key) || 0;
-            const nedopostavki = nedopostavkiMap.get(key) || 0;
 
             let percentZapasa = 0;
             if (vmesimost > 0 && zapasSht > 0) {
@@ -1414,15 +283,15 @@
                 'Артикул': art,
                 'Наименование': gammaItem['Наименование'] || '',
                 'BEST гамма': bestGamma,
-                'BEST NEXT': bestNext,
+                'BEST NEXT': '',
                 'Гамма': String(gammaItem['Гамма'] || '').trim(),
                 'ТОП': top,
                 'LOC': gammaItem['Признак LOC'] || '',
                 'Статус': gammaItem['Статус'] || '',
                 'CPQ': gammaItem['CPQ'] || '',
                 'min дн': cleanZero(minDn, 'min дн'),
-                'max дн.': cleanZero(maxDn, 'max дн.'),
-                'Авто min': cleanZero(avtoMin, 'Авто min'),
+                'max дн.': '',
+                'Авто min': '',
                 'min ЦО Проект': cleanZero(minTsProekt, 'min ЦО Проект'),
                 'min ЦО ПАК-Подиум': cleanZero(minTsPak, 'min ЦО ПАК-Подиум'),
                 'min ЦО коорд': cleanZero(minTsKoord, 'min ЦО коорд'),
@@ -1430,7 +299,7 @@
                 'min 441 ПМ': cleanZero(min441, 'min 441 ПМ'),
                 'min 500 Проект': cleanZero(min500, 'min 500 Проект'),
                 'min 902 B2B': cleanZero(min902, 'min 902 B2B'),
-                'max шт.': cleanZero(maxSht, 'max шт.'),
+                'max шт.': '',
                 'Брак': cleanZero(brak, 'Брак'),
                 'ЭКСПО': cleanZero(ekspo, 'ЭКСПО'),
                 'През. минимум': cleanZero(prezMin, 'През. минимум'),
@@ -1450,18 +319,18 @@
                 'В пути, шт.': cleanZero(vPutishSht, 'В пути, шт.'),
                 'В пути, дн.': vPutishDn === 999 ? 999 : cleanZero(vPutishDn, 'В пути, дн.'),
                 'Размер упаковки': gammaItem['Размер упаковки'] || '',
-                'УТО, руб.': cleanZero(utoRub, 'УТО, руб.'),
-                'УТО, шт.': cleanZero(utoSht, 'УТО, шт.'),
-                'Кол-во случаев перебоя за 30 дн': cleanZero(pereboiCount, 'Кол-во случаев перебоя за 30 дн'),
-                'Кол-во дней в перебое': cleanZero(pereboiDays, 'Кол-во дней в перебое'),
+                'УТО, руб.': '',
+                'УТО, шт.': '',
+                'Кол-во случаев перебоя за 30 дн': '',
+                'Кол-во дней в перебое': '',
                 '20/80': gammaItem['Сумма 20/80'] || '',
                 'ТС': gammaItem['Токсичный сток'] || '',
                 'МС': gammaItem['Сумма Мертвый сток'] || '',
-                'Корекции': cleanZero(korrekcii, 'Корекции'),
-                'Недопоставки': nedopostavki > 0 ? nedopostavki : '',
+                'Корекции': '',
+                'Недопоставки': '',
                 'Подотдел': gammaItem['Подотдел'] || '',
                 'ТИП': String(gammaItem['Тип'] || '').trim(),
-                'Дни выхода заказа поставщика': dniZakaza,
+                'Дни выхода заказа поставщика': '',
                 'Номер поставщика': supplierCode,
                 'Поставщик': gammaItem['Имя поставщика'] || '',
                 'Запас больше вместимости': zapasBolsheVmes,
@@ -1822,14 +691,12 @@
                 const tsStores = Array.from(data.tsStores);
                 const allStores = Array.from(data.stores);
 
-                // Магазины где нет ТС
                 const noTsStores = allStores.filter(s => !tsStores.includes(s));
 
                 for (const tsStore of tsStores) {
                     for (const noTsStore of noTsStores) {
                         const tsDetails = data.storeDetails[tsStore] || {};
                         const noTsDetails = data.storeDetails[noTsStore] || {};
-                        // Проверяем что в магазине без ТС есть продажи
                         if (noTsDetails.otgruzhenoSred > 0) {
                             crossTransfer.push({
                                 article: art,
@@ -1849,7 +716,6 @@
                 }
             }
 
-            // Сортируем по разнице в продажах
             crossTransfer.sort((a, b) => (b.noTsSales - b.tsSales) - (a.noTsSales - a.tsSales));
             tsData.crossTransfer = crossTransfer.slice(0, 10);
 
@@ -1911,7 +777,6 @@
                     if (mins.length) minInfo += (minInfo ? ' | ' : '') + mins.join(', ');
                 }
 
-                // Средний запас в днях
                 const avgDays = item.avgDays || 0;
 
                 tr.innerHTML = `
@@ -1947,7 +812,6 @@
 
             for (const item of candidates) {
                 const tr = document.createElement('tr');
-                // Определяем магазин с лучшими продажами среди УТО
                 let bestUtoStore = '';
                 let bestSales = 0;
                 for (const s of item.utoStores) {
@@ -1957,7 +821,6 @@
                         bestUtoStore = s;
                     }
                 }
-                // Определяем магазин с ТС где хуже всего продажи
                 let worstTsStore = '';
                 let worstSales = Infinity;
                 for (const s of item.tsStores) {
@@ -2110,7 +973,6 @@
                         const td = document.createElement('td');
                         td.textContent = vals[i];
                         td.style.textAlign = 'center';
-                        // Подсветка ТС
                         if (i === 2 && vals[i] === 1) {
                             td.classList.add('ts-cell-1');
                         }
@@ -2434,11 +1296,24 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
-                        if (!rawData || rawData.length < 4) { resolve(false); return; }
-                        const headers = rawData[2] ? rawData[2].map(h => String(h || '').trim()) : [];
+                        if (!rawData || rawData.length < 2) { resolve(false); return; }
+
+                        // Пытаемся найти строку заголовков: ищем среди первых 10 строк ту, где есть "Артикул"
+                        let headerRowIdx = -1;
+                        for (let i = 0; i < Math.min(10, rawData.length); i++) {
+                            const row = rawData[i] || [];
+                            const hasArticle = row.some(cell => String(cell || '').trim().toLowerCase() === 'артикул');
+                            if (hasArticle) {
+                                headerRowIdx = i;
+                                break;
+                            }
+                        }
+                        if (headerRowIdx === -1) headerRowIdx = 2; // fallback
+
+                        const headers = (rawData[headerRowIdx] || []).map(h => String(h || '').trim());
 
                         const jsonData = [];
-                        for (let i = 3; i < rawData.length; i++) {
+                        for (let i = headerRowIdx + 1; i < rawData.length; i++) {
                             const row = rawData[i];
                             if (!row || row.length === 0) continue;
                             const obj = {};
@@ -2470,7 +1345,6 @@
         async function autoLoadFiles(files) {
             const resultContainer = document.getElementById('autoLoadResultContainer');
             const resultDiv = document.getElementById('autoLoadResult');
-            const fileList = document.getElementById('fileList');
 
             resultContainer.style.display = 'block';
             resultDiv.innerHTML = '';
@@ -2480,14 +1354,6 @@
             reportNames.forEach(n => loadedReports[n] = false);
             gammaData = [];
             reservyData = [];
-            utoData = [];
-            bestsData = [];
-            avtoMinData = [];
-            maxData = [];
-            ekspoData = [];
-            postavkiData = [];
-            korrekciiData = [];
-            nedopostavkiData = [];
 
             const loadedFiles = {};
             let loadedCount = 0;
@@ -2506,30 +1372,6 @@
                                     break;
                                 case 'Резервы':
                                     targetArray = reservyData;
-                                    break;
-                                case 'УТО':
-                                    targetArray = utoData;
-                                    break;
-                                case 'БЭСТ':
-                                    targetArray = bestsData;
-                                    break;
-                                case 'Автоминимумы':
-                                    targetArray = avtoMinData;
-                                    break;
-                                case 'Максы':
-                                    targetArray = maxData;
-                                    break;
-                                case 'ЭКСПО':
-                                    targetArray = ekspoData;
-                                    break;
-                                case 'Детали поставки':
-                                    targetArray = postavkiData;
-                                    break;
-                                case 'Коррекции':
-                                    targetArray = korrekciiData;
-                                    break;
-                                case 'Недопоставки':
-                                    targetArray = nedopostavkiData;
                                     break;
                                 default:
                                     continue;
@@ -2634,8 +1476,8 @@
                 } catch (e) {}
             };
 
-            console.log('📊 ТС Аналитика v2.1');
-            console.log('💡 Загрузите отчёты и нажмите "ВЫЧИСЛИТЬ"');
+            console.log('📊 ТС Аналитика v2.2');
+            console.log('💡 Загрузите отчёты "Гамма" и "Резервы", затем нажмите "ВЫЧИСЛИТЬ"');
         });
 
         window.openMagPortal = openMagPortal;
@@ -2659,6 +1501,3 @@
         window.toggleAutoLoadResult = toggleAutoLoadResult;
         window.copyToClipboard = copyToClipboard;
     </script>
-
-</body>
-</html>
