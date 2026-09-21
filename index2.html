@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ТС Аналитика — Токсичный сток</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
         body { background: #f0f7f0; color: #1e2e1e; padding: 16px 20px; min-height: 100vh; }
@@ -112,23 +113,79 @@
         .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
         footer { margin-top: 16px; text-align: center; font-size: 0.5rem; color: #999; border-top: 1px solid #c8e6c9; padding-top: 10px; }
 
-        /* === ЦВЕТА ДЛЯ ТОПОВ === */
         .top-0 { background: #eceff1 !important; color: #607d8b !important; font-weight: 700 !important; text-align: center; }
         .top-1 { background: #c8e6c9 !important; color: #1b5e20 !important; font-weight: 700 !important; text-align: center; }
         .top-2 { background: #ffe0b2 !important; color: #e65100 !important; font-weight: 700 !important; text-align: center; }
         .top-other { background: #fff9c4 !important; color: #827717 !important; font-weight: 600 !important; text-align: center; }
-
-        /* === ТС-ячейки === */
         .ts-cell-1 { background: #c62828 !important; color: white !important; font-weight: 700 !important; text-align: center; }
         .ts-cell-0 { background: #f5f5f5 !important; color: #bbb !important; text-align: center; }
 
-        /* === ЦВЕТА МАГАЗИНОВ (динамически) === */
-        .store-header-even { background: #2e7d32 !important; }
-        .store-header-odd { background: #1565c0 !important; }
-
-        /* Сводная таблица: цвета колонок магазинов */
-        .store-col-even { background: #f1f8e9 !important; }
-        .store-col-odd { background: #e3f2fd !important; }
+        #tsPivotTable { table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 0.55rem; }
+        #tsPivotTable col.col-art { width: 85px; }
+        #tsPivotTable col.col-name { width: 170px; }
+        #tsPivotTable col.col-top { width: 40px; }
+        #tsPivotTable col.col-zap { width: 56px; }
+        #tsPivotTable col.col-ts { width: 32px; }
+        #tsPivotTable col.col-dn { width: 56px; }
+        #tsPivotTable col.col-vp { width: 56px; }
+        #tsPivotTable thead th.corner-1,
+        #tsPivotTable thead th.corner-2 {
+            position: sticky;
+            background: linear-gradient(135deg, #8d4a2b 0%, #b35a2e 100%) !important;
+            color: #fff5e6 !important;
+            z-index: 13;
+            font-weight: 700;
+            border-right: 2px solid #6b3820 !important;
+            border-bottom: 2px solid #6b3820 !important;
+            text-align: center;
+            padding: 4px 2px;
+        }
+        #tsPivotTable thead th.corner-1 { left: 0; }
+        #tsPivotTable thead th.corner-2 { left: 85px; }
+        #tsPivotTable thead th {
+            position: sticky;
+            color: white;
+            padding: 4px 2px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.5rem;
+            white-space: nowrap;
+            z-index: 5;
+            border-right: 1px solid rgba(255,255,255,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+        #tsPivotTable thead tr:nth-child(1) th { top: 0; z-index: 12; }
+        #tsPivotTable thead tr:nth-child(2) th { top: 22px; z-index: 11; }
+        #tsPivotTable tbody td {
+            padding: 3px 3px;
+            text-align: center;
+            border-bottom: 1px solid #e8f5e9;
+            border-right: 1px solid #eef7ee;
+            font-size: 0.55rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #tsPivotTable tbody td.cell-art {
+            position: sticky;
+            left: 0;
+            background: #ffffff;
+            z-index: 6;
+            font-weight: 600;
+            text-align: center;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+        #tsPivotTable tbody td.cell-name {
+            position: sticky;
+            left: 85px;
+            background: #ffffff;
+            z-index: 6;
+            text-align: left;
+            padding-left: 4px;
+            max-width: 170px;
+        }
+        #tsPivotTable tbody tr:hover td { filter: brightness(0.96); }
     </style>
 </head>
 <body>
@@ -152,11 +209,6 @@
                     <p><strong>2. 🧮 Расчёт</strong> — нажмите "ВЫЧИСЛИТЬ".</p>
                     <p><strong>3. 📊 ТС</strong> — аналитика по токсичному стоку.</p>
                     <p style="color:#2e7d32; margin-top:6px;">💡 Клик по артикулу → MagPortal</p>
-                    <p style="color:#666; margin-top:6px; font-size:0.7rem;">
-                        🎨 Цвета ТОП: <span class="badge top-0" style="padding:2px 8px;">0</span>
-                        <span class="badge top-1" style="padding:2px 8px;">1</span>
-                        <span class="badge top-2" style="padding:2px 8px;">2</span>
-                    </p>
                 </div>
             </div>
         </div>
@@ -241,7 +293,7 @@
                         <div class="label">📦 Всего ТС</div>
                         <div class="hint">Клик для выгрузки</div>
                     </div>
-                    <div class="stat-card warning" onclick="exportTransferCandidates()">
+                    <div class="stat-card warning" onclick="exportCrossTransfer()">
                         <div class="value" id="tsTransfer">0</div>
                         <div class="label">🔄 Рекомендаций</div>
                         <div class="hint">Клик для выгрузки</div>
@@ -289,12 +341,13 @@
                         <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Рекомендации по трансферу (ТС → УТО)</span>
                         <button class="btn btn-success btn-sm" onclick="exportTransferCandidates()">📤 Выгрузить</button>
                     </div>
-                    <div class="table-wrapper" style="max-height:160px;">
+                    <div class="table-wrapper" style="max-height:200px;">
                         <table id="tsTransferTable">
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Артикул</th>
+                                    <th>Наименование</th>
                                     <th>ТС магазины</th>
                                     <th>УТО магазины</th>
                                     <th>Продажи (шт)</th>
@@ -302,7 +355,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tsTransferBody">
-                                <tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
+                                <tr><td colspan="7" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -313,20 +366,22 @@
                         <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Трансфер между магазинами (ТС в одном, нет в другом)</span>
                         <button class="btn btn-success btn-sm" onclick="exportCrossTransfer()">📤 Выгрузить</button>
                     </div>
-                    <div class="table-wrapper" style="max-height:160px;">
+                    <div class="table-wrapper" style="max-height:280px;">
                         <table id="tsCrossTransferTable">
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Артикул</th>
-                                    <th>ТС магазин</th>
-                                    <th>Нет ТС магазин</th>
-                                    <th>Продажи (шт)</th>
+                                    <th>Наименование</th>
+                                    <th>Откуда (ТС)</th>
+                                    <th>Куда</th>
+                                    <th>Кол-во</th>
+                                    <th>Стоимость</th>
                                     <th>Рекомендация</th>
                                 </tr>
                             </thead>
                             <tbody id="tsCrossTransferBody">
-                                <tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
+                                <tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -337,8 +392,9 @@
                         <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">📋 Сводная таблица ТС по магазинам</span>
                         <button class="btn btn-success btn-sm" onclick="exportTsPivot()">📤 Выгрузить</button>
                     </div>
-                    <div class="table-wrapper" style="max-height:280px;">
+                    <div class="table-wrapper" style="max-height:300px;">
                         <table id="tsPivotTable">
+                            <colgroup id="tsPivotColgroup"></colgroup>
                             <thead id="tsPivotHeader"></thead>
                             <tbody id="tsPivotBody">
                                 <tr><td style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>
@@ -381,47 +437,21 @@
         let loadedReports = {};
         reportNames.forEach(n => loadedReports[n] = false);
 
-        // ---- Палитра для магазинов (чередование) ----
         const STORE_COLORS = [
-            '#e8f5e9', // светло-зелёный
-            '#e3f2fd', // светло-синий
-            '#fff3e0', // светло-оранжевый
-            '#f3e5f5', // светло-фиолетовый
-            '#e0f7fa', // светло-циан
-            '#fce4ec', // светло-розовый
-            '#f1f8e9', // салатовый
-            '#fff8e1', // светло-жёлтый
-            '#ede7f6', // лавандовый
-            '#fbe9e7'  // персиковый
+            '#e8f5e9', '#e3f2fd', '#fff3e0', '#f3e5f5', '#e0f7fa',
+            '#fce4ec', '#f1f8e9', '#fff8e1', '#ede7f6', '#fbe9e7'
         ];
         const STORE_HEADER_COLORS = [
-            '#2e7d32', // тёмно-зелёный
-            '#1565c0', // синий
-            '#e65100', // оранжевый
-            '#6a1b9a', // фиолетовый
-            '#00838f', // циан
-            '#ad1457', // малиновый
-            '#558b2f', // оливковый
-            '#f9a825', // жёлтый
-            '#4527a0', // индиго
-            '#bf360c'  // тёмно-оранжевый
+            '#2e7d32', '#1565c0', '#e65100', '#6a1b9a', '#00838f',
+            '#ad1457', '#558b2f', '#f9a825', '#4527a0', '#bf360c'
         ];
 
-        function getStoreColor(store, stores, light = true) {
-            const idx = stores.indexOf(String(store));
-            const palette = light ? STORE_COLORS : STORE_HEADER_COLORS;
-            return palette[(idx >= 0 ? idx : 0) % palette.length];
-        }
+        const TARGET_DAYS = 45;
+        const MIN_TRANSFER = 3;
+        const DEFAULT_START_STOCK_TOP1 = 10;
+        const DEFAULT_START_STOCK_TOP2 = 5;
+        const DEFAULT_START_STOCK_OTHER = 3;
 
-        function getStoreColorRGB(store, stores, light = true) {
-            const hex = getStoreColor(store, stores, light).replace('#', '');
-            return {
-                rgb: hex,
-                argb: 'FF' + hex.toUpperCase()
-            };
-        }
-
-        // ---- Toast ----
         function showToast(msg, type = 'info', duration = 3000) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -440,13 +470,8 @@
             }, duration);
         }
 
-        function toggleHelp() {
-            document.getElementById('helpModal').classList.toggle('show');
-        }
-        function closeHelp() {
-            document.getElementById('helpModal').classList.remove('show');
-        }
-
+        function toggleHelp() { document.getElementById('helpModal').classList.toggle('show'); }
+        function closeHelp() { document.getElementById('helpModal').classList.remove('show'); }
         function toggleTheme() {
             isDark = !isDark;
             document.body.style.background = isDark ? '#1a2a1a' : '#f0f7f0';
@@ -465,19 +490,16 @@
             const n = Number(s);
             return isNaN(n) ? def : n;
         }
-
         function round(v, d = 1) {
             const n = toNumber(v);
             const f = Math.pow(10, d);
             return Math.round(n * f) / f;
         }
-
         function extractStore(s) {
             if (!s) return '';
             const m = String(s).match(/^(\d+)/);
             return m ? String(parseInt(m[1], 10)) : String(s).trim();
         }
-
         function getStoreValue(item, keys = []) {
             for (const k of keys) {
                 if (item[k] !== undefined && item[k] !== null && String(item[k]).trim() !== '') {
@@ -492,21 +514,15 @@
             }
             return '';
         }
-
         function getSumByReserve(store, art, type) {
-            const key = `${store}|${art}`;
-            const items = reservyMap.get(key);
+            const items = reservyMap.get(`${store}|${art}`);
             if (!items) return 0;
             let sum = 0;
-            for (const item of items) {
-                if (item['Резерв'] === type) sum += toNumber(item['Кол-во резерва']);
-            }
+            for (const item of items) if (item['Резерв'] === type) sum += toNumber(item['Кол-во резерва']);
             return sum;
         }
-
         function getMaxReserve(store, art) {
-            const key = `${store}|${art}`;
-            const items = reservyMap.get(key);
+            const items = reservyMap.get(`${store}|${art}`);
             if (!items) return 0;
             let max = 0;
             for (const item of items) {
@@ -518,7 +534,6 @@
             }
             return max;
         }
-
         function cleanZero(v, col) {
             const zeroCols = ['max дн.', 'Авто min', 'min ЦО Проект', 'min ЦО ПАК-Подиум', 'min ЦО коорд',
                 'min 401 NEW', 'min 441 ПМ', 'min 500 Проект', 'min 902 B2B', 'max шт.', 'Брак',
@@ -528,7 +543,6 @@
             if (zeroCols.includes(col) && n === 0) return '';
             return n;
         }
-
         function getFieldValue(item, keys) {
             for (const k of keys) {
                 if (item[k] !== undefined && item[k] !== null && item[k] !== '') return item[k];
@@ -547,20 +561,14 @@
                     reservyMap.get(key).push(item);
                 }
             }
-
             utoMap.clear();
             for (const item of utoData) {
                 const store = getStoreValue(item, ['Магазин', '№ магазина']);
                 const art = String(item['Артикул'] || item['ЛМ-код'] || '').trim();
-                if (store && art) {
-                    utoMap.set(`${store}|${art}`, item);
-                }
+                if (store && art) utoMap.set(`${store}|${art}`, item);
             }
-
-            console.log('✅ Кеши: резервы =', reservyMap.size, ', УТО =', utoMap.size);
         }
 
-        // ---- Calculate Row ----
         function calculateRow(gammaItem) {
             const art = String(gammaItem['Артикул'] || '').trim();
             const store = String(gammaItem['№ магазина'] || '').trim();
@@ -569,14 +577,12 @@
 
             const bestGamma = (toNumber(gammaItem['Сумма Best Seller']) + toNumber(gammaItem['Сумма Мертвый сток']) >= 1) ? 1 : '';
 
-            // ТОП — из "Сумма Топ в магазине". ВАЖНО: 0 сохраняем как "0"!
             let topRaw = getFieldValue(gammaItem, ['Сумма Топ в магазине', 'Топ в магазине', 'ТОП', 'Top', 'топ']);
             let top = '';
             if (topRaw !== undefined && topRaw !== null && topRaw !== '') {
                 let ts = String(topRaw).trim();
                 if (ts.match(/^\d+\.00$/)) ts = ts.replace(/\.00$/, '');
                 ts = ts.replace(/\.0+$/, '');
-                // Сохраняем 0 как "0"
                 top = ts;
             }
 
@@ -587,7 +593,6 @@
             );
 
             const minDn = getMaxReserve(store, art);
-
             const minTsProekt = getSumByReserve(store, art, 'Мин ЦО Амбиция проекта шт');
             const minTsPak = getSumByReserve(store, art, 'Мин ЦО Пак-Подиум шт');
             const minTsKoord = getSumByReserve(store, art, 'Мин ЦО коорд. шт');
@@ -595,7 +600,6 @@
             const min441 = getSumByReserve(store, art, 'Мин Магазин ПМ шт');
             const min500 = getSumByReserve(store, art, 'Мин Магазин Амбиция проекта шт');
             const min902 = getSumByReserve(store, art, 'Мин Магазин В2В шт');
-
             const brak = getSumByReserve(store, art, 'Брак');
             const ekspo = getSumByReserve(store, art, 'ЭКСПО');
             const prezMin = getSumByReserve(store, art, 'През. минимум');
@@ -613,20 +617,14 @@
                 'min 500 Проект': toNumber(min500),
                 'min 902 B2B': toNumber(min902)
             };
-
             let maxMinVal = 0, maxMinType = '';
             for (const [t, v] of Object.entries(minTypes)) {
                 if (v > maxMinVal) { maxMinVal = v; maxMinType = t; }
             }
-
             const typeNames = {
-                'min ЦО Проект': 'min ЦО Проект',
-                'min ЦО ПАК-Подиум': 'min ЦО ПАК-Подиум',
-                'min ЦО коорд': 'min ЦО коорд',
-                'min 401 NEW': '401 NEW',
-                'min 441 ПМ': '441 ПМ',
-                'min 500 Проект': '500 Проект',
-                'min 902 B2B': '902 B2B'
+                'min ЦО Проект': 'min ЦО Проект', 'min ЦО ПАК-Подиум': 'min ЦО ПАК-Подиум',
+                'min ЦО коорд': 'min ЦО коорд', 'min 401 NEW': '401 NEW',
+                'min 441 ПМ': '441 ПМ', 'min 500 Проект': '500 Проект', 'min 902 B2B': '902 B2B'
             };
             const naibolshiyMin = maxMinVal > 0 ? `${typeNames[maxMinType] || maxMinType} (${maxMinVal})` : '';
 
@@ -671,19 +669,13 @@
             }
 
             return {
-                '№ магазина': store,
-                'Артикул': art,
-                'Наименование': gammaItem['Наименование'] || '',
-                'BEST гамма': bestGamma,
-                'BEST NEXT': '',
-                'Гамма': String(gammaItem['Гамма'] || '').trim(),
-                'ТОП': top,
-                'LOC': gammaItem['Признак LOC'] || '',
-                'Статус': gammaItem['Статус'] || '',
+                '№ магазина': store, 'Артикул': art, 'Наименование': gammaItem['Наименование'] || '',
+                'BEST гамма': bestGamma, 'BEST NEXT': '',
+                'Гамма': String(gammaItem['Гамма'] || '').trim(), 'ТОП': top,
+                'LOC': gammaItem['Признак LOC'] || '', 'Статус': gammaItem['Статус'] || '',
                 'CPQ': gammaItem['CPQ'] || '',
                 'min дн': cleanZero(minDn, 'min дн'),
-                'max дн.': '',
-                'Авто min': '',
+                'max дн.': '', 'Авто min': '',
                 'min ЦО Проект': cleanZero(minTsProekt, 'min ЦО Проект'),
                 'min ЦО ПАК-Подиум': cleanZero(minTsPak, 'min ЦО ПАК-Подиум'),
                 'min ЦО коорд': cleanZero(minTsKoord, 'min ЦО коорд'),
@@ -691,8 +683,7 @@
                 'min 441 ПМ': cleanZero(min441, 'min 441 ПМ'),
                 'min 500 Проект': cleanZero(min500, 'min 500 Проект'),
                 'min 902 B2B': cleanZero(min902, 'min 902 B2B'),
-                'max шт.': '',
-                'Брак': cleanZero(brak, 'Брак'),
+                'max шт.': '', 'Брак': cleanZero(brak, 'Брак'),
                 'ЭКСПО': cleanZero(ekspo, 'ЭКСПО'),
                 'През. минимум': cleanZero(prezMin, 'През. минимум'),
                 'ТЖ/ПАК': cleanZero(tjPak, 'ТЖ/ПАК'),
@@ -700,8 +691,7 @@
                 'Улич. Торг': cleanZero(ulichn, 'Улич. Торг'),
                 'Доп. презентация': cleanZero(dopPrez, 'Доп. презентация'),
                 'Наибольший резерв MIN': naibolshiyMin,
-                'Вид минимума': '',
-                'Кол-во проектов': '',
+                'Вид минимума': '', 'Кол-во проектов': '',
                 'Вместимость': cleanZero(vmesimost, 'Вместимость'),
                 'Наполненность полки': percentZapasa,
                 'Отгружено в сред. За 7 дн': cleanZero(otgruzhenoSred, 'Отгружено в сред. За 7 дн'),
@@ -718,8 +708,7 @@
                 '20/80': gammaItem['Сумма 20/80'] || '',
                 'ТС': gammaItem['Токсичный сток'] || '',
                 'МС': gammaItem['Сумма Мертвый сток'] || '',
-                'Корекции': '',
-                'Недопоставки': '',
+                'Корекции': '', 'Недопоставки': '',
                 'Подотдел': gammaItem['Подотдел'] || '',
                 'ТИП': String(gammaItem['Тип'] || '').trim(),
                 'Дни выхода заказа поставщика': '',
@@ -733,27 +722,19 @@
         }
 
         async function computeSummary() {
-            if (!gammaData.length) {
-                showToast('⚠️ Сначала загрузите файл "Гамма"', 'warning');
-                return;
-            }
-
+            if (!gammaData.length) { showToast('⚠️ Сначала загрузите файл "Гамма"', 'warning'); return; }
             buildMaps();
-
             const results = [];
             for (const item of gammaData) {
                 const row = calculateRow(item);
                 if (row) results.push(row);
             }
-
             fullData = results;
             filteredData = [...results];
-
             updateFilters();
             applyFilters();
             buildTsStoreFilter();
             buildTsData();
-
             showToast(`✅ Расчёт завершён! Найдено ${fullData.length} товаров`, 'success');
         }
 
@@ -763,13 +744,11 @@
                 if (row['№ магазина']) stores.add(String(row['№ магазина']));
                 if (row['Подотдел']) subdepts.add(String(row['Подотдел']));
             }
-
             const storeSel = document.getElementById('storeFilter');
             storeSel.innerHTML = '<option value="all">Все магазины</option>';
             Array.from(stores).sort((a, b) => parseInt(a) - parseInt(b)).forEach(s => {
                 storeSel.innerHTML += `<option value="${s}">${s}</option>`;
             });
-
             const subSel = document.getElementById('subdepartmentFilter');
             subSel.innerHTML = '<option value="all">Все подотделы</option>';
             Array.from(subdepts).sort().forEach(s => {
@@ -794,13 +773,8 @@
             if (minD > maxD)[minD, maxD] = [maxD, minD];
 
             let data = [...fullData];
-
-            if (store !== 'all') {
-                data = data.filter(r => String(r['№ магазина'] || '') === store);
-            }
-            if (subdept !== 'all') {
-                data = data.filter(r => String(r['Подотдел'] || '') === subdept);
-            }
+            if (store !== 'all') data = data.filter(r => String(r['№ магазина'] || '') === store);
+            if (subdept !== 'all') data = data.filter(r => String(r['Подотдел'] || '') === subdept);
             if (top !== 'all') {
                 data = data.filter(r => {
                     const t = String(r['ТОП'] ?? '').replace(/\.00$/, '').replace(/\.0+$/, '');
@@ -811,7 +785,6 @@
                 const d = toNumber(r['Запас, дн.'], 999);
                 return d >= minD && d <= maxD;
             });
-
             filteredData = data;
             buildTsData();
         }
@@ -828,10 +801,7 @@
         function openMagPortal(article) {
             if (!article) return;
             const clean = String(article).replace(/[^\d]/g, '');
-            if (clean.length < 4) {
-                showToast('❌ Некорректный артикул', 'warning');
-                return;
-            }
+            if (clean.length < 4) { showToast('❌ Некорректный артикул', 'warning'); return; }
             window.open(`https://magportal.lemanapro.ru/catalogproducts/product/${clean}`, '_blank');
             showToast(`🔗 Открываем ${clean} в MagPortal`, 'info', 1500);
         }
@@ -851,18 +821,15 @@
 
         let tsData = {
             items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [],
-            transferCandidates: [], crossTransfer: []
+            transferCandidates: [], crossTransfer: [],
+            byArticleAllStores: {}
         };
 
         function buildTsStoreFilter() {
             const container = document.getElementById('tsStoreFilter');
             if (!container) return;
-
             const stores = new Set();
-            for (const row of fullData) {
-                if (row['№ магазина']) stores.add(String(row['№ магазина']));
-            }
-
+            for (const row of fullData) if (row['№ магазина']) stores.add(String(row['№ магазина']));
             container.innerHTML = '';
             const sorted = Array.from(stores).sort((a, b) => parseInt(a) - parseInt(b));
 
@@ -894,9 +861,7 @@
                         document.getElementById('tsStoreAll').checked = false;
                     } else {
                         tsSelectedStores.delete(s);
-                        if (tsSelectedStores.size === 0) {
-                            document.getElementById('tsStoreAll').checked = true;
-                        }
+                        if (tsSelectedStores.size === 0) document.getElementById('tsStoreAll').checked = true;
                     }
                 };
                 label.appendChild(cb);
@@ -906,11 +871,7 @@
             }
         }
 
-        function applyTsFilter() {
-            buildTsData();
-            showToast('✅ Фильтр магазинов применён', 'info');
-        }
-
+        function applyTsFilter() { buildTsData(); showToast('✅ Фильтр магазинов применён', 'info'); }
         function resetTsFilter() {
             tsSelectedStores.clear();
             document.getElementById('tsStoreAll').checked = true;
@@ -922,25 +883,90 @@
         function buildTsData() {
             const data = filteredData.length ? filteredData : fullData;
             if (!data.length) {
-                tsData = { items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [], transferCandidates: [], crossTransfer: [] };
+                tsData = { items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [],
+                    transferCandidates: [], crossTransfer: [], byArticleAllStores: {} };
                 renderTsTable();
                 return;
             }
 
             let tsItems = data.filter(row => toNumber(row['ТС'], 0) === 1);
-
             if (tsSelectedStores.size > 0) {
                 tsItems = tsItems.filter(row => tsSelectedStores.has(String(row['№ магазина'] || '')));
             }
 
-            if (!tsItems.length) {
-                tsData = { items: [], byStore: {}, byArticle: {}, topArticles: [], stores: [], transferCandidates: [], crossTransfer: [] };
-                renderTsTable();
-                return;
+            let pivotSource = data;
+            if (tsSelectedStores.size > 0) {
+                pivotSource = pivotSource.filter(row => tsSelectedStores.has(String(row['№ магазина'] || '')));
             }
 
             const byStore = {};
             const byArticle = {};
+            const byArticleAllStores = {};
+
+            for (const row of pivotSource) {
+                const store = row['№ магазина'] || 'unknown';
+                const art = row['Артикул'] || 'unknown';
+                const name = row['Наименование'] || '';
+                const days = toNumber(row['Запас, дн.'], 999);
+                const transit = toNumber(row['В пути, дн.'], 0);
+                const top = row['ТОП'] || '';
+                const utoRub = toNumber(row['УТО, руб.'], 0);
+                const utoSht = toNumber(row['УТО, шт.'], 0);
+                const hasUto = utoRub > 0 || utoSht > 0;
+                const zapasSht = toNumber(row['Запас, шт.'], 0);
+                const min441 = toNumber(row['min 441 ПМ'], 0);
+                const min500 = toNumber(row['min 500 Проект'], 0);
+                const min401 = toNumber(row['min 401 NEW'], 0);
+                const naibMin = row['Наибольший резерв MIN'] || '';
+                const salePrice = toNumber(row['Продажная цена магазина'], 0);
+                const otgruzhenoSred = toNumber(row['Отгружено в сред. За 7 дн'], 0);
+                const isTs = toNumber(row['ТС'], 0) === 1;
+
+                if (!byArticleAllStores[art]) {
+                    byArticleAllStores[art] = {
+                        name: name, stores: new Set(), total: 0, hasUto: false,
+                        utoStores: new Set(), tsStores: new Set(), storeDetails: {},
+                        min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0
+                    };
+                }
+                const aAll = byArticleAllStores[art];
+                aAll.stores.add(store);
+                if (isTs) {
+                    aAll.total++;
+                    aAll.tsStores.add(store);
+                }
+                if (hasUto) { aAll.hasUto = true; aAll.utoStores.add(store); }
+                if (min441 > 0) aAll.min441 = min441;
+                if (min500 > 0) aAll.min500 = min500;
+                if (min401 > 0) aAll.min401 = min401;
+                if (naibMin) aAll.naibMin = naibMin;
+                if (salePrice > 0) aAll.salePrice = salePrice;
+                aAll.avgSales += otgruzhenoSred;
+                aAll.storeDetails[store] = {
+                    days, transit, zapasSht, utoRub, utoSht, hasUto, top,
+                    min441, min500, min401, naibMin, salePrice, otgruzhenoSred,
+                    isTs
+                };
+            }
+
+            for (const [art, d] of Object.entries(byArticleAllStores)) {
+                d.avgSales = d.stores.size > 0 ? round(d.avgSales / d.stores.size, 1) : 0;
+            }
+
+            if (!tsItems.length) {
+                const allPivotStores = new Set();
+                for (const art of Object.keys(byArticleAllStores)) {
+                    for (const s of byArticleAllStores[art].stores) allPivotStores.add(s);
+                }
+                tsData = {
+                    items: [], byStore: {}, byArticle: {}, topArticles: [],
+                    stores: Array.from(allPivotStores).sort((a, b) => parseInt(a) - parseInt(b)),
+                    transferCandidates: [], crossTransfer: [],
+                    byArticleAllStores
+                };
+                renderTsTable();
+                return;
+            }
 
             for (const row of tsItems) {
                 const store = row['№ магазина'] || 'unknown';
@@ -960,9 +986,7 @@
                 const salePrice = toNumber(row['Продажная цена магазина'], 0);
                 const otgruzhenoSred = toNumber(row['Отгружено в сред. За 7 дн'], 0);
 
-                if (!byStore[store]) {
-                    byStore[store] = { items: [], total: 0, articles: new Set() };
-                }
+                if (!byStore[store]) byStore[store] = { items: [], total: 0, articles: new Set() };
                 byStore[store].items.push(row);
                 byStore[store].total++;
                 byStore[store].articles.add(art);
@@ -974,28 +998,22 @@
                         min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0
                     };
                 }
-
                 const aData = byArticle[art];
                 aData.stores.add(store);
                 aData.total++;
                 aData.tsStores.add(store);
-                if (hasUto) {
-                    aData.hasUto = true;
-                    aData.utoStores.add(store);
-                }
+                if (hasUto) { aData.hasUto = true; aData.utoStores.add(store); }
                 if (min441 > 0) aData.min441 = min441;
                 if (min500 > 0) aData.min500 = min500;
                 if (min401 > 0) aData.min401 = min401;
                 if (naibMin) aData.naibMin = naibMin;
                 if (salePrice > 0) aData.salePrice = salePrice;
                 aData.avgSales += otgruzhenoSred;
-
                 aData.storeDetails[store] = {
                     days, transit, zapasSht, utoRub, utoSht, hasUto, top,
                     min441, min500, min401, naibMin, salePrice, otgruzhenoSred
                 };
             }
-
             for (const [art, data] of Object.entries(byArticle)) {
                 data.avgSales = data.stores.size > 0 ? round(data.avgSales / data.stores.size, 1) : 0;
             }
@@ -1024,43 +1042,96 @@
                 .sort((a, b) => b.utoStores.length - a.utoStores.length || b.tsStores.length - a.tsStores.length)
                 .slice(0, 10);
 
+            // ========== КРОСС-ТРАНСФЕР ==========
             const crossTransfer = [];
-            const allArticles = Object.keys(byArticle);
+            for (const art of Object.keys(byArticleAllStores)) {
+                const dataAll = byArticleAllStores[art];
+                const details = dataAll.storeDetails;
+                const storeList = Object.keys(details);
 
-            for (const art of allArticles) {
-                const data = byArticle[art];
-                const tsStores = Array.from(data.tsStores);
-                const allStores = Array.from(data.stores);
-                const noTsStores = allStores.filter(s => !tsStores.includes(s));
+                const donors = storeList.filter(s => {
+                    const d = details[s];
+                    return d.isTs && d.days > TARGET_DAYS && d.zapasSht > 0;
+                });
 
-                for (const tsStore of tsStores) {
-                    for (const noTsStore of noTsStores) {
-                        const tsDetails = data.storeDetails[tsStore] || {};
-                        const noTsDetails = data.storeDetails[noTsStore] || {};
-                        if (noTsDetails.otgruzhenoSred > 0) {
-                            crossTransfer.push({
-                                article: art, name: data.name,
-                                tsStore: tsStore, noTsStore: noTsStore,
-                                tsSales: tsDetails.otgruzhenoSred || 0,
-                                noTsSales: noTsDetails.otgruzhenoSred || 0,
-                                tsDays: tsDetails.days || 0, noTsDays: noTsDetails.days || 0,
-                                tsZapas: tsDetails.zapasSht || 0, noTsZapas: noTsDetails.zapasSht || 0,
-                                avgSales: data.avgSales
-                            });
+                const receivers = storeList.filter(s => {
+                    const d = details[s];
+                    if (d.isTs) return false;
+                    const hasTop = d.top === '1' || d.top === '2';
+                    const hasSales = d.otgruzhenoSred > 0;
+                    const isEmpty = d.zapasSht === 0;
+                    const lowStock = d.days < TARGET_DAYS || d.zapasSht === 0;
+                    return (hasTop || hasSales || isEmpty) && lowStock;
+                });
+
+                for (const donor of donors) {
+                    const dDonor = details[donor];
+                    const avgSalesDonor = dDonor.otgruzhenoSred > 0 ? dDonor.otgruzhenoSred : 0;
+                    const keepForDonor = avgSalesDonor > 0
+                        ? Math.ceil(TARGET_DAYS * avgSalesDonor / 7)
+                        : Math.ceil(dDonor.zapasSht * 0.5);
+                    const donorExcess = Math.max(0, dDonor.zapasSht - keepForDonor);
+                    if (donorExcess < MIN_TRANSFER) continue;
+
+                    for (const receiver of receivers) {
+                        const dRecv = details[receiver];
+                        const avgSalesRecv = dRecv.otgruzhenoSred > 0 ? dRecv.otgruzhenoSred : 0;
+                        let receiverNeed;
+                        if (avgSalesRecv > 0) {
+                            receiverNeed = Math.max(0, Math.ceil(TARGET_DAYS * avgSalesRecv / 7) - dRecv.zapasSht);
+                        } else {
+                            const startStock = dRecv.top === '1' ? DEFAULT_START_STOCK_TOP1 :
+                                              (dRecv.top === '2' ? DEFAULT_START_STOCK_TOP2 : DEFAULT_START_STOCK_OTHER);
+                            receiverNeed = Math.max(0, startStock - dRecv.zapasSht);
                         }
+                        if (receiverNeed < MIN_TRANSFER) continue;
+
+                        const qty = Math.min(donorExcess, receiverNeed);
+                        if (qty < MIN_TRANSFER) continue;
+
+                        const pricePerUnit = dRecv.salePrice || dDonor.salePrice || 0;
+                        const value = qty * pricePerUnit;
+
+                        crossTransfer.push({
+                            article: art,
+                            name: dataAll.name,
+                            tsStore: donor,
+                            noTsStore: receiver,
+                            tsSales: dDonor.otgruzhenoSred || 0,
+                            noTsSales: dRecv.otgruzhenoSred || 0,
+                            tsDays: dDonor.days || 0,
+                            noTsDays: dRecv.days || 0,
+                            tsZapas: dDonor.zapasSht || 0,
+                            noTsZapas: dRecv.zapasSht || 0,
+                            qty: qty,
+                            tsTop: dDonor.top || '-',
+                            noTsTop: dRecv.top || '-',
+                            value: value,
+                            avgSales: dataAll.avgSales
+                        });
                     }
                 }
             }
 
-            crossTransfer.sort((a, b) => (b.noTsSales - b.tsSales) - (a.noTsSales - a.tsSales));
-            tsData.crossTransfer = crossTransfer.slice(0, 10);
+            crossTransfer.sort((a, b) => {
+                const pA = (a.noTsTop === '1' ? 3 : a.noTsTop === '2' ? 2 : 1);
+                const pB = (b.noTsTop === '1' ? 3 : b.noTsTop === '2' ? 2 : 1);
+                return (pB * 1000 + b.qty) - (pA * 1000 + a.qty);
+            });
+            tsData.crossTransfer = crossTransfer.slice(0, 30);
+
+            const allPivotStores = new Set();
+            for (const art of Object.keys(byArticleAllStores)) {
+                for (const s of byArticleAllStores[art].stores) allPivotStores.add(s);
+            }
 
             tsData = {
                 items: tsItems, byStore, byArticle, topArticles,
-                stores: Object.keys(byStore), transferCandidates,
-                crossTransfer: tsData.crossTransfer || []
+                stores: Array.from(allPivotStores).sort((a, b) => parseInt(a) - parseInt(b)),
+                transferCandidates,
+                crossTransfer: tsData.crossTransfer || [],
+                byArticleAllStores
             };
-
             renderTsTable();
         }
 
@@ -1075,8 +1146,7 @@
         function renderTsStats() {
             document.getElementById('tsTotal').textContent = tsData.items.length;
             document.getElementById('tsStores').textContent = tsData.stores.length;
-            document.getElementById('tsTransfer').textContent = (tsData.transferCandidates.length || 0) + (tsData.crossTransfer.length || 0);
-
+            document.getElementById('tsTransfer').textContent = (tsData.crossTransfer || []).length;
             if (tsData.topArticles.length) {
                 const top = tsData.topArticles[0];
                 document.getElementById('tsTopArticle').textContent = `${top.article} (${top.storeCount})`;
@@ -1088,12 +1158,10 @@
         function renderTsTop() {
             const tbody = document.getElementById('tsTopBody');
             tbody.innerHTML = '';
-
             if (!tsData.topArticles.length) {
                 tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет токсичного стока</td></tr>';
                 return;
             }
-
             for (const item of tsData.topArticles) {
                 const tr = document.createElement('tr');
                 const storesStr = item.stores.join(', ');
@@ -1106,9 +1174,7 @@
                     if (item.min401 > 0) mins.push(`401:${item.min401}`);
                     if (mins.length) minInfo += (minInfo ? ' | ' : '') + mins.join(', ');
                 }
-
                 const avgDays = item.avgDays || 0;
-
                 tr.innerHTML = `
                     <td>${tsData.topArticles.indexOf(item) + 1}</td>
                     <td><span class="article-link" onclick="openMagPortal('${item.article}')">${item.article}</span></td>
@@ -1121,9 +1187,7 @@
                         <div>${storesStr}</div>
                         ${minInfo ? `<div style="color:#666;">${minInfo}</div>` : ''}
                     </td>
-                    <td>
-                        <button class="export-btn small" onclick="exportTsArticle('${item.article}')">📤</button>
-                    </td>
+                    <td><button class="export-btn small" onclick="exportTsArticle('${item.article}')">📤</button></td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -1132,13 +1196,11 @@
         function renderTsTransfer() {
             const tbody = document.getElementById('tsTransferBody');
             tbody.innerHTML = '';
-
             const candidates = tsData.transferCandidates || [];
             if (!candidates.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
                 return;
             }
-
             for (const item of candidates) {
                 const tr = document.createElement('tr');
                 let bestUtoStore = '', bestSales = 0;
@@ -1151,14 +1213,13 @@
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
                     if (sales < worstSales) { worstSales = sales; worstTsStore = s; }
                 }
-
                 const rec = bestUtoStore && worstTsStore ?
                     `📦 Трансфер из ${worstTsStore} (продажи ${worstSales}) → ${bestUtoStore} (продажи ${bestSales})` :
                     `🔄 Переместить товар в магазины с УТО: ${item.utoStores.join(', ')}`;
-
                 tr.innerHTML = `
                     <td>${candidates.indexOf(item) + 1}</td>
                     <td><span class="article-link" onclick="openMagPortal('${item.article}')">${item.article}</span></td>
+                    <td style="font-size:0.5rem;">${(item.name || '').substring(0, 30)}</td>
                     <td><span class="badge badge-ts">${item.tsStores.join(', ')}</span></td>
                     <td><span class="badge badge-uto">${item.utoStores.join(', ')}</span></td>
                     <td>${item.avgSales || 0}</td>
@@ -1171,35 +1232,28 @@
         function renderTsCrossTransfer() {
             const tbody = document.getElementById('tsCrossTransferBody');
             tbody.innerHTML = '';
-
             const items = tsData.crossTransfer || [];
             if (!items.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
                 return;
             }
-
             for (const item of items) {
                 const tr = document.createElement('tr');
-                const diff = item.noTsSales - item.tsSales;
-                const rec = diff > 0 ?
-                    `📈 Переместить из ${item.tsStore} (продажи ${item.tsSales}) → ${item.noTsStore} (продажи ${item.noTsSales}, прирост +${diff})` :
-                    `🔄 Рассмотреть перемещение из ${item.tsStore} → ${item.noTsStore}`;
+                const rec = `📦 Передать <b>${item.qty} шт</b> из <b>${item.tsStore}</b> (ТОП ${item.tsTop}, ${item.tsZapas} шт, ${item.tsDays} дн) → <b>${item.noTsStore}</b> (ТОП ${item.noTsTop}, ${item.noTsZapas} шт, ${item.noTsDays} дн)`;
 
                 tr.innerHTML = `
                     <td>${items.indexOf(item) + 1}</td>
                     <td><span class="article-link" onclick="openMagPortal('${item.article}')">${item.article}</span></td>
+                    <td style="font-size:0.5rem;">${(item.name || '').substring(0, 30)}</td>
                     <td><span class="badge badge-ts">${item.tsStore}</span></td>
                     <td><span class="badge badge-success">${item.noTsStore}</span></td>
-                    <td>${item.noTsSales || 0}</td>
-                    <td style="font-size:0.5rem;color:#2e7d32;">🔄 ${rec}</td>
+                    <td><b style="color:#c62828;">${item.qty}</b></td>
+                    <td>${item.value > 0 ? Math.round(item.value) + ' ₽' : '-'}</td>
+                    <td style="font-size:0.5rem;color:#2e7d32;">${rec}</td>
                 `;
                 tbody.appendChild(tr);
             }
         }
-
-        // ============================================================
-        // ==================== СВОДНАЯ ТАБЛИЦА ====================
-        // ============================================================
 
         function getTopClass(top) {
             const t = String(top ?? '').replace(/\.00$/, '').replace(/\.0+$/, '').trim();
@@ -1209,143 +1263,162 @@
             if (t === '') return '';
             return 'top-other';
         }
+        function topDisplay(top) {
+            if (top === undefined || top === null || top === '') return '-';
+            const t = String(top).replace(/\.00$/, '').replace(/\.0+$/, '').trim();
+            if (t === '' || t === '-') return '-';
+            return t;
+        }
 
         function renderTsPivot() {
             const thead = document.getElementById('tsPivotHeader');
             const tbody = document.getElementById('tsPivotBody');
+            const colgroup = document.getElementById('tsPivotColgroup');
 
             const stores = tsData.stores.sort((a, b) => parseInt(a) - parseInt(b));
-            const articles = Object.keys(tsData.byArticle).sort();
+            const articles = Object.keys(tsData.byArticleAllStores || {}).sort();
 
             thead.innerHTML = '';
+            tbody.innerHTML = '';
+            colgroup.innerHTML = '';
+
             if (!stores.length || !articles.length) {
                 tbody.innerHTML = '<tr><td style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>';
                 return;
             }
 
+            colgroup.innerHTML = `
+                <col class="col-art">
+                <col class="col-name">
+                ${stores.map(() => `
+                    <col class="col-top">
+                    <col class="col-zap">
+                    <col class="col-ts">
+                    <col class="col-dn">
+                    <col class="col-vp">
+                `).join('')}
+            `;
+
             const subCols = ['ТОП', 'Запас(шт)', 'ТС', 'Запас(дн)', 'В пути(дн)'];
 
-            // Верхняя строка заголовков — магазины (своим цветом)
             const hRow1 = document.createElement('tr');
             const thArt = document.createElement('th');
             thArt.textContent = 'Артикул';
+            thArt.className = 'corner-1';
             thArt.rowSpan = 2;
-            thArt.style.position = 'sticky';
-            thArt.style.left = '0';
-            thArt.style.zIndex = '11';
-            thArt.style.background = '#1e2e1e';
             hRow1.appendChild(thArt);
 
             const thName = document.createElement('th');
             thName.textContent = 'Наименование';
+            thName.className = 'corner-2';
             thName.rowSpan = 2;
-            thName.style.position = 'sticky';
-            thName.style.left = '80px';
-            thName.style.zIndex = '11';
-            thName.style.background = '#1e2e1e';
             hRow1.appendChild(thName);
 
             stores.forEach((s, idx) => {
                 const th = document.createElement('th');
                 th.colSpan = subCols.length;
                 th.textContent = `🏪 Магазин ${s}`;
-                th.style.textAlign = 'center';
                 th.style.background = STORE_HEADER_COLORS[idx % STORE_HEADER_COLORS.length];
                 th.style.color = 'white';
                 th.style.borderLeft = '2px solid white';
                 th.style.borderRight = '2px solid white';
+                th.style.top = '0';
                 hRow1.appendChild(th);
             });
             thead.appendChild(hRow1);
 
-            // Вторая строка — подколонки
             const hRow2 = document.createElement('tr');
             stores.forEach((s, idx) => {
-                subCols.forEach(c => {
+                subCols.forEach((c, j) => {
                     const th = document.createElement('th');
                     th.textContent = c;
-                    th.style.fontSize = '0.4rem';
                     th.style.background = STORE_HEADER_COLORS[idx % STORE_HEADER_COLORS.length];
                     th.style.color = 'white';
-                    th.style.opacity = '0.85';
-                    th.style.borderLeft = '1px solid white';
+                    th.style.opacity = '0.9';
+                    th.style.fontSize = '0.45rem';
+                    if (j === 0) th.style.borderLeft = '2px solid white';
+                    if (j === subCols.length - 1) th.style.borderRight = '2px solid white';
+                    th.style.top = '22px';
                     hRow2.appendChild(th);
                 });
             });
             thead.appendChild(hRow2);
 
-            tbody.innerHTML = '';
             const displayArts = articles.slice(0, 50);
-
             for (const art of displayArts) {
                 const tr = document.createElement('tr');
-                const data = tsData.byArticle[art];
+                const data = tsData.byArticleAllStores[art];
 
                 const tdArt = document.createElement('td');
-                tdArt.style.position = 'sticky';
-                tdArt.style.left = '0';
-                tdArt.style.zIndex = '5';
-                tdArt.style.background = 'white';
-                tdArt.style.fontWeight = '600';
+                tdArt.className = 'cell-art';
                 tdArt.innerHTML = `<span class="article-link" onclick="openMagPortal('${art}')">${art}</span>`;
                 tr.appendChild(tdArt);
 
                 const tdName = document.createElement('td');
-                tdName.style.position = 'sticky';
-                tdName.style.left = '80px';
-                tdName.style.zIndex = '5';
-                tdName.style.background = 'white';
-                tdName.style.maxWidth = '140px';
-                tdName.style.overflow = 'hidden';
-                tdName.style.textOverflow = 'ellipsis';
-                tdName.style.whiteSpace = 'nowrap';
-                tdName.textContent = (data.name || '').substring(0, 22);
+                tdName.className = 'cell-name';
+                tdName.textContent = data.name || '';
                 tdName.title = data.name || '';
                 tr.appendChild(tdName);
 
                 stores.forEach((store, storeIdx) => {
-                    const details = data.storeDetails[store] || {};
-                    const isTs = data.tsStores?.has(store) || false;
+                    const details = data.storeDetails[store] || null;
+                    const isTs = details ? (details.isTs === true || data.tsStores.has(store)) : false;
                     const storeBg = STORE_COLORS[storeIdx % STORE_COLORS.length];
 
-                    // ТОП
                     const tdTop = document.createElement('td');
-                    const topClass = getTopClass(details.top);
-                    tdTop.textContent = (details.top !== undefined && details.top !== null && details.top !== '') ? details.top : '-';
-                    if (topClass) tdTop.className = topClass;
-                    else { tdTop.style.textAlign = 'center'; tdTop.style.background = storeBg; }
+                    if (details) {
+                        const topClass = getTopClass(details.top);
+                        tdTop.textContent = topDisplay(details.top);
+                        if (topClass) tdTop.className = topClass;
+                        else tdTop.style.background = storeBg;
+                    } else {
+                        tdTop.textContent = '-';
+                        tdTop.style.background = storeBg;
+                        tdTop.style.color = '#bbb';
+                    }
                     tr.appendChild(tdTop);
 
-                    // Запас(шт)
                     const tdZap = document.createElement('td');
-                    tdZap.textContent = details.zapasSht || 0;
-                    tdZap.style.textAlign = 'center';
+                    tdZap.textContent = details ? (details.zapasSht || 0) : '-';
                     tdZap.style.background = storeBg;
+                    if (!details) tdZap.style.color = '#bbb';
                     tr.appendChild(tdZap);
 
-                    // ТС
                     const tdTs = document.createElement('td');
-                    tdTs.textContent = isTs ? 1 : 0;
-                    tdTs.className = isTs ? 'ts-cell-1' : 'ts-cell-0';
+                    if (details) {
+                        tdTs.textContent = isTs ? 1 : 0;
+                        tdTs.className = isTs ? 'ts-cell-1' : 'ts-cell-0';
+                    } else {
+                        tdTs.textContent = '-';
+                        tdTs.style.background = '#f5f5f5';
+                        tdTs.style.color = '#ccc';
+                    }
                     tr.appendChild(tdTs);
 
-                    // Запас(дн)
                     const tdDays = document.createElement('td');
-                    tdDays.textContent = details.days || 0;
-                    tdDays.style.textAlign = 'center';
-                    tdDays.style.background = storeBg;
-                    // Подсветка запаса в днях
-                    const dNum = toNumber(details.days, 0);
-                    if (dNum >= 100 && dNum < 999) tdDays.style.color = '#e65100';
-                    if (dNum >= 999) tdDays.style.color = '#c62828';
-                    if (dNum > 0 && dNum < 30) tdDays.style.color = '#2e7d32';
+                    if (details) {
+                        tdDays.textContent = details.days || 0;
+                        tdDays.style.background = storeBg;
+                        const dNum = toNumber(details.days, 0);
+                        if (dNum >= 100 && dNum < 999) tdDays.style.color = '#e65100';
+                        if (dNum >= 999) tdDays.style.color = '#c62828';
+                        if (dNum > 0 && dNum < 30) tdDays.style.color = '#2e7d32';
+                    } else {
+                        tdDays.textContent = '-';
+                        tdDays.style.background = storeBg;
+                        tdDays.style.color = '#bbb';
+                    }
                     tr.appendChild(tdDays);
 
-                    // В пути(дн)
                     const tdTransit = document.createElement('td');
-                    tdTransit.textContent = details.transit || 0;
-                    tdTransit.style.textAlign = 'center';
-                    tdTransit.style.background = storeBg;
+                    if (details) {
+                        tdTransit.textContent = details.transit || 0;
+                        tdTransit.style.background = storeBg;
+                    } else {
+                        tdTransit.textContent = '-';
+                        tdTransit.style.background = storeBg;
+                        tdTransit.style.color = '#bbb';
+                    }
                     tr.appendChild(tdTransit);
                 });
                 tbody.appendChild(tr);
@@ -1485,16 +1558,29 @@
         function exportCrossTransfer() {
             const items = tsData.crossTransfer || [];
             if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
-            const wsData = [['#', 'Артикул', 'Наименование', 'ТС магазин', 'Нет ТС магазин', 'Продажи в ТС', 'Продажи в нет ТС', 'Разница', 'Рекомендация']];
+            const wsData = [[
+                '#', 'Артикул', 'Наименование',
+                'Откуда (ТС)', 'ТОП откуда', 'Запас(шт) откуда', 'Запас(дн) откуда', 'Продажи/нед откуда',
+                'Куда', 'ТОП куда', 'Запас(шт) куда', 'Запас(дн) куда', 'Продажи/нед куда',
+                'Кол-во для трансфера', 'Стоимость (₽)'
+            ]];
             for (const item of items) {
-                const diff = item.noTsSales - item.tsSales;
-                const rec = diff > 0 ?
-                    `Переместить из ${item.tsStore} → ${item.noTsStore} (прирост +${diff})` :
-                    `Рассмотреть перемещение из ${item.tsStore} → ${item.noTsStore}`;
                 wsData.push([
-                    items.indexOf(item) + 1, item.article, item.name || '',
-                    item.tsStore, item.noTsStore, item.tsSales || 0, item.noTsSales || 0,
-                    diff, rec
+                    items.indexOf(item) + 1,
+                    item.article,
+                    item.name || '',
+                    item.tsStore,
+                    item.tsTop,
+                    item.tsZapas,
+                    item.tsDays,
+                    item.tsSales,
+                    item.noTsStore,
+                    item.noTsTop,
+                    item.noTsZapas,
+                    item.noTsDays,
+                    item.noTsSales,
+                    item.qty,
+                    item.value > 0 ? Math.round(item.value) : 0
                 ]);
             }
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1505,216 +1591,231 @@
             showToast(`✅ Выгружено ${items.length} рекомендаций`, 'success');
         }
 
-        // ==== ЭКСПОРТ СВОДНОЙ ТАБЛИЦЫ С ЦВЕТАМИ ====
-        function exportTsPivot() {
+        async function exportTsPivot() {
             const stores = tsData.stores.sort((a, b) => parseInt(a) - parseInt(b));
-            const articles = Object.keys(tsData.byArticle).sort();
+            const articles = Object.keys(tsData.byArticleAllStores || {}).sort();
             if (!stores.length || !articles.length) { showToast('Нет данных', 'warning'); return; }
+
+            if (typeof ExcelJS === 'undefined') {
+                showToast('❌ ExcelJS не загружен — проверьте интернет', 'error');
+                return;
+            }
 
             const subCols = ['ТОП', 'Запас(шт)', 'ТС', 'Запас(дн)', 'В пути(дн)'];
 
-            // Заголовок (одна строка)
-            const header = ['Артикул', 'Наименование'];
-            stores.forEach(s => {
-                subCols.forEach(c => {
-                    header.push(`${c} ${s}`);
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet('Сводная_ТС', {
+                views: [{ state: 'frozen', xSplit: 2, ySplit: 2 }]
+            });
+
+            ws.getColumn(1).width = 12;
+            ws.getColumn(2).width = 28;
+            let colIdx = 3;
+            stores.forEach(() => {
+                ws.getColumn(colIdx++).width = 8;
+                ws.getColumn(colIdx++).width = 10;
+                ws.getColumn(colIdx++).width = 6;
+                ws.getColumn(colIdx++).width = 10;
+                ws.getColumn(colIdx++).width = 10;
+            });
+
+            const row1 = ws.getRow(1);
+            row1.height = 24;
+            row1.getCell(1).value = 'Артикул';
+            row1.getCell(2).value = 'Наименование';
+            stores.forEach((s, i) => {
+                row1.getCell(3 + i * subCols.length).value = `🏪 Магазин ${s}`;
+            });
+
+            const row2 = ws.getRow(2);
+            row2.height = 18;
+            stores.forEach((s, i) => {
+                subCols.forEach((c, j) => {
+                    row2.getCell(3 + i * subCols.length + j).value = c;
                 });
             });
 
-            const wsData = [header];
-            const dataRows = [];
+            ws.mergeCells(1, 1, 2, 1);
+            ws.mergeCells(1, 2, 2, 2);
+            stores.forEach((s, i) => {
+                const startC = 3 + i * subCols.length;
+                const endC = startC + subCols.length - 1;
+                ws.mergeCells(1, startC, 1, endC);
+            });
 
+            const warmFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8D4A2B' } };
+            const warmFont = { bold: true, color: { argb: 'FFFFF5E6' }, size: 11, name: 'Calibri' };
+            const whiteFont = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11, name: 'Calibri' };
+            const whiteFontSmall = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9, name: 'Calibri' };
+            const thinWhiteBorder = {
+                top: { style: 'thin', color: { argb: 'FFFFFFFF' } },
+                bottom: { style: 'thin', color: { argb: 'FFFFFFFF' } },
+                left: { style: 'thin', color: { argb: 'FFFFFFFF' } },
+                right: { style: 'thin', color: { argb: 'FFFFFFFF' } }
+            };
+            const thinGrayBorder = {
+                top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+            };
+            const centerAlign = { horizontal: 'center', vertical: 'middle' };
+            const leftAlign = { horizontal: 'left', vertical: 'middle' };
+
+            [1, 2].forEach(c => {
+                const cell = ws.getCell(1, c);
+                cell.fill = warmFill; cell.font = warmFont; cell.alignment = centerAlign; cell.border = thinWhiteBorder;
+            });
+            [1, 2].forEach(c => {
+                const cell = ws.getCell(2, c);
+                cell.fill = warmFill; cell.border = thinWhiteBorder;
+            });
+
+            stores.forEach((s, i) => {
+                const hdrColor = STORE_HEADER_COLORS[i % STORE_HEADER_COLORS.length].replace('#', '').toUpperCase();
+                const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + hdrColor } };
+                const startC = 3 + i * subCols.length;
+                for (let c = startC; c < startC + subCols.length; c++) {
+                    const cell = ws.getCell(1, c);
+                    cell.fill = fill; cell.font = whiteFont; cell.alignment = centerAlign; cell.border = thinWhiteBorder;
+                }
+                subCols.forEach((label, j) => {
+                    const cell = ws.getCell(2, startC + j);
+                    cell.fill = fill; cell.font = whiteFontSmall; cell.alignment = centerAlign; cell.border = thinWhiteBorder;
+                });
+            });
+
+            let rowNum = 3;
             for (const art of articles) {
-                const data = tsData.byArticle[art];
-                const row = [art, data.name || ''];
-                stores.forEach(store => {
-                    const d = data.storeDetails[store] || {};
-                    const isTs = data.tsStores?.has(store) || false;
-                    row.push(
-                        (d.top !== undefined && d.top !== null && d.top !== '') ? d.top : '-',
-                        d.zapasSht || 0,
-                        isTs ? 1 : 0,
-                        d.days || 0,
-                        d.transit || 0
-                    );
-                });
-                dataRows.push(row);
-                wsData.push(row);
-            }
+                const data = tsData.byArticleAllStores[art];
+                const row = ws.getRow(rowNum);
+                row.height = 16;
 
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
+                const cellArt = row.getCell(1);
+                cellArt.value = art;
+                cellArt.font = { bold: true, size: 10, name: 'Calibri' };
+                cellArt.alignment = centerAlign;
+                cellArt.border = thinGrayBorder;
 
-            // Устанавливаем ширину колонок
-            ws['!cols'] = header.map((h, i) => {
-                if (i === 0) return { wch: 14 };
-                if (i === 1) return { wch: 28 };
-                return { wch: 10 };
-            });
+                const cellName = row.getCell(2);
+                cellName.value = data.name || '';
+                cellName.font = { size: 10, name: 'Calibri' };
+                cellName.alignment = leftAlign;
+                cellName.border = thinGrayBorder;
 
-            // ==== ЗАЛИВКА ЦВЕТАМИ ====
-            const xlsxRange = XLSX.utils.decode_range(ws['!ref']);
+                stores.forEach((store, i) => {
+                    const details = data.storeDetails[store] || null;
+                    const isTs = details ? (details.isTs === true || data.tsStores.has(store)) : false;
+                    const storeBg = STORE_COLORS[i % STORE_COLORS.length].replace('#', '').toUpperCase();
+                    const storeFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + storeBg } };
+                    const base = 3 + i * subCols.length;
 
-            // 1. Заливка заголовков магазинов + ТОП-подколонок
-            // Колонки магазинов: начиная с колонки 2 (C), группы по 5
-            for (let storeIdx = 0; storeIdx < stores.length; storeIdx++) {
-                const startCol = 2 + storeIdx * subCols.length;
-                const headerColor = STORE_HEADER_COLORS[storeIdx % STORE_HEADER_COLORS.length]
-                    .replace('#', '').toUpperCase();
-
-                for (let c = 0; c < subCols.length; c++) {
-                    const colIdx = startCol + c;
-                    const addr = XLSX.utils.encode_cell({ r: 0, c: colIdx });
-                    if (!ws[addr]) ws[addr] = { t: 's', v: header[colIdx] };
-                    ws[addr].s = {
-                        fill: { fgColor: { rgb: 'FF' + headerColor } },
-                        font: { color: { rgb: 'FFFFFFFF' }, bold: true, sz: 10 },
-                        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-                        border: {
-                            top: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
-                            bottom: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
-                            left: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
-                            right: { style: 'thin', color: { rgb: 'FFFFFFFF' } }
+                    const cellTop = row.getCell(base);
+                    if (details) {
+                        const topVal = topDisplay(details.top);
+                        const topStr = String(topVal).replace(/\.00$/, '').replace(/\.0+$/, '').trim();
+                        cellTop.value = topVal;
+                        cellTop.alignment = centerAlign;
+                        cellTop.border = thinGrayBorder;
+                        if (topStr === '0') {
+                            cellTop.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECEFF1' } };
+                            cellTop.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FF607D8B' } };
+                        } else if (topStr === '1') {
+                            cellTop.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8E6C9' } };
+                            cellTop.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FF1B5E20' } };
+                        } else if (topStr === '2') {
+                            cellTop.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE0B2' } };
+                            cellTop.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FFE65100' } };
+                        } else if (topStr === '-' || topStr === '') {
+                            cellTop.fill = storeFill;
+                            cellTop.font = { size: 10, name: 'Calibri', color: { argb: 'FFAAAAAA' } };
+                        } else {
+                            cellTop.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+                            cellTop.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FF827717' } };
                         }
-                    };
-                }
-            }
-
-            // Заливка первых 2 колонок заголовка
-            [0, 1].forEach(c => {
-                const addr = XLSX.utils.encode_cell({ r: 0, c });
-                if (!ws[addr]) ws[addr] = { t: 's', v: header[c] };
-                ws[addr].s = {
-                    fill: { fgColor: { rgb: 'FF1E2E1E' } },
-                    font: { color: { rgb: 'FFFFFFFF' }, bold: true, sz: 11 },
-                    alignment: { horizontal: 'center', vertical: 'center' },
-                    border: {
-                        top: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
-                        bottom: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
-                        left: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
-                        right: { style: 'thin', color: { rgb: 'FFFFFFFF' } }
+                    } else {
+                        cellTop.value = '-';
+                        cellTop.fill = storeFill;
+                        cellTop.font = { size: 10, name: 'Calibri', color: { argb: 'FFAAAAAA' } };
+                        cellTop.alignment = centerAlign;
+                        cellTop.border = thinGrayBorder;
                     }
-                };
-            });
 
-            // 2. Заливка строк данных
-            for (let r = 1; r <= dataRows.length; r++) {
-                // Артикул и Наименование — нейтральные
-                [0, 1].forEach(c => {
-                    const addr = XLSX.utils.encode_cell({ r, c });
-                    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
-                    ws[addr].s = {
-                        fill: { fgColor: { rgb: 'FFFFFFFF' } },
-                        font: { bold: c === 0, sz: 10 },
-                        alignment: { vertical: 'center', horizontal: c === 0 ? 'left' : 'left' }
-                    };
+                    const cellZap = row.getCell(base + 1);
+                    cellZap.value = details ? (details.zapasSht || 0) : '-';
+                    cellZap.fill = storeFill;
+                    cellZap.alignment = centerAlign;
+                    cellZap.font = { size: 10, name: 'Calibri', color: { argb: details ? 'FF1E2E1E' : 'FFAAAAAA' } };
+                    cellZap.border = thinGrayBorder;
+
+                    const cellTs = row.getCell(base + 2);
+                    if (details) {
+                        cellTs.value = isTs ? 1 : 0;
+                        cellTs.alignment = centerAlign;
+                        cellTs.border = thinGrayBorder;
+                        if (isTs) {
+                            cellTs.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC62828' } };
+                            cellTs.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FFFFFFFF' } };
+                        } else {
+                            cellTs.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
+                            cellTs.font = { size: 10, name: 'Calibri', color: { argb: 'FFBBBBBB' } };
+                        }
+                    } else {
+                        cellTs.value = '-';
+                        cellTs.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
+                        cellTs.font = { size: 10, name: 'Calibri', color: { argb: 'FFCCCCCC' } };
+                        cellTs.alignment = centerAlign;
+                        cellTs.border = thinGrayBorder;
+                    }
+
+                    const cellD = row.getCell(base + 3);
+                    if (details) {
+                        const dVal = details.days || 0;
+                        cellD.value = dVal;
+                        cellD.fill = storeFill;
+                        cellD.alignment = centerAlign;
+                        cellD.border = thinGrayBorder;
+                        const dNum = toNumber(dVal, 0);
+                        if (dNum >= 999) cellD.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FFC62828' } };
+                        else if (dNum >= 100) cellD.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FFE65100' } };
+                        else if (dNum > 0 && dNum < 30) cellD.font = { size: 10, name: 'Calibri', color: { argb: 'FF2E7D32' } };
+                        else cellD.font = { size: 10, name: 'Calibri' };
+                    } else {
+                        cellD.value = '-';
+                        cellD.fill = storeFill;
+                        cellD.font = { size: 10, name: 'Calibri', color: { argb: 'FFAAAAAA' } };
+                        cellD.alignment = centerAlign;
+                        cellD.border = thinGrayBorder;
+                    }
+
+                    const cellT = row.getCell(base + 4);
+                    cellT.value = details ? (details.transit || 0) : '-';
+                    cellT.fill = storeFill;
+                    cellT.alignment = centerAlign;
+                    cellT.font = { size: 10, name: 'Calibri', color: { argb: details ? 'FF1E2E1E' : 'FFAAAAAA' } };
+                    cellT.border = thinGrayBorder;
                 });
 
-                for (let storeIdx = 0; storeIdx < stores.length; storeIdx++) {
-                    const startCol = 2 + storeIdx * subCols.length;
-                    const storeBg = STORE_COLORS[storeIdx % STORE_COLORS.length].replace('#', '').toUpperCase();
-
-                    const top = dataRows[r - 1][startCol];
-                    const zapSht = dataRows[r - 1][startCol + 1];
-                    const tsVal = dataRows[r - 1][startCol + 2];
-                    const zapDn = dataRows[r - 1][startCol + 3];
-                    const transit = dataRows[r - 1][startCol + 4];
-
-                    // ТОП — особый цвет
-                    const topAddr = XLSX.utils.encode_cell({ r, c: startCol });
-                    if (!ws[topAddr]) ws[topAddr] = { t: 'n', v: top };
-                    let topFill = storeBg;
-                    let topFont = 'FF1E2E1E';
-                    const topStr = String(top ?? '').replace(/\.00$/, '').replace(/\.0+$/, '').trim();
-                    if (topStr === '0') { topFill = 'FFECEFF1'; topFont = 'FF607D8B'; }
-                    else if (topStr === '1') { topFill = 'FFC8E6C9'; topFont = 'FF1B5E20'; }
-                    else if (topStr === '2') { topFill = 'FFFFE0B2'; topFont = 'FFE65100'; }
-                    else if (topStr === '' || topStr === '-') { topFill = storeBg; }
-                    else { topFill = 'FFFFF9C4'; topFont = 'FF827717'; }
-
-                    ws[topAddr].s = {
-                        fill: { fgColor: { rgb: topFill } },
-                        font: { color: { rgb: topFont }, bold: true, sz: 10 },
-                        alignment: { horizontal: 'center', vertical: 'center' },
-                        border: {
-                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
-                        }
-                    };
-
-                    // Запас(шт)
-                    const zapAddr = XLSX.utils.encode_cell({ r, c: startCol + 1 });
-                    if (!ws[zapAddr]) ws[zapAddr] = { t: 'n', v: zapSht };
-                    ws[zapAddr].s = {
-                        fill: { fgColor: { rgb: storeBg } },
-                        alignment: { horizontal: 'center', vertical: 'center' },
-                        border: {
-                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
-                        }
-                    };
-
-                    // ТС
-                    const tsAddr = XLSX.utils.encode_cell({ r, c: startCol + 2 });
-                    if (!ws[tsAddr]) ws[tsAddr] = { t: 'n', v: tsVal };
-                    ws[tsAddr].s = {
-                        fill: { fgColor: { rgb: tsVal === 1 ? 'FFC62828' : 'FFF5F5F5' } },
-                        font: { color: { rgb: tsVal === 1 ? 'FFFFFFFF' : 'FFBBBBBB' }, bold: tsVal === 1, sz: 10 },
-                        alignment: { horizontal: 'center', vertical: 'center' },
-                        border: {
-                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
-                        }
-                    };
-
-                    // Запас(дн)
-                    const daysAddr = XLSX.utils.encode_cell({ r, c: startCol + 3 });
-                    if (!ws[daysAddr]) ws[daysAddr] = { t: 'n', v: zapDn };
-                    let daysFont = 'FF1E2E1E';
-                    const dNum = toNumber(zapDn, 0);
-                    if (dNum >= 999) daysFont = 'FFC62828';
-                    else if (dNum >= 100) daysFont = 'FFE65100';
-                    else if (dNum > 0 && dNum < 30) daysFont = 'FF2E7D32';
-                    ws[daysAddr].s = {
-                        fill: { fgColor: { rgb: storeBg } },
-                        font: { color: { rgb: daysFont }, bold: dNum >= 100 },
-                        alignment: { horizontal: 'center', vertical: 'center' },
-                        border: {
-                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
-                        }
-                    };
-
-                    // В пути(дн)
-                    const transAddr = XLSX.utils.encode_cell({ r, c: startCol + 4 });
-                    if (!ws[transAddr]) ws[transAddr] = { t: 'n', v: transit };
-                    ws[transAddr].s = {
-                        fill: { fgColor: { rgb: storeBg } },
-                        alignment: { horizontal: 'center', vertical: 'center' },
-                        border: {
-                            top: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            left: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
-                            right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
-                        }
-                    };
-                }
+                rowNum++;
             }
 
-            // Включаем стили в книгу
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Сводная_ТС');
-
-            const today = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, `Сводная_ТС_${today}.xlsx`, { cellStyles: true });
-            showToast('✅ Сводная таблица с цветами выгружена', 'success');
+            try {
+                const buf = await wb.xlsx.writeBuffer();
+                const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const today = new Date().toISOString().split('T')[0];
+                a.download = `Сводная_ТС_${today}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('✅ Сводная таблица выгружена', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Ошибка экспорта: ' + err.message, 'error');
+            }
         }
 
         // ============================================================
@@ -1764,7 +1865,6 @@
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
                         if (!rawData || rawData.length < 2) { resolve(false); return; }
-
                         let headerRowIdx = -1;
                         for (let i = 0; i < Math.min(10, rawData.length); i++) {
                             const row = rawData[i] || [];
@@ -1772,7 +1872,6 @@
                             if (hasArticle) { headerRowIdx = i; break; }
                         }
                         if (headerRowIdx === -1) headerRowIdx = 2;
-
                         const headers = (rawData[headerRowIdx] || []).map(h => String(h || '').trim());
                         const jsonData = [];
                         for (let i = headerRowIdx + 1; i < rawData.length; i++) {
@@ -1807,19 +1906,15 @@
         async function autoLoadFiles(files) {
             const resultContainer = document.getElementById('autoLoadResultContainer');
             const resultDiv = document.getElementById('autoLoadResult');
-
             resultContainer.style.display = 'block';
             resultDiv.innerHTML = '';
             resultDiv.classList.remove('collapsed');
-
             reportNames.forEach(n => loadedReports[n] = false);
             gammaData = [];
             reservyData = [];
             utoData = [];
-
             const loadedFiles = {};
             let loadedCount = 0;
-
             for (const file of files) {
                 const name = file.name.toLowerCase();
                 let found = false;
@@ -1847,7 +1942,6 @@
                     if (found) break;
                 }
             }
-
             let resultHtml = '';
             for (const report of reportNames) {
                 const status = loadedReports[report] ? '✅' : '❌';
@@ -1859,12 +1953,9 @@
                 resultHtml += `<div class="result-item"><span class="${statusClass}">${status}</span> <strong>${report}</strong>: ${copyable}</div>`;
             }
             resultHtml += `<div style="margin-top:6px;font-weight:700;color:#2e7d32;">✅ Загружено ${loadedCount} из ${reportNames.length} отчётов</div>`;
-
             resultDiv.innerHTML = resultHtml;
-
             document.getElementById('loadedCount').textContent = loadedCount;
             document.getElementById('statusMessage').textContent = loadedCount > 0 ? '✅ Загружено' : '❌ Ошибка';
-
             if (gammaData.length) {
                 showToast(`✅ Загружено ${loadedCount} отчётов. Нажмите "ВЫЧИСЛИТЬ"`, 'success');
             } else {
@@ -1881,7 +1972,6 @@
                 fallbackCopy(text);
             }
         }
-
         function fallbackCopy(text) {
             const textArea = document.createElement('textarea');
             textArea.value = text;
@@ -1899,10 +1989,6 @@
             document.body.removeChild(textArea);
         }
 
-        // ============================================================
-        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
-        // ============================================================
-
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 const saved = localStorage.getItem('ts_stores');
@@ -1911,21 +1997,17 @@
                     if (Array.isArray(arr)) tsSelectedStores = new Set(arr);
                 }
             } catch (e) {}
-
             const origApply = applyTsFilter;
             applyTsFilter = function() {
                 origApply();
                 try { localStorage.setItem('ts_stores', JSON.stringify(Array.from(tsSelectedStores))); } catch (e) {}
             };
-
             const origReset = resetTsFilter;
             resetTsFilter = function() {
                 origReset();
                 try { localStorage.setItem('ts_stores', JSON.stringify([])); } catch (e) {}
             };
-
-            console.log('📊 ТС Аналитика v2.4');
-            console.log('💡 Загрузите "Гамма", "Резервы", "УТО", нажмите "ВЫЧИСЛИТЬ"');
+            console.log('📊 ТС Аналитика v3.3 (с наименованием в рекомендациях)');
         });
 
         window.openMagPortal = openMagPortal;
