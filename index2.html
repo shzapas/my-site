@@ -200,18 +200,56 @@
         </div>
 
         <div id="helpModal" class="modal-overlay">
-            <div class="modal-content">
-                <button class="modal-close" onclick="closeHelp()">✕</button>
-                <h2>📊 ТС Аналитика</h2>
-                <div class="subtitle">Управление токсичным стоком</div>
-                <div style="font-size:0.8rem; line-height:1.6;">
-                    <p><strong>1. 📁 Загрузка</strong> — выберите папку с отчётами (Гамма + Резервы + УТО).</p>
-                    <p><strong>2. 🧮 Расчёт</strong> — нажмите "ВЫЧИСЛИТЬ".</p>
-                    <p><strong>3. 📊 ТС</strong> — аналитика по токсичному стоку.</p>
-                    <p style="color:#2e7d32; margin-top:6px;">💡 Клик по артикулу → MagPortal</p>
-                </div>
-            </div>
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeHelp()">✕</button>
+        <h2>📊 ТС Аналитика</h2>
+        <div class="subtitle">Краткая инструкция</div>
+
+        <div style="font-size:0.8rem; line-height:1.6;">
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:12px;">📁 1. Загрузка</h3>
+            <p>Нажмите <b>«📁 Загрузить отчёты из папки»</b> и выберите папку с файлами <b>Гамма + Резервы + УТО</b>. Имена должны содержать: <code>гамма</code>, <code>резерв</code>, <code>УТО</code>. Обязателен только Гамма — остальные опциональны.</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🧮 2. Расчёт</h3>
+            <p>Нажмите <b>«🧮 ВЫЧИСЛИТЬ»</b>. Система посчитает запас, MIN, найдёт ТС и сформирует рекомендации.</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🎛️ 3. Фильтры</h3>
+            <p><b>Магазин</b>, <b>Подотдел</b>, <b>ТОП</b> (0/1/2), <b>Запас (дн)</b> — например <code>100-999</code> для переполненных. Кнопки: <b>✅ Применить</b> / <b>🔄 Сбросить</b>.</p>
+            <p>Внизу — чекбоксы магазинов для ТС (сохраняются в браузере).</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">📊 4. Таблицы</h3>
+            <p><b>🔴 ТОП-10</b> — самые проблемные артикулы по числу магазинов с ТС.</p>
+            <p><b>🟣 ТС → УТО</b> — где ТС, а где дефицит (упущенные продажи). Показывает маршрут.</p>
+            <p><b>🟠 Трансфер между магазинами</b> — универсальные рекомендации с <b>конкретным количеством</b> штук.</p>
+            <p style="background:#e3f2fd; padding:5px 8px; border-left:3px solid #1565c0; border-radius:4px; font-size:0.72rem; margin-top:4px;">
+                💡 Формула: <b>Излишек</b> = запас − (45 × продажи / 7). <b>Нужда</b> = (45 × продажи / 7) − запас. <b>К передаче</b> = min(излишек, нужда), но ≥3 шт. 45 дней — настройка <code>TARGET_DAYS</code>.
+            </p>
+            <p><b>🟢 Сводная</b> — все магазины по артикулу. Цвета: ТОП 0 серый / 1 зелёный / 2 оранжевый, ТС=1 красный, <b>«-»</b> = магазин отсутствует в отчёте.</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">📤 5. Экспорт</h3>
+            <p>Кнопки <b>📤 Выгрузить</b> в каждой таблице. Сводная выгружается с полными цветами (ExcelJS). Имена: <code>ТС_все</code>, <code>ТОП10_ТС</code>, <code>Кросс_трансфер</code>, <code>Сводная_ТС</code> и т.д. с датой.</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">⚙️ Настройки в коде</h3>
+            <ul style="margin-left:16px; font-size:0.72rem;">
+                <li><code>TARGET_DAYS = 45</code> — целевой запас в днях</li>
+                <li><code>MIN_TRANSFER = 3</code> — мин. штук для рекомендации</li>
+                <li>Стартовые запасы ТОП 1/2: 10 / 5 / 3 шт</li>
+            </ul>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">💡 Полезное</h3>
+            <ul style="margin-left:16px; font-size:0.72rem;">
+                <li>Клик по артикулу → MagPortal</li>
+                <li>Клик по KPI-карточке → выгрузка соответствующей таблицы</li>
+                <li>Пустые таблицы — нажмите <b>🧮 ВЫЧИСЛИТЬ</b></li>
+                <li>Нет рекомендаций — уменьшите <code>TARGET_DAYS</code> до 30</li>
+            </ul>
+
+            <p style="margin-top:14px; padding-top:8px; border-top:1px solid #c8e6c9; text-align:center; color:#999; font-size:0.65rem;">
+                ТС Аналитика v3.3
+            </p>
         </div>
+    </div>
+</div>
 
         <div class="dashboard">
             <div class="left-panel">
