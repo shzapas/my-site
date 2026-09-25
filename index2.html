@@ -86,6 +86,7 @@
         .badge-success { background: #2e7d32; color: white; }
         .badge-ts { background: #c62828; color: white; }
         .badge-uto { background: #6a1b9a; color: white; }
+        .badge-puto { background: #f57f17; color: white; }
         .export-btn { background: #2e7d32; border: none; border-radius: 10px; padding: 1px 8px; font-size: 0.45rem; cursor: pointer; color: white; font-weight: 600; transition: 0.2s; }
         .export-btn:hover { background: #1b5e20; }
         .export-btn.small { padding: 1px 5px; font-size: 0.4rem; }
@@ -245,7 +246,7 @@
             </ul>
 
             <p style="margin-top:14px; padding-top:8px; border-top:1px solid #c8e6c9; text-align:center; color:#999; font-size:0.65rem;">
-                ТС Аналитика v3.3
+                ТС Аналитика v3.4 (с ПУТО)
             </p>
         </div>
     </div>
@@ -376,10 +377,10 @@
 
                 <div style="margin-bottom:10px;">
                     <div class="flex-between">
-                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Рекомендации по трансферу (ТС → УТО)</span>
+                        <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Рекомендации по трансферу (ТС → УТО / ПУТО)</span>
                         <button class="btn btn-success btn-sm" onclick="exportTransferCandidates()">📤 Выгрузить</button>
                     </div>
-                    <div class="table-wrapper" style="max-height:200px;">
+                    <div class="table-wrapper" style="max-height:240px;">
                         <table id="tsTransferTable">
                             <thead>
                                 <tr>
@@ -388,12 +389,13 @@
                                     <th>Наименование</th>
                                     <th>ТС магазины</th>
                                     <th>УТО магазины</th>
+                                    <th>ПУТО магазины</th>
                                     <th>Продажи (шт)</th>
                                     <th>Рекомендация</th>
                                 </tr>
                             </thead>
                             <tbody id="tsTransferBody">
-                                <tr><td colspan="7" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
+                                <tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -690,6 +692,13 @@
                 vPutishDn = 999;
             }
 
+            // --- РАСЧЁТ ПУТО (Потенциальное УТО) ---
+            // Логика как в STOCKWISE: запас < 21 дня, запас > 0, и нет поставки в пути
+            let puto = 0;
+            if (zapasDn < 21 && zapasDn > 0 && (vPutishSht === 0 || vPutishDn === 0)) {
+                puto = 1;
+            }
+
             const vmesimost = toNumber(gammaItem['Вместимость полки']);
             const zapasBolsheVmes = (zapasSht >= vmesimost && vmesimost > 0) ? 'да' : 'нет';
 
@@ -740,6 +749,7 @@
                 'В пути, дн.': vPutishDn === 999 ? 999 : cleanZero(vPutishDn, 'В пути, дн.'),
                 'Размер упаковки': gammaItem['Размер упаковки'] || '',
                 'УТО, руб.': cleanZero(utoRub, 'УТО, руб.'),
+                'ПУТО': puto,
                 'УТО, шт.': cleanZero(utoSht, 'УТО, шт.'),
                 'Кол-во случаев перебоя за 30 дн': cleanZero(pereboiCount, 'Кол-во случаев перебоя за 30 дн'),
                 'Кол-во дней в перебое': cleanZero(pereboiDays, 'Кол-во дней в перебое'),
@@ -951,6 +961,8 @@
                 const utoRub = toNumber(row['УТО, руб.'], 0);
                 const utoSht = toNumber(row['УТО, шт.'], 0);
                 const hasUto = utoRub > 0 || utoSht > 0;
+                const puto = toNumber(row['ПУТО'], 0);
+                const hasPuto = puto === 1;
                 const zapasSht = toNumber(row['Запас, шт.'], 0);
                 const min441 = toNumber(row['min 441 ПМ'], 0);
                 const min500 = toNumber(row['min 500 Проект'], 0);
@@ -963,7 +975,7 @@
                 if (!byArticleAllStores[art]) {
                     byArticleAllStores[art] = {
                         name: name, stores: new Set(), total: 0, hasUto: false,
-                        utoStores: new Set(), tsStores: new Set(), storeDetails: {},
+                        utoStores: new Set(), putoStores: new Set(), tsStores: new Set(), storeDetails: {},
                         min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0
                     };
                 }
@@ -974,6 +986,7 @@
                     aAll.tsStores.add(store);
                 }
                 if (hasUto) { aAll.hasUto = true; aAll.utoStores.add(store); }
+                if (hasPuto) { aAll.putoStores.add(store); }
                 if (min441 > 0) aAll.min441 = min441;
                 if (min500 > 0) aAll.min500 = min500;
                 if (min401 > 0) aAll.min401 = min401;
@@ -981,7 +994,7 @@
                 if (salePrice > 0) aAll.salePrice = salePrice;
                 aAll.avgSales += otgruzhenoSred;
                 aAll.storeDetails[store] = {
-                    days, transit, zapasSht, utoRub, utoSht, hasUto, top,
+                    days, transit, zapasSht, utoRub, utoSht, hasUto, puto, hasPuto, top,
                     min441, min500, min401, naibMin, salePrice, otgruzhenoSred,
                     isTs
                 };
@@ -1016,6 +1029,8 @@
                 const utoRub = toNumber(row['УТО, руб.'], 0);
                 const utoSht = toNumber(row['УТО, шт.'], 0);
                 const hasUto = utoRub > 0 || utoSht > 0;
+                const puto = toNumber(row['ПУТО'], 0);
+                const hasPuto = puto === 1;
                 const zapasSht = toNumber(row['Запас, шт.'], 0);
                 const min441 = toNumber(row['min 441 ПМ'], 0);
                 const min500 = toNumber(row['min 500 Проект'], 0);
@@ -1032,7 +1047,7 @@
                 if (!byArticle[art]) {
                     byArticle[art] = {
                         name: name, stores: new Set(), total: 0, hasUto: false,
-                        utoStores: new Set(), tsStores: new Set(), storeDetails: {},
+                        utoStores: new Set(), putoStores: new Set(), tsStores: new Set(), storeDetails: {},
                         min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0
                     };
                 }
@@ -1041,6 +1056,7 @@
                 aData.total++;
                 aData.tsStores.add(store);
                 if (hasUto) { aData.hasUto = true; aData.utoStores.add(store); }
+                if (hasPuto) { aData.putoStores.add(store); }
                 if (min441 > 0) aData.min441 = min441;
                 if (min500 > 0) aData.min500 = min500;
                 if (min401 > 0) aData.min401 = min401;
@@ -1048,7 +1064,7 @@
                 if (salePrice > 0) aData.salePrice = salePrice;
                 aData.avgSales += otgruzhenoSred;
                 aData.storeDetails[store] = {
-                    days, transit, zapasSht, utoRub, utoSht, hasUto, top,
+                    days, transit, zapasSht, utoRub, utoSht, hasUto, puto, hasPuto, top,
                     min441, min500, min401, naibMin, salePrice, otgruzhenoSred
                 };
             }
@@ -1073,12 +1089,14 @@
                     article: art, name: data.name,
                     tsStores: Array.from(data.tsStores),
                     utoStores: Array.from(data.utoStores),
+                    putoStores: Array.from(data.putoStores || []),
                     total: data.total, hasUto: data.hasUto,
                     avgSales: data.avgSales, storeDetails: data.storeDetails
                 }))
-                .filter(item => item.tsStores.length > 0 && item.utoStores.length > 0)
-                .sort((a, b) => b.utoStores.length - a.utoStores.length || b.tsStores.length - a.tsStores.length)
-                .slice(0, 10);
+                .filter(item => item.tsStores.length > 0 && (item.utoStores.length > 0 || item.putoStores.length > 0))
+                .sort((a, b) => (b.utoStores.length + b.putoStores.length) - (a.utoStores.length + a.putoStores.length)
+                              || b.tsStores.length - a.tsStores.length)
+                .slice(0, 15);
 
             // ========== КРОСС-ТРАНСФЕР ==========
             const crossTransfer = [];
@@ -1236,32 +1254,77 @@
             tbody.innerHTML = '';
             const candidates = tsData.transferCandidates || [];
             if (!candidates.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
                 return;
             }
             for (const item of candidates) {
                 const tr = document.createElement('tr');
+
+                // --- Лучший УТО-магазин (по продажам) ---
                 let bestUtoStore = '', bestSales = 0;
                 for (const s of item.utoStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
                     if (sales > bestSales) { bestSales = sales; bestUtoStore = s; }
                 }
-                let worstTsStore = '', worstSales = Infinity;
-                for (const s of item.tsStores) {
-                    const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
-                    if (sales < worstSales) { worstSales = sales; worstTsStore = s; }
+
+                // --- Лучший ПУТО-магазин (наименьший запас дней, но продажи > 0) ---
+                let bestPutoStore = '', bestPutoScore = -1;
+                for (const s of (item.putoStores || [])) {
+                    const d = item.storeDetails[s];
+                    if (!d) continue;
+                    const sales = d.otgruzhenoSred || 0;
+                    const score = sales * 100 - d.days;
+                    if (score > bestPutoScore) {
+                        bestPutoScore = score;
+                        bestPutoStore = s;
+                    }
                 }
-                const rec = bestUtoStore && worstTsStore ?
-                    `📦 Трансфер из ${worstTsStore} (продажи ${worstSales}) → ${bestUtoStore} (продажи ${bestSales})` :
-                    `🔄 Переместить товар в магазины с УТО: ${item.utoStores.join(', ')}`;
+
+                // --- Худший ТС-магазин (наименьшие продажи, максимальный запас) ---
+                let worstTsStore = '', worstSales = Infinity, worstDays = 0;
+                for (const s of item.tsStores) {
+                    const d = item.storeDetails[s];
+                    const sales = d?.otgruzhenoSred || 0;
+                    if (sales < worstSales || (sales === worstSales && (d?.days || 0) > worstDays)) {
+                        worstSales = sales;
+                        worstDays = d?.days || 0;
+                        worstTsStore = s;
+                    }
+                }
+
+                // --- Формируем рекомендацию ---
+                const recParts = [];
+                if (bestUtoStore && worstTsStore) {
+                    recParts.push(`📦 Трансфер из ${worstTsStore} (ТС, ${worstDays} дн) → ${bestUtoStore} (УТО, продажи ${bestSales})`);
+                } else if (bestUtoStore) {
+                    recParts.push(`🔄 Переместить в магазины с УТО: ${item.utoStores.join(', ')}`);
+                }
+
+                if (bestPutoStore && worstTsStore && bestPutoStore !== bestUtoStore) {
+                    const putoDays = item.storeDetails[bestPutoStore]?.days || 0;
+                    const putoSales = item.storeDetails[bestPutoStore]?.otgruzhenoSred || 0;
+                    recParts.push(`⚠️ ПУТО: из ${worstTsStore} → ${bestPutoStore} (${putoDays} дн, продажи ${putoSales})`);
+                } else if (bestPutoStore) {
+                    const putoDays = item.storeDetails[bestPutoStore]?.days || 0;
+                    recParts.push(`⚠️ ПУТО-риск в магазинах: ${item.putoStores.join(', ')} (мин. ${putoDays} дн)`);
+                }
+
+                const rec = recParts.length ? recParts.join('<br>') : '—';
+
+                // --- Колонка ПУТО магазинов ---
+                const putoStoresDisplay = (item.putoStores || []).length
+                    ? `<span class="badge badge-puto">${item.putoStores.join(', ')}</span>`
+                    : '<span style="color:#999;">—</span>';
+
                 tr.innerHTML = `
                     <td>${candidates.indexOf(item) + 1}</td>
                     <td><span class="article-link" onclick="openMagPortal('${item.article}')">${item.article}</span></td>
                     <td style="font-size:0.5rem;">${(item.name || '').substring(0, 30)}</td>
                     <td><span class="badge badge-ts">${item.tsStores.join(', ')}</span></td>
-                    <td><span class="badge badge-uto">${item.utoStores.join(', ')}</span></td>
+                    <td><span class="badge badge-uto">${item.utoStores.length ? item.utoStores.join(', ') : '—'}</span></td>
+                    <td>${putoStoresDisplay}</td>
                     <td>${item.avgSales || 0}</td>
-                    <td style="font-size:0.5rem;color:#2e7d32;">🔄 ${rec}</td>
+                    <td style="font-size:0.5rem;color:#2e7d32;">${rec}</td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -1481,7 +1544,7 @@
 
         function exportTsAll() {
             if (!tsData.items.length) { showToast('Нет ТС-позиций', 'warning'); return; }
-            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ТС', 'Продажная цена магазина'];
+            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of tsData.items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1521,7 +1584,7 @@
         function exportTsArticle(article) {
             const items = tsData.items.filter(r => String(r['Артикул'] || '') === article);
             if (!items.length) { showToast('Артикул не найден', 'warning'); return; }
-            const cols = ['№ магазина', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ТС', 'min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'];
+            const cols = ['№ магазина', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1550,7 +1613,7 @@
             }
             const items = tsData.byStore[type]?.items || [];
             if (!items.length) { showToast(`Нет данных для магазина ${type}`, 'warning'); return; }
-            const cols = ['Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'Продажная цена магазина'];
+            const cols = ['Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1564,25 +1627,44 @@
         function exportTransferCandidates() {
             const items = tsData.transferCandidates || [];
             if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
-            const wsData = [['#', 'Артикул', 'Наименование', 'ТС магазины', 'УТО магазины', 'Средние продажи', 'Рекомендация']];
+            const wsData = [[
+                '#', 'Артикул', 'Наименование',
+                'ТС магазины', 'УТО магазины', 'ПУТО магазины',
+                'Средние продажи', 'Рекомендация'
+            ]];
             for (const item of items) {
                 let bestUtoStore = '', bestSales = 0;
                 for (const s of item.utoStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
                     if (sales > bestSales) { bestSales = sales; bestUtoStore = s; }
                 }
+                let bestPutoStore = '', bestPutoScore = -1;
+                for (const s of (item.putoStores || [])) {
+                    const d = item.storeDetails[s];
+                    if (!d) continue;
+                    const score = (d.otgruzhenoSred || 0) * 100 - d.days;
+                    if (score > bestPutoScore) { bestPutoScore = score; bestPutoStore = s; }
+                }
                 let worstTsStore = '', worstSales = Infinity;
                 for (const s of item.tsStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
                     if (sales < worstSales) { worstSales = sales; worstTsStore = s; }
                 }
-                const rec = bestUtoStore && worstTsStore ?
-                    `Трансфер из ${worstTsStore} (продажи ${worstSales}) → ${bestUtoStore} (продажи ${bestSales})` :
-                    `Переместить в магазины с УТО: ${item.utoStores.join(', ')}`;
+                const recParts = [];
+                if (bestUtoStore && worstTsStore) {
+                    recParts.push(`Трансфер из ${worstTsStore} (ТС) → ${bestUtoStore} (УТО, продажи ${bestSales})`);
+                }
+                if (bestPutoStore && worstTsStore) {
+                    const putoDays = item.storeDetails[bestPutoStore]?.days || 0;
+                    recParts.push(`ПУТО: из ${worstTsStore} → ${bestPutoStore} (${putoDays} дн)`);
+                }
                 wsData.push([
                     items.indexOf(item) + 1, item.article, item.name || '',
-                    item.tsStores.join(', '), item.utoStores.join(', '),
-                    item.avgSales || 0, rec
+                    item.tsStores.join(', '),
+                    item.utoStores.join(', ') || '—',
+                    (item.putoStores || []).join(', ') || '—',
+                    item.avgSales || 0,
+                    recParts.join(' | ') || '—'
                 ]);
             }
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1590,7 +1672,7 @@
             XLSX.utils.book_append_sheet(wb, ws, 'Трансфер_ТС');
             const today = new Date().toISOString().split('T')[0];
             XLSX.writeFile(wb, `Трансфер_рекомендации_${today}.xlsx`);
-            showToast(`✅ Выгружено ${items.length} рекомендаций`, 'success');
+            showToast(`✅ Выгружено ${items.length} рекомендаций (включая ПУТО)`, 'success');
         }
 
         function exportCrossTransfer() {
@@ -2045,7 +2127,7 @@
                 origReset();
                 try { localStorage.setItem('ts_stores', JSON.stringify([])); } catch (e) {}
             };
-            console.log('📊 ТС Аналитика v3.3 (с наименованием в рекомендациях)');
+            console.log('📊 ТС Аналитика v3.4 (с ПУТО в рекомендациях по трансферу)');
         });
 
         window.openMagPortal = openMagPortal;
