@@ -168,7 +168,6 @@
         .surplus-attention { background: #fff9c4 !important; color: #f57f17; font-weight: 600; }
         .surplus-normal { background: #c8e6c9 !important; color: #1b5e20; font-weight: 600; }
 
-        /* ✅ Наполненность полки */
         .fill-low { background: #ffcdd2 !important; color: #b71c1c; font-weight: 700; }
         .fill-medium { background: #ffe0b2 !important; color: #e65100; font-weight: 600; }
         .fill-high { background: #c8e6c9 !important; color: #1b5e20; font-weight: 600; }
@@ -640,7 +639,6 @@ function capDays(val) {
     return n;
 }
 
-// ✅ Цвет наполненности
 function getFillClass(percent) {
     if (percent <= 30) return 'fill-low';
     if (percent <= 60) return 'fill-medium';
@@ -904,7 +902,6 @@ function calculateAvsRows() {
 
         if (surplus <= 0) continue;
 
-        // ✅ Расчёт по каждому магазину с наполненностью
         const storeDataAvs = {};
         for (const store of activeStores) {
             const sd = row.storeData[store] || { stock: 0, transit: 0, top: '', capacity: 0 };
@@ -919,7 +916,6 @@ function calculateAvsRows() {
             const storeTotal = storeStockDays + storeTransitDays;
             const storeSurplus = storeTotal - daysToAvs;
             
-            // ✅ Наполненность = запас / вместимость × 100%
             const capacity = sd.capacity || 0;
             let fillPercent = 0;
             if (capacity > 0) {
@@ -1171,7 +1167,6 @@ function renderTable() {
             html += `<td ${topCls}>${sd.top}</td>`;
             html += `<td ${salesCls}>${sd.sales}</td>`;
             html += `<td ${stockCls}>${sd.stock}</td>`;
-            // ✅ Наполненность
             const capacity = sd.capacity || 0;
             let fillPercent = 0;
             if (capacity > 0 && sd.stock > 0) fillPercent = Math.round((sd.stock / capacity) * 100);
@@ -1218,7 +1213,6 @@ function renderAvsTable() {
         return `sortable sort-${avsSortDir}`;
     };
 
-    // ==================== ВАРИАНТ 1: МАГАЗИН ВЫБРАН (плоская таблица) ====================
     if (currentStore !== 'all') {
         thead.innerHTML = `
             <tr>
@@ -1302,7 +1296,6 @@ function renderAvsTable() {
         return;
     }
 
-    // ==================== ВАРИАНТ 2: ВСЕ МАГАЗИНЫ ====================
     let storeHeaders = '';
     for (const store of activeStores) {
         const storeClass = `store-${store}-h`;
@@ -1375,7 +1368,6 @@ function renderAvsTable() {
             const topCls = sdata.top === '0' ? 'top-zero' : '';
             html += `<td class="${topCls}" style="text-align:center;">${sdata.top || ''}</td>`;
             html += `<td style="text-align:center;">${sdata.stock || 0}</td>`;
-            // Наполненность
             const fillCls = sdata.capacity > 0 ? getFillClass(sdata.fillPercent) : '';
             html += `<td class="${fillCls}" style="text-align:center;font-weight:600;">${sdata.capacity > 0 ? sdata.fillPercent + '%' : '—'}</td>`;
             html += `<td style="text-align:center;">${capDays(sdata.transitDays)}</td>`;
@@ -1584,7 +1576,683 @@ function showToast(msg, type = 'info', duration = 5000) {
     setTimeout(() => el.remove(), duration);
 }
 
-// =========================== ЭКСПОРТ AVS ===========================
+// =========================== ЭКСПОРТ СВОДНОЙ (ЦВЕТНАЯ) ===========================
+async function exportFullData() {
+    if (!filteredRows.length) { showToast('⚠️ Нет данных для выгрузки', 'warning'); return; }
+    updateProgress('Формируем полную сводную таблицу...', 10);
+
+    try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'ТОП 0';
+        workbook.created = new Date();
+
+        const worksheet = workbook.addWorksheet('Сводная', {
+            views: [{ state: 'frozen', ySplit: 2, xSplit: 2 }]
+        });
+
+        const baseColumns = [
+            { key: 'art',        header: 'Артикул',                  width: 15, color: 'FFE0DBD4' },
+            { key: 'name',       header: 'Наименование',             width: 40, color: 'FFE0DBD4' },
+            { key: 'dept',       header: 'Отдел',                    width: 10, color: 'FFE0DBD4' },
+            { key: 'subdept',    header: 'Подотдел',                 width: 18, color: 'FFE0DBD4' },
+            { key: 'price',      header: 'ПЦ',                       width: 12, color: 'FFBBDEFB' },
+            { key: 'rrp',        header: 'РРЦ',                      width: 12, color: 'FFBBDEFB' },
+            { key: 'dpac',       header: 'Цена dpac',                width: 12, color: 'FFBBDEFB' },
+            { key: 'zakupNds',   header: 'закуп + НДС',              width: 14, color: 'FFFFE0B2' },
+            { key: 'margin',     header: 'Маржа %',                  width: 12, color: 'FFFFF9C4' },
+            { key: 'newPrice',   header: 'Нов ПЦ',                   width: 12, color: 'FFC8E6C9' },
+            { key: 'newMargin',  header: 'Нов МАРЖ',                 width: 12, color: 'FFC8E6C9' },
+            { key: 'dateChange', header: 'Дата изм.',                width: 14, color: 'FFE0DBD4' },
+            { key: 'condition',  header: 'Условие',                  width: 12, color: 'FFFFCC80' },
+            { key: 'reduce',     header: 'Снижение если нет продаж', width: 15, color: 'FFFFCC80' },
+            { key: 'status',     header: 'Статус',                   width: 10, color: 'FFE0DBD4' },
+            { key: 'avs',        header: 'AVS',                      width: 10, color: 'FFF3E5F5' }
+        ];
+
+        const storeBlockColors = {
+            '8': 'FFC8E6C9', '92': 'FFBBDEFB', '147': 'FFFFE0B2',
+            '150': 'FFE1BEE7', '165': 'FFF8BBD0', '258': 'FFB2EBF2'
+        };
+        const storeBlocks = activeStores.map(store => ({
+            store, title: `🏬 Магазин ${store}`,
+            color: storeBlockColors[store] || 'FFE0DBD4'
+        }));
+
+        const storeSubColumns = ['ТОП', 'Статус', 'Продажи', 'Сток', 'Наполн.', 'ТС'];
+        const SUB_COUNT = storeSubColumns.length;
+
+        const endColumns = [
+            { key: 'comment',  header: 'Комментарии',            width: 25, color: 'FFFFF9C4' },
+            { key: 'supplier', header: '№ Поставщика',           width: 15, color: 'FFE0DBD4' },
+            { key: 'consent',  header: 'Согласие на возврат',    width: 18, color: 'FFE0DBD4' },
+            { key: 'avsCol',   header: 'АВС',                    width: 10, color: 'FFE0DBD4' },
+            { key: 'sumDpac',  header: 'Сумма товара в dpac',    width: 18, color: 'FFE0DBD4' }
+        ];
+
+        const totalCols     = baseColumns.length + storeBlocks.length * SUB_COUNT + endColumns.length;
+        const storeStartCol = baseColumns.length + 1;
+        const endStartCol   = baseColumns.length + storeBlocks.length * SUB_COUNT + 1;
+
+        updateProgress('Формируем заголовки...', 30);
+
+        const headerRow1 = worksheet.getRow(1);
+        headerRow1.height = 32;
+
+        baseColumns.forEach((col, idx) => {
+            worksheet.mergeCells(1, idx + 1, 2, idx + 1);
+            const cell = headerRow1.getCell(idx + 1);
+            cell.value = col.header;
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: col.color } };
+            cell.border = {
+                top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+            };
+        });
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            const endCol   = startCol + SUB_COUNT - 1;
+            worksheet.mergeCells(1, startCol, 1, endCol);
+            const cell = headerRow1.getCell(startCol);
+            cell.value = block.title;
+            cell.font = { bold: true, size: 11, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            for (let c = startCol; c <= endCol; c++) {
+                const c1 = headerRow1.getCell(c);
+                c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: block.color } };
+                c1.border = {
+                    top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                    bottom:{style:'medium',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                };
+            }
+        });
+
+        endColumns.forEach((col, idx) => {
+            const colIdx = endStartCol + idx;
+            worksheet.mergeCells(1, colIdx, 2, colIdx);
+            const cell = headerRow1.getCell(colIdx);
+            cell.value = col.header;
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: col.color } };
+            cell.border = {
+                top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+            };
+        });
+
+        const headerRow2 = worksheet.getRow(2);
+        headerRow2.height = 22;
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            storeSubColumns.forEach((subHeader, subIdx) => {
+                const cell = headerRow2.getCell(startCol + subIdx);
+                cell.value = subHeader;
+                cell.font = { bold: true, size: 9, color: { argb: 'FF1E1E1E' } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: block.color } };
+                cell.border = {
+                    top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                    bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                };
+            });
+        });
+
+        baseColumns.forEach((col, idx) => { worksheet.getColumn(idx + 1).width = col.width; });
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            for (let i = 0; i < SUB_COUNT; i++) worksheet.getColumn(startCol + i).width = 10;
+        });
+        endColumns.forEach((col, idx) => { worksheet.getColumn(endStartCol + idx).width = col.width; });
+
+        updateProgress('Заполняем данными...', 50);
+
+        filteredRows.forEach(r => {
+            const sd = (store) => r.storeData[store] || { top:'', status:'', sales:'', stock:'', capacity:0, ts:'' };
+
+            const rowData = [
+                r.art, r.name, r.dept, r.subdept, r.price, r.rrp, r.dpac, r.zakupNds,
+                r.margin / 100,
+                '',  // Нов ПЦ — ПУСТО
+                '',  // Нов МАРЖ — ПУСТО
+                r.dateChange, r.condition, r.reduceIfNoSales, r.status, r.isAvs ? '💎 AVS' : ''
+            ];
+
+            storeBlocks.forEach(block => {
+                const s = sd(block.store);
+                const capacity = s.capacity || 0;
+                let fillPercent = 0;
+                if (capacity > 0 && s.stock > 0) fillPercent = Math.round((s.stock / capacity) * 100);
+                rowData.push(s.top || '', s.status || '', s.sales || '', s.stock || '',
+                              capacity > 0 ? fillPercent + '%' : '—', s.ts || '');
+            });
+
+            rowData.push(commentsMap.get(r.art) || r.comment || '', r.supplier, r.consent, r.avs, r.sumDpac);
+
+            const dataRow = worksheet.addRow(rowData);
+            dataRow.height = 18;
+
+            for (let colIdx = 1; colIdx <= totalCols; colIdx++) {
+                const cell = dataRow.getCell(colIdx);
+                cell.border = {
+                    top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}},
+                    bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}}
+                };
+                cell.font = { size: 9 };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            }
+
+            baseColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(idx + 1);
+                if (col.key === 'art')  { cell.font = { size:9, bold:true }; cell.alignment = { vertical:'middle', horizontal:'left' }; }
+                if (col.key === 'name') { cell.alignment = { vertical:'middle', horizontal:'left' }; }
+                if (col.key === 'dept' || col.key === 'subdept') { cell.alignment = { vertical:'middle', horizontal:'left' }; }
+                if (col.key === 'price') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFBBDEFB'} };
+                    cell.font = { size:9, bold:true, color:{argb:'FF0D47A1'} };
+                    cell.numFmt = '#,##0'; cell.alignment = { horizontal:'right', vertical:'middle' };
+                }
+                if (col.key === 'rrp' || col.key === 'dpac') { cell.numFmt = '#,##0'; cell.alignment = { horizontal:'right', vertical:'middle' }; }
+                if (col.key === 'zakupNds') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFE0B2'} };
+                    cell.font = { size:9, bold:true, color:{argb:'FFE65100'} };
+                    cell.numFmt = '#,##0'; cell.alignment = { horizontal:'right', vertical:'middle' };
+                }
+                if (col.key === 'margin') {
+                    cell.numFmt = '0.0%';
+                    cell.font = r.margin < 0
+                        ? { size:9, bold:true, color:{argb:'FFC0392B'} }
+                        : { size:9, color:{argb:'FF2E7D32'} };
+                }
+                if (col.key === 'newPrice' || col.key === 'newMargin') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF5F5F5'} };
+                    cell.font = { size:9, color:{argb:'FFAAAAAA'} };
+                }
+                if (col.key === 'condition') {
+                    if (r.condition === 'снижение') {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFCDD2'} };
+                        cell.font = { size:9, bold:true, color:{argb:'FFB71C1C'} };
+                    } else {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFC8E6C9'} };
+                        cell.font = { size:9, bold:true, color:{argb:'FF1B5E20'} };
+                    }
+                }
+                if (col.key === 'reduce') {
+                    if (r.reduceIfNoSales === 'снижение') {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFE0B2'} };
+                        cell.font = { size:9, bold:true, color:{argb:'FFE65100'} };
+                    } else {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF5F5F5'} };
+                        cell.font = { size:9, color:{argb:'FF616161'} };
+                    }
+                }
+                if (col.key === 'status') {
+                    const sc = { 'A':{bg:'FFE8F5E9',fg:'FF1B5E20'},'B':{bg:'FFFFF3E0',fg:'FFE65100'},
+                                 'C':{bg:'FFF5F5F5',fg:'FF616161'},'I':{bg:'FFFFF9C4',fg:'FFF57F17'},
+                                 'D':{bg:'FFFFEBEE',fg:'FFB71C1C'} }[r.status] || {bg:'FFFFFFFF',fg:'FF1E1E1E'};
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:sc.bg} };
+                    cell.font = { size:9, bold:true, color:{argb:sc.fg} };
+                }
+                if (col.key === 'avs' && r.isAvs) {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF3E5F5'} };
+                    cell.font = { size:9, bold:true, color:{argb:'FF4A148C'} };
+                }
+            });
+
+            storeBlocks.forEach((block, blockIdx) => {
+                const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                const s = sd(block.store);
+
+                const topCell = dataRow.getCell(startCol);
+                if (s.top === '0') {
+                    topCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFCDD2'} };
+                    topCell.font = { size:9, bold:true, color:{argb:'FFB71C1C'} };
+                }
+                const statusCell = dataRow.getCell(startCol + 1);
+                if (s.status) {
+                    const sc = { 'A':{bg:'FFE8F5E9',fg:'FF1B5E20'},'B':{bg:'FFFFF3E0',fg:'FFE65100'},
+                                 'C':{bg:'FFF5F5F5',fg:'FF616161'},'I':{bg:'FFFFF9C4',fg:'FFF57F17'},
+                                 'D':{bg:'FFFFEBEE',fg:'FFB71C1C'} }[s.status] || {bg:'FFFFFFFF',fg:'FF1E1E1E'};
+                    statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:sc.bg} };
+                    statusCell.font = { size:9, bold:true, color:{argb:sc.fg} };
+                }
+                const salesCell = dataRow.getCell(startCol + 2);
+                if (s.sales && parseInt(s.sales) > 0) {
+                    salesCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFEDD5'} };
+                    salesCell.font = { size:9, bold:true };
+                }
+                const stockCell = dataRow.getCell(startCol + 3);
+                if (s.stock && parseInt(s.stock) > 0) {
+                    stockCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF5F5'} };
+                }
+                const capacity = s.capacity || 0;
+                if (capacity > 0) {
+                    let fillPercent = 0;
+                    if (s.stock > 0) fillPercent = Math.round((s.stock / capacity) * 100);
+                    const fillCell = dataRow.getCell(startCol + 4);
+                    let bg = 'FFC8E6C9', fg = 'FF1B5E20';
+                    if (fillPercent <= 30)      { bg = 'FFFFCDD2'; fg = 'FFB71C1C'; }
+                    else if (fillPercent <= 60) { bg = 'FFFFE0B2'; fg = 'FFE65100'; }
+                    else if (fillPercent > 100) { bg = 'FFB71C1C'; fg = 'FFFFFFFF'; }
+                    fillCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} };
+                    fillCell.font = { size:9, bold:true, color:{argb:fg} };
+                }
+            });
+
+            endColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(endStartCol + idx);
+                if (col.key === 'comment') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF9C4'} };
+                    cell.font = { size:9, italic:true };
+                    cell.alignment = { vertical:'middle', horizontal:'left', wrapText:true };
+                }
+                if (col.key === 'sumDpac') {
+                    cell.numFmt = '#,##0'; cell.font = { size:9, bold:true };
+                    cell.alignment = { horizontal:'right', vertical:'middle' };
+                }
+            });
+        });
+
+        updateProgress('Итоги...', 70);
+
+        const totalSum = filteredRows.reduce((s, r) => s + r.sumDpac, 0);
+        const totalRow = worksheet.addRow([]);
+        totalRow.height = 22;
+
+        const totalLabelCell = totalRow.getCell(totalCols - 1);
+        totalLabelCell.value = 'ИТОГО:';
+        totalLabelCell.font = { size:10, bold:true };
+        totalLabelCell.alignment = { horizontal:'right', vertical:'middle' };
+        totalLabelCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFE0DBD4'} };
+
+        const totalCell = totalRow.getCell(totalCols);
+        totalCell.value = totalSum;
+        totalCell.font = { size:11, bold:true, color:{argb:'FF2C5F2D'} };
+        totalCell.alignment = { horizontal:'right', vertical:'middle' };
+        totalCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFE0DBD4'} };
+        totalCell.numFmt = '#,##0';
+
+        worksheet.autoFilter = { from:{row:2,column:1}, to:{row:2,column:totalCols} };
+
+        updateProgress('Сохраняем файл...', 90);
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `ТОП0_сводная_полная_${new Date().toISOString().slice(0,10)}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        updateProgress('Готово!', 100);
+        showToast(`✅ Выгружено ${filteredRows.length} артикулов (сводная БЕЗ применённых цен)`, 'success', 6000);
+    } catch (err) {
+        console.error(err);
+        updateProgress('Ошибка', 100);
+        showToast(`❌ Ошибка выгрузки: ${err.message}`, 'error', 7000);
+    }
+}
+
+// =========================== ЭКСПОРТ С ИЗМЕНЕНИЯМИ (ЦВЕТНАЯ) ===========================
+async function exportChanges() {
+    const rowsToExport = filteredRows.filter(r => r.userMargin !== null && r.userMargin !== undefined);
+    if (!rowsToExport.length) {
+        showToast('⚠️ Нет артикулов с применённой маржой. Выделите артикулы и примените маржу.', 'warning', 6000);
+        return;
+    }
+    updateProgress('Формируем Excel с изменениями...', 10);
+
+    try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'ТОП 0';
+        workbook.created = new Date();
+
+        const worksheet = workbook.addWorksheet('Снижение цены', {
+            views: [{ state: 'frozen', ySplit: 2, xSplit: 2 }]
+        });
+
+        const baseColumns = [
+            { key: 'art',        header: 'Артикул',                  width: 15, color: 'FFE0DBD4' },
+            { key: 'name',       header: 'Наименование',             width: 40, color: 'FFE0DBD4' },
+            { key: 'dept',       header: 'Отдел',                    width: 10, color: 'FFE0DBD4' },
+            { key: 'subdept',    header: 'Подотдел',                 width: 18, color: 'FFE0DBD4' },
+            { key: 'price',      header: 'ПЦ',                       width: 12, color: 'FFBBDEFB' },
+            { key: 'rrp',        header: 'РРЦ',                      width: 12, color: 'FFBBDEFB' },
+            { key: 'dpac',       header: 'Цена dpac',                width: 12, color: 'FFBBDEFB' },
+            { key: 'zakupNds',   header: 'закуп + НДС',              width: 14, color: 'FFFFE0B2' },
+            { key: 'margin',     header: 'Маржа %',                  width: 12, color: 'FFFFF9C4' },
+            { key: 'newPrice',   header: 'Нов ПЦ',                   width: 12, color: 'FFC8E6C9' },
+            { key: 'newMargin',  header: 'Нов МАРЖ',                 width: 12, color: 'FFC8E6C9' },
+            { key: 'dateChange', header: 'Дата изм.',                width: 14, color: 'FFE0DBD4' },
+            { key: 'condition',  header: 'Условие',                  width: 12, color: 'FFFFCC80' },
+            { key: 'reduce',     header: 'Снижение если нет продаж', width: 15, color: 'FFFFCC80' },
+            { key: 'status',     header: 'Статус',                   width: 10, color: 'FFE0DBD4' },
+            { key: 'avs',        header: 'AVS',                      width: 10, color: 'FFF3E5F5' }
+        ];
+
+        const storeBlockColors = {
+            '8': 'FFC8E6C9', '92': 'FFBBDEFB', '147': 'FFFFE0B2',
+            '150': 'FFE1BEE7', '165': 'FFF8BBD0', '258': 'FFB2EBF2'
+        };
+        const storeBlocks = activeStores.map(store => ({
+            store, title: `🏬 Магазин ${store}`,
+            color: storeBlockColors[store] || 'FFE0DBD4'
+        }));
+
+        const storeSubColumns = ['ТОП', 'Статус', 'Продажи', 'Сток', 'Наполн.', 'ТС'];
+        const SUB_COUNT = storeSubColumns.length;
+
+        const endColumns = [
+            { key: 'comment',  header: 'Комментарии',            width: 25, color: 'FFFFF9C4' },
+            { key: 'supplier', header: '№ Поставщика',           width: 15, color: 'FFE0DBD4' },
+            { key: 'consent',  header: 'Согласие на возврат',    width: 18, color: 'FFE0DBD4' },
+            { key: 'avsCol',   header: 'АВС',                    width: 10, color: 'FFE0DBD4' },
+            { key: 'sumDpac',  header: 'Сумма товара в dpac',    width: 18, color: 'FFE0DBD4' }
+        ];
+
+        const totalCols     = baseColumns.length + storeBlocks.length * SUB_COUNT + endColumns.length;
+        const storeStartCol = baseColumns.length + 1;
+        const endStartCol   = baseColumns.length + storeBlocks.length * SUB_COUNT + 1;
+
+        updateProgress('Формируем заголовки...', 30);
+
+        const headerRow1 = worksheet.getRow(1);
+        headerRow1.height = 32;
+
+        baseColumns.forEach((col, idx) => {
+            worksheet.mergeCells(1, idx + 1, 2, idx + 1);
+            const cell = headerRow1.getCell(idx + 1);
+            cell.value = col.header;
+            cell.font = { bold:true, size:10, color:{argb:'FF1E1E1E'} };
+            cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+            cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:col.color} };
+            cell.border = {
+                top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+            };
+        });
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            const endCol   = startCol + SUB_COUNT - 1;
+            worksheet.mergeCells(1, startCol, 1, endCol);
+            const cell = headerRow1.getCell(startCol);
+            cell.value = block.title;
+            cell.font = { bold:true, size:11, color:{argb:'FF1E1E1E'} };
+            cell.alignment = { horizontal:'center', vertical:'middle' };
+            for (let c = startCol; c <= endCol; c++) {
+                const c1 = headerRow1.getCell(c);
+                c1.fill = { type:'pattern', pattern:'solid', fgColor:{argb:block.color} };
+                c1.border = {
+                    top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                    bottom:{style:'medium',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                };
+            }
+        });
+
+        endColumns.forEach((col, idx) => {
+            const colIdx = endStartCol + idx;
+            worksheet.mergeCells(1, colIdx, 2, colIdx);
+            const cell = headerRow1.getCell(colIdx);
+            cell.value = col.header;
+            cell.font = { bold:true, size:10, color:{argb:'FF1E1E1E'} };
+            cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+            cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:col.color} };
+            cell.border = {
+                top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+            };
+        });
+
+        const headerRow2 = worksheet.getRow(2);
+        headerRow2.height = 22;
+
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            storeSubColumns.forEach((subHeader, subIdx) => {
+                const cell = headerRow2.getCell(startCol + subIdx);
+                cell.value = subHeader;
+                cell.font = { bold:true, size:9, color:{argb:'FF1E1E1E'} };
+                cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+                cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:block.color} };
+                cell.border = {
+                    top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                    bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                };
+            });
+        });
+
+        baseColumns.forEach((col, idx) => { worksheet.getColumn(idx + 1).width = col.width; });
+        storeBlocks.forEach((block, blockIdx) => {
+            const startCol = storeStartCol + blockIdx * SUB_COUNT;
+            for (let i = 0; i < SUB_COUNT; i++) worksheet.getColumn(startCol + i).width = 10;
+        });
+        endColumns.forEach((col, idx) => { worksheet.getColumn(endStartCol + idx).width = col.width; });
+
+        updateProgress('Заполняем данными...', 50);
+
+        rowsToExport.forEach(r => {
+            const sd = (store) => r.storeData[store] || { top:'', status:'', sales:'', stock:'', capacity:0, ts:'' };
+
+            const rowData = [
+                r.art, r.name, r.dept, r.subdept, r.price, r.rrp, r.dpac, r.zakupNds,
+                r.margin / 100, r.newPrice, r.newMargin / 100,
+                r.dateChange, r.condition, r.reduceIfNoSales, r.status, r.isAvs ? '💎 AVS' : ''
+            ];
+
+            storeBlocks.forEach(block => {
+                const s = sd(block.store);
+                const capacity = s.capacity || 0;
+                let fillPercent = 0;
+                if (capacity > 0 && s.stock > 0) fillPercent = Math.round((s.stock / capacity) * 100);
+                rowData.push(s.top || '', s.status || '', s.sales || '', s.stock || '',
+                              capacity > 0 ? fillPercent + '%' : '—', s.ts || '');
+            });
+
+            rowData.push(commentsMap.get(r.art) || r.comment || '', r.supplier, r.consent, r.avs, r.sumDpac);
+
+            const dataRow = worksheet.addRow(rowData);
+            dataRow.height = 18;
+
+            for (let colIdx = 1; colIdx <= totalCols; colIdx++) {
+                const cell = dataRow.getCell(colIdx);
+                cell.border = {
+                    top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}},
+                    bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}}
+                };
+                cell.font = { size:9 };
+                cell.alignment = { vertical:'middle', horizontal:'center' };
+            }
+
+            baseColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(idx + 1);
+                if (col.key === 'art')  { cell.font = { size:9, bold:true }; cell.alignment = { vertical:'middle', horizontal:'left' }; }
+                if (col.key === 'name') { cell.alignment = { vertical:'middle', horizontal:'left' }; }
+                if (col.key === 'dept' || col.key === 'subdept') { cell.alignment = { vertical:'middle', horizontal:'left' }; }
+                if (col.key === 'price') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFBBDEFB'} };
+                    cell.font = { size:9, bold:true, color:{argb:'FF0D47A1'} };
+                    cell.numFmt = '#,##0'; cell.alignment = { horizontal:'right', vertical:'middle' };
+                }
+                if (col.key === 'rrp' || col.key === 'dpac') { cell.numFmt = '#,##0'; cell.alignment = { horizontal:'right', vertical:'middle' }; }
+                if (col.key === 'zakupNds') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFE0B2'} };
+                    cell.font = { size:9, bold:true, color:{argb:'FFE65100'} };
+                    cell.numFmt = '#,##0'; cell.alignment = { horizontal:'right', vertical:'middle' };
+                }
+                if (col.key === 'margin') {
+                    cell.numFmt = '0.0%';
+                    cell.font = r.margin < 0
+                        ? { size:9, bold:true, color:{argb:'FFC0392B'} }
+                        : { size:9, color:{argb:'FF2E7D32'} };
+                }
+                if (col.key === 'newPrice') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFC8E6C9'} };
+                    cell.font = { size:9, bold:true, color:{argb:'FF1B5E20'} };
+                    cell.numFmt = '#,##0'; cell.alignment = { horizontal:'right', vertical:'middle' };
+                }
+                if (col.key === 'newMargin') { cell.numFmt = '0.0%'; cell.font = { size:9, bold:true }; }
+                if (col.key === 'condition') {
+                    if (r.condition === 'снижение') {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFCDD2'} };
+                        cell.font = { size:9, bold:true, color:{argb:'FFB71C1C'} };
+                    } else {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFC8E6C9'} };
+                        cell.font = { size:9, bold:true, color:{argb:'FF1B5E20'} };
+                    }
+                }
+                if (col.key === 'reduce') {
+                    if (r.reduceIfNoSales === 'снижение') {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFE0B2'} };
+                        cell.font = { size:9, bold:true, color:{argb:'FFE65100'} };
+                    } else {
+                        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF5F5F5'} };
+                        cell.font = { size:9, color:{argb:'FF616161'} };
+                    }
+                }
+                if (col.key === 'status') {
+                    const sc = { 'A':{bg:'FFE8F5E9',fg:'FF1B5E20'},'B':{bg:'FFFFF3E0',fg:'FFE65100'},
+                                 'C':{bg:'FFF5F5F5',fg:'FF616161'},'I':{bg:'FFFFF9C4',fg:'FFF57F17'},
+                                 'D':{bg:'FFFFEBEE',fg:'FFB71C1C'} }[r.status] || {bg:'FFFFFFFF',fg:'FF1E1E1E'};
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:sc.bg} };
+                    cell.font = { size:9, bold:true, color:{argb:sc.fg} };
+                }
+                if (col.key === 'avs' && r.isAvs) {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF3E5F5'} };
+                    cell.font = { size:9, bold:true, color:{argb:'FF4A148C'} };
+                }
+            });
+
+            storeBlocks.forEach((block, blockIdx) => {
+                const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                const s = sd(block.store);
+
+                const topCell = dataRow.getCell(startCol);
+                if (s.top === '0') {
+                    topCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFCDD2'} };
+                    topCell.font = { size:9, bold:true, color:{argb:'FFB71C1C'} };
+                }
+                const statusCell = dataRow.getCell(startCol + 1);
+                if (s.status) {
+                    const sc = { 'A':{bg:'FFE8F5E9',fg:'FF1B5E20'},'B':{bg:'FFFFF3E0',fg:'FFE65100'},
+                                 'C':{bg:'FFF5F5F5',fg:'FF616161'},'I':{bg:'FFFFF9C4',fg:'FFF57F17'},
+                                 'D':{bg:'FFFFEBEE',fg:'FFB71C1C'} }[s.status] || {bg:'FFFFFFFF',fg:'FF1E1E1E'};
+                    statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:sc.bg} };
+                    statusCell.font = { size:9, bold:true, color:{argb:sc.fg} };
+                }
+                const salesCell = dataRow.getCell(startCol + 2);
+                if (s.sales && parseInt(s.sales) > 0) {
+                    salesCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFEDD5'} };
+                    salesCell.font = { size:9, bold:true };
+                }
+                const stockCell = dataRow.getCell(startCol + 3);
+                if (s.stock && parseInt(s.stock) > 0) {
+                    stockCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF5F5'} };
+                }
+                const capacity = s.capacity || 0;
+                if (capacity > 0) {
+                    let fillPercent = 0;
+                    if (s.stock > 0) fillPercent = Math.round((s.stock / capacity) * 100);
+                    const fillCell = dataRow.getCell(startCol + 4);
+                    let bg = 'FFC8E6C9', fg = 'FF1B5E20';
+                    if (fillPercent <= 30)      { bg = 'FFFFCDD2'; fg = 'FFB71C1C'; }
+                    else if (fillPercent <= 60) { bg = 'FFFFE0B2'; fg = 'FFE65100'; }
+                    else if (fillPercent > 100) { bg = 'FFB71C1C'; fg = 'FFFFFFFF'; }
+                    fillCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} };
+                    fillCell.font = { size:9, bold:true, color:{argb:fg} };
+                }
+            });
+
+            endColumns.forEach((col, idx) => {
+                const cell = dataRow.getCell(endStartCol + idx);
+                if (col.key === 'comment') {
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF9C4'} };
+                    cell.font = { size:9, italic:true };
+                    cell.alignment = { vertical:'middle', horizontal:'left', wrapText:true };
+                }
+                if (col.key === 'sumDpac') {
+                    cell.numFmt = '#,##0'; cell.font = { size:9, bold:true };
+                    cell.alignment = { horizontal:'right', vertical:'middle' };
+                }
+            });
+        });
+
+        updateProgress('Итоги...', 70);
+
+        const totalSum = rowsToExport.reduce((s, r) => s + r.sumDpac, 0);
+        const totalRow = worksheet.addRow([]);
+        totalRow.height = 22;
+        const totalLabelCell = totalRow.getCell(totalCols - 1);
+        totalLabelCell.value = 'ИТОГО:';
+        totalLabelCell.font = { size:10, bold:true };
+        totalLabelCell.alignment = { horizontal:'right', vertical:'middle' };
+        totalLabelCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFE0DBD4'} };
+        const totalCell = totalRow.getCell(totalCols);
+        totalCell.value = totalSum;
+        totalCell.font = { size:11, bold:true, color:{argb:'FF2C5F2D'} };
+        totalCell.alignment = { horizontal:'right', vertical:'middle' };
+        totalCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFE0DBD4'} };
+        totalCell.numFmt = '#,##0';
+
+        worksheet.autoFilter = { from:{row:2,column:1}, to:{row:2,column:totalCols} };
+
+        // Лист «Комментарии»
+        const commentRows = [["Артикул","Наименование","Комментарий"]];
+        let commentCount = 0;
+        rowsToExport.forEach(r => {
+            const comment = commentsMap.get(r.art) || r.comment || '';
+            if (comment && comment.trim() !== '') {
+                commentRows.push([r.art, r.name, comment]);
+                commentCount++;
+            }
+        });
+        if (commentCount > 0) {
+            const wsComments = workbook.addWorksheet('Комментарии');
+            wsComments.columns = [
+                { header:'Артикул',     key:'art',     width:15 },
+                { header:'Наименование',key:'name',    width:40 },
+                { header:'Комментарий', key:'comment', width:50 }
+            ];
+            const hr = wsComments.getRow(1);
+            hr.font = { bold:true, size:10 };
+            hr.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF9C4'} };
+            hr.height = 25;
+            commentRows.slice(1).forEach(row => {
+                const rr = wsComments.addRow(row);
+                rr.height = 18;
+                rr.font = { size:9 };
+                rr.eachCell(c => {
+                    c.border = {
+                        top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}},
+                        bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}}
+                    };
+                });
+            });
+        }
+
+        updateProgress('Сохраняем файл...', 90);
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `ТОП0_с_изменениями_${new Date().toISOString().slice(0,10)}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        updateProgress('Готово!', 100);
+        showToast(`✅ Выгружено ${rowsToExport.length} артикулов с применённой маржой`, 'success', 6000);
+    } catch (err) {
+        console.error(err);
+        updateProgress('Ошибка', 100);
+        showToast(`❌ Ошибка выгрузки: ${err.message}`, 'error', 7000);
+    }
+}
+
+// =========================== ЭКСПОРТ AVS (ЦВЕТНАЯ) ===========================
 async function exportAvsList() {
     if (!filteredAvsRows.length) {
         showToast('⚠️ Нет артикулов в AVS прогнозе', 'warning', 5000);
@@ -1596,38 +2264,248 @@ async function exportAvsList() {
 
     try {
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('AVS Прогноз');
+        workbook.creator = 'ТОП 0';
+        workbook.created = new Date();
+        const worksheet = workbook.addWorksheet('AVS Прогноз', {
+            views: [{ state: 'frozen', ySplit: 2, xSplit: 2 }]
+        });
 
-        let allHeaders, rowDataFn;
+        const storeBlockColors = {
+            '8': 'FFC8E6C9', '92': 'FFBBDEFB', '147': 'FFFFE0B2',
+            '150': 'FFE1BEE7', '165': 'FFF8BBD0', '258': 'FFB2EBF2'
+        };
 
+        // ====== ВАРИАНТ A: выбран конкретный магазин → плоская таблица ======
         if (currentStore !== 'all') {
-            // ✅ Плоская таблица для выбранного магазина
-            allHeaders = ['Артикул','Наименование','Подотдел','Статус','Дата AVS','Дней до AVS','ТОП','Запас (шт)','Наполн.','Запас (дн)','Путь (дн)','Всего (дн)','Излишек (дн)','ТОП ЦО','ПЦ','Сумма в dpac'];
-            
-            rowDataFn = (r) => {
+            const headers = [
+                { key:'art',        header:'Артикул',        width:15, color:'FFE0DBD4' },
+                { key:'name',       header:'Наименование',   width:40, color:'FFE0DBD4' },
+                { key:'subdept',    header:'Подотдел',       width:18, color:'FFE0DBD4' },
+                { key:'status',     header:'Статус',         width:10, color:'FFE0DBD4' },
+                { key:'avsDate',    header:'Дата AVS',       width:12, color:'FFF3E5F5' },
+                { key:'daysToAvs',  header:'Дней до AVS',    width:12, color:'FFF3E5F5' },
+                { key:'top',        header:'ТОП',            width:8,  color:'FFE0DBD4' },
+                { key:'stock',      header:'Запас (шт)',     width:10, color:'FFE0DBD4' },
+                { key:'fill',       header:'Наполн.',        width:10, color:'FFFFF9C4' },
+                { key:'stockDays',  header:'Запас (дн)',     width:10, color:'FFBBDEFB' },
+                { key:'transitDays',header:'Путь (дн)',      width:10, color:'FFBBDEFB' },
+                { key:'totalDays',  header:'Всего (дн)',     width:10, color:'FFBBDEFB' },
+                { key:'surplus',    header:'Излишек (дн)',   width:12, color:'FFFFCDD2' },
+                { key:'topCO',      header:'ТОП ЦО',         width:10, color:'FFE0DBD4' },
+                { key:'price',      header:'ПЦ',             width:12, color:'FFBBDEFB' },
+                { key:'sumDpac',    header:'Сумма в dpac',   width:15, color:'FFE0DBD4' }
+            ];
+
+            const headerRow1 = worksheet.getRow(1);
+            headerRow1.height = 28;
+            headers.forEach((col, idx) => {
+                const cell = headerRow1.getCell(idx + 1);
+                cell.value = col.header;
+                cell.font = { bold:true, size:10, color:{argb:'FF1E1E1E'} };
+                cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+                cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:col.color} };
+                cell.border = {
+                    top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                    bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                };
+            });
+
+            headers.forEach((col, idx) => { worksheet.getColumn(idx + 1).width = col.width; });
+
+            filteredAvsRows.forEach(r => {
                 const s = r.storeDataAvs[currentStore] || { top:'', stock:0, capacity:0, stockDays:0, transitDays:0, totalDays:0, surplus:0, fillPercent:0 };
-                return [
+                const rowData = [
                     r.art, r.name, r.subdept, r.status, r.avsDateFormatted, r.daysToAvs,
-                    s.top || '', s.stock || 0, s.capacity > 0 ? s.fillPercent + '%' : '—',
+                    s.top || '', s.stock || 0,
+                    s.capacity > 0 ? s.fillPercent + '%' : '—',
                     capDays(s.stockDays), capDays(s.transitDays), capDays(s.totalDays),
                     s.surplus > 0 ? capDays(s.surplus) : '—',
                     r.topCO || '', r.price, r.sumDpac
                 ];
-            };
+                const dataRow = worksheet.addRow(rowData);
+                dataRow.height = 18;
+                for (let c = 1; c <= headers.length; c++) {
+                    const cell = dataRow.getCell(c);
+                    cell.border = {
+                        top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}},
+                        bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}}
+                    };
+                    cell.font = { size:9 };
+                    cell.alignment = { vertical:'middle', horizontal:'center' };
+                }
+
+                // Артикул и наименование
+                dataRow.getCell(1).font = { size:9, bold:true };
+                dataRow.getCell(1).alignment = { vertical:'middle', horizontal:'left' };
+                dataRow.getCell(2).alignment = { vertical:'middle', horizontal:'left' };
+
+                // Статус
+                const sc = { 'A':{bg:'FFE8F5E9',fg:'FF1B5E20'},'B':{bg:'FFFFF3E0',fg:'FFE65100'},
+                             'C':{bg:'FFF5F5F5',fg:'FF616161'},'I':{bg:'FFFFF9C4',fg:'FFF57F17'},
+                             'D':{bg:'FFFFEBEE',fg:'FFB71C1C'} }[r.status] || {bg:'FFFFFFFF',fg:'FF1E1E1E'};
+                const statusCell = dataRow.getCell(4);
+                statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:sc.bg} };
+                statusCell.font = { size:9, bold:true, color:{argb:sc.fg} };
+
+                // Дней до AVS
+                const daysCell = dataRow.getCell(6);
+                let daysBg = 'FFC8E6C9', daysFg = 'FF1B5E20';
+                if (r.daysToAvs <= 30)      { daysBg = 'FFFFCDD2'; daysFg = 'FFB71C1C'; }
+                else if (r.daysToAvs <= 60) { daysBg = 'FFFFE0B2'; daysFg = 'FFE65100'; }
+                else if (r.daysToAvs <= 90) { daysBg = 'FFFFF9C4'; daysFg = 'FFF57F17'; }
+                daysCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:daysBg} };
+                daysCell.font = { size:9, bold:true, color:{argb:daysFg} };
+
+                // ТОП 0
+                if (s.top === '0') {
+                    const topCell = dataRow.getCell(7);
+                    topCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFCDD2'} };
+                    topCell.font = { size:9, bold:true, color:{argb:'FFB71C1C'} };
+                }
+
+                // Наполненность
+                if (s.capacity > 0) {
+                    const fillCell = dataRow.getCell(9);
+                    let bg = 'FFC8E6C9', fg = 'FF1B5E20';
+                    if (s.fillPercent <= 30)      { bg = 'FFFFCDD2'; fg = 'FFB71C1C'; }
+                    else if (s.fillPercent <= 60) { bg = 'FFFFE0B2'; fg = 'FFE65100'; }
+                    else if (s.fillPercent > 100) { bg = 'FFB71C1C'; fg = 'FFFFFFFF'; }
+                    fillCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} };
+                    fillCell.font = { size:9, bold:true, color:{argb:fg} };
+                }
+
+                // Излишек
+                const surplusCell = dataRow.getCell(13);
+                let surplusBg = 'FFC8E6C9', surplusFg = 'FF1B5E20';
+                if (s.surplus >= 180)      { surplusBg = 'FFFFCDD2'; surplusFg = 'FFB71C1C'; }
+                else if (s.surplus >= 90)  { surplusBg = 'FFFFE0B2'; surplusFg = 'FFE65100'; }
+                else if (s.surplus >= 30)  { surplusBg = 'FFFFF9C4'; surplusFg = 'FFF57F17'; }
+                surplusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:surplusBg} };
+                surplusCell.font = { size:9, bold:true, color:{argb:surplusFg} };
+
+                // ПЦ
+                const priceCell = dataRow.getCell(15);
+                priceCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFBBDEFB'} };
+                priceCell.font = { size:9, bold:true, color:{argb:'FF0D47A1'} };
+                priceCell.numFmt = '#,##0';
+                priceCell.alignment = { horizontal:'right', vertical:'middle' };
+
+                // Сумма
+                const sumCell = dataRow.getCell(16);
+                sumCell.numFmt = '#,##0';
+                sumCell.font = { size:9, bold:true };
+                sumCell.alignment = { horizontal:'right', vertical:'middle' };
+            });
+
+            worksheet.autoFilter = { from:{row:1,column:1}, to:{row:1,column:headers.length} };
+
+        // ====== ВАРИАНТ B: все магазины → двухуровневые заголовки с блоками ======
         } else {
-            // Все магазины с блоками
-            const baseHeaders = ['Артикул','Наименование','Подотдел','Статус','Дата AVS','Дней до AVS','ТОП ЦО'];
-            const storeHeaders = [];
-            for (const store of activeStores) {
-                storeHeaders.push(`М${store} ТОП`, `М${store} Запас(шт)`, `М${store} Наполн.`, `М${store} Путь(дн)`, `М${store} Излишек`);
-            }
-            const endHeaders = ['Общий излишек','ПЦ','Сумма в dpac'];
-            allHeaders = [...baseHeaders, ...storeHeaders, ...endHeaders];
-            
-            rowDataFn = (r) => {
-                const rowData = [r.art, r.name, r.subdept, r.status, r.avsDateFormatted, r.daysToAvs, r.topCO];
-                for (const store of activeStores) {
-                    const s = r.storeDataAvs[store] || { top:'', stock:0, capacity:0, stockDays:0, transitDays:0, totalDays:0, surplus:0, fillPercent:0 };
+            const baseColumns = [
+                { key:'art',       header:'Артикул',     width:15, color:'FFE0DBD4' },
+                { key:'name',      header:'Наименование',width:40, color:'FFE0DBD4' },
+                { key:'subdept',   header:'Подотдел',    width:18, color:'FFE0DBD4' },
+                { key:'status',    header:'Статус',      width:10, color:'FFE0DBD4' },
+                { key:'avsDate',   header:'Дата AVS',    width:12, color:'FFF3E5F5' },
+                { key:'daysToAvs', header:'Дней до AVS', width:12, color:'FFF3E5F5' },
+                { key:'topCO',     header:'ТОП ЦО',      width:10, color:'FFE0DBD4' }
+            ];
+            const storeSubColumns = ['ТОП', 'Запас', 'Наполн.', 'Путь(дн)', 'Излишек'];
+            const SUB_COUNT = storeSubColumns.length;
+
+            const endColumns = [
+                { key:'surplus', header:'Общий излишек', width:15, color:'FFFFCDD2' },
+                { key:'price',   header:'ПЦ',            width:12, color:'FFBBDEFB' },
+                { key:'sumDpac', header:'Сумма в dpac',  width:15, color:'FFE0DBD4' }
+            ];
+
+            const storeBlocks = activeStores.map(store => ({
+                store, title:`🏬 Магазин ${store}`,
+                color: storeBlockColors[store] || 'FFE0DBD4'
+            }));
+
+            const totalCols     = baseColumns.length + storeBlocks.length * SUB_COUNT + endColumns.length;
+            const storeStartCol = baseColumns.length + 1;
+            const endStartCol   = baseColumns.length + storeBlocks.length * SUB_COUNT + 1;
+
+            const headerRow1 = worksheet.getRow(1);
+            headerRow1.height = 32;
+
+            baseColumns.forEach((col, idx) => {
+                worksheet.mergeCells(1, idx + 1, 2, idx + 1);
+                const cell = headerRow1.getCell(idx + 1);
+                cell.value = col.header;
+                cell.font = { bold:true, size:10, color:{argb:'FF1E1E1E'} };
+                cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+                cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:col.color} };
+                cell.border = {
+                    top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                    bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                };
+            });
+
+            storeBlocks.forEach((block, blockIdx) => {
+                const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                const endCol   = startCol + SUB_COUNT - 1;
+                worksheet.mergeCells(1, startCol, 1, endCol);
+                const cell = headerRow1.getCell(startCol);
+                cell.value = block.title;
+                cell.font = { bold:true, size:11, color:{argb:'FF1E1E1E'} };
+                cell.alignment = { horizontal:'center', vertical:'middle' };
+                for (let c = startCol; c <= endCol; c++) {
+                    const c1 = headerRow1.getCell(c);
+                    c1.fill = { type:'pattern', pattern:'solid', fgColor:{argb:block.color} };
+                    c1.border = {
+                        top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                        bottom:{style:'medium',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                    };
+                }
+            });
+
+            endColumns.forEach((col, idx) => {
+                const colIdx = endStartCol + idx;
+                worksheet.mergeCells(1, colIdx, 2, colIdx);
+                const cell = headerRow1.getCell(colIdx);
+                cell.value = col.header;
+                cell.font = { bold:true, size:10, color:{argb:'FF1E1E1E'} };
+                cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+                cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:col.color} };
+                cell.border = {
+                    top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                    bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                };
+            });
+
+            const headerRow2 = worksheet.getRow(2);
+            headerRow2.height = 22;
+            storeBlocks.forEach((block, blockIdx) => {
+                const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                storeSubColumns.forEach((subHeader, subIdx) => {
+                    const cell = headerRow2.getCell(startCol + subIdx);
+                    cell.value = subHeader;
+                    cell.font = { bold:true, size:9, color:{argb:'FF1E1E1E'} };
+                    cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+                    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:block.color} };
+                    cell.border = {
+                        top:{style:'thin',color:{argb:'FFB0A899'}}, left:{style:'thin',color:{argb:'FFB0A899'}},
+                        bottom:{style:'thin',color:{argb:'FFB0A899'}}, right:{style:'thin',color:{argb:'FFB0A899'}}
+                    };
+                });
+            });
+
+            baseColumns.forEach((col, idx) => { worksheet.getColumn(idx + 1).width = col.width; });
+            storeBlocks.forEach((block, blockIdx) => {
+                const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                for (let i = 0; i < SUB_COUNT; i++) worksheet.getColumn(startCol + i).width = 11;
+            });
+            endColumns.forEach((col, idx) => { worksheet.getColumn(endStartCol + idx).width = col.width; });
+
+            filteredAvsRows.forEach(r => {
+                const rowData = [
+                    r.art, r.name, r.subdept, r.status, r.avsDateFormatted, r.daysToAvs, r.topCO || ''
+                ];
+                storeBlocks.forEach(block => {
+                    const s = r.storeDataAvs[block.store] || { top:'', stock:0, capacity:0, transitDays:0, surplus:0, fillPercent:0 };
                     rowData.push(
                         s.top || '',
                         s.stock || 0,
@@ -1635,41 +2513,105 @@ async function exportAvsList() {
                         capDays(s.transitDays),
                         s.surplus > 0 ? capDays(s.surplus) : '—'
                     );
-                }
+                });
                 rowData.push(capDays(r.surplus), r.price, r.sumDpac);
-                return rowData;
-            };
+
+                const dataRow = worksheet.addRow(rowData);
+                dataRow.height = 18;
+
+                for (let colIdx = 1; colIdx <= totalCols; colIdx++) {
+                    const cell = dataRow.getCell(colIdx);
+                    cell.border = {
+                        top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}},
+                        bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}}
+                    };
+                    cell.font = { size:9 };
+                    cell.alignment = { vertical:'middle', horizontal:'center' };
+                }
+
+                dataRow.getCell(1).font = { size:9, bold:true };
+                dataRow.getCell(1).alignment = { vertical:'middle', horizontal:'left' };
+                dataRow.getCell(2).alignment = { vertical:'middle', horizontal:'left' };
+
+                // Статус
+                const sc = { 'A':{bg:'FFE8F5E9',fg:'FF1B5E20'},'B':{bg:'FFFFF3E0',fg:'FFE65100'},
+                             'C':{bg:'FFF5F5F5',fg:'FF616161'},'I':{bg:'FFFFF9C4',fg:'FFF57F17'},
+                             'D':{bg:'FFFFEBEE',fg:'FFB71C1C'} }[r.status] || {bg:'FFFFFFFF',fg:'FF1E1E1E'};
+                const statusCell = dataRow.getCell(4);
+                statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:sc.bg} };
+                statusCell.font = { size:9, bold:true, color:{argb:sc.fg} };
+
+                // Дней до AVS
+                const daysCell = dataRow.getCell(6);
+                let daysBg = 'FFC8E6C9', daysFg = 'FF1B5E20';
+                if (r.daysToAvs <= 30)      { daysBg = 'FFFFCDD2'; daysFg = 'FFB71C1C'; }
+                else if (r.daysToAvs <= 60) { daysBg = 'FFFFE0B2'; daysFg = 'FFE65100'; }
+                else if (r.daysToAvs <= 90) { daysBg = 'FFFFF9C4'; daysFg = 'FFF57F17'; }
+                daysCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:daysBg} };
+                daysCell.font = { size:9, bold:true, color:{argb:daysFg} };
+
+                // Блоки магазинов
+                storeBlocks.forEach((block, blockIdx) => {
+                    const startCol = storeStartCol + blockIdx * SUB_COUNT;
+                    const s = r.storeDataAvs[block.store] || { top:'', stock:0, capacity:0, transitDays:0, surplus:0, fillPercent:0 };
+
+                    const topCell = dataRow.getCell(startCol);
+                    if (s.top === '0') {
+                        topCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFCDD2'} };
+                        topCell.font = { size:9, bold:true, color:{argb:'FFB71C1C'} };
+                    }
+
+                    if (s.capacity > 0) {
+                        const fillCell = dataRow.getCell(startCol + 2);
+                        let bg = 'FFC8E6C9', fg = 'FF1B5E20';
+                        if (s.fillPercent <= 30)      { bg = 'FFFFCDD2'; fg = 'FFB71C1C'; }
+                        else if (s.fillPercent <= 60) { bg = 'FFFFE0B2'; fg = 'FFE65100'; }
+                        else if (s.fillPercent > 100) { bg = 'FFB71C1C'; fg = 'FFFFFFFF'; }
+                        fillCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} };
+                        fillCell.font = { size:9, bold:true, color:{argb:fg} };
+                    }
+
+                    const surplusCell = dataRow.getCell(startCol + 4);
+                    if (s.surplus > 0) {
+                        let bg = 'FFC8E6C9', fg = 'FF1B5E20';
+                        if (s.surplus >= 180)     { bg = 'FFFFCDD2'; fg = 'FFB71C1C'; }
+                        else if (s.surplus >= 90) { bg = 'FFFFE0B2'; fg = 'FFE65100'; }
+                        else if (s.surplus >= 30) { bg = 'FFFFF9C4'; fg = 'FFF57F17'; }
+                        surplusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} };
+                        surplusCell.font = { size:9, bold:true, color:{argb:fg} };
+                    }
+                });
+
+                // Общий излишек
+                const totalSurplusCell = dataRow.getCell(endStartCol);
+                let totalBg = 'FFC8E6C9', totalFg = 'FF1B5E20';
+                if (r.surplus >= 180)      { totalBg = 'FFFFCDD2'; totalFg = 'FFB71C1C'; }
+                else if (r.surplus >= 90)  { totalBg = 'FFFFE0B2'; totalFg = 'FFE65100'; }
+                else if (r.surplus >= 30)  { totalBg = 'FFFFF9C4'; totalFg = 'FFF57F17'; }
+                totalSurplusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:totalBg} };
+                totalSurplusCell.font = { size:9, bold:true, color:{argb:totalFg} };
+
+                // ПЦ
+                const priceCell = dataRow.getCell(endStartCol + 1);
+                priceCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFBBDEFB'} };
+                priceCell.font = { size:9, bold:true, color:{argb:'FF0D47A1'} };
+                priceCell.numFmt = '#,##0';
+                priceCell.alignment = { horizontal:'right', vertical:'middle' };
+
+                // Сумма
+                const sumCell = dataRow.getCell(endStartCol + 2);
+                sumCell.numFmt = '#,##0';
+                sumCell.font = { size:9, bold:true };
+                sumCell.alignment = { horizontal:'right', vertical:'middle' };
+            });
+
+            worksheet.autoFilter = { from:{row:2,column:1}, to:{row:2,column:totalCols} };
         }
 
-        const headerRow = worksheet.addRow(allHeaders);
-        headerRow.eachCell(cell => {
-            cell.font = { bold: true, size: 9, color: { argb: 'FFFFFFFF' } };
-            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7B1FA2' } };
-            cell.border = { top:{style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
-        });
-        headerRow.height = 32;
-
-        filteredAvsRows.forEach(r => {
-            const dataRow = worksheet.addRow(rowDataFn(r));
-            dataRow.eachCell(cell => {
-                cell.font = { size: 9 };
-                cell.border = { top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}}, bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}} };
-                cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            });
-            const surplusColIdx = allHeaders.indexOf('Общий излишек') + 1;
-            if (surplusColIdx > 0) {
-                const surplusCell = dataRow.getCell(surplusColIdx);
-                if (r.surplus >= 180) surplusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFCDD2'} };
-                else if (r.surplus >= 90) surplusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFE0B2'} };
-            }
-        });
-
-        worksheet.columns.forEach((col, i) => { col.width = 14; });
-        worksheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: allHeaders.length } };
+        updateProgress('Сохраняем файл...', 90);
 
         const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         const today = new Date().toISOString().slice(0,10);
@@ -1684,88 +2626,6 @@ async function exportAvsList() {
         console.error(err);
         updateProgress('Ошибка', 100);
         showToast(`❌ Ошибка выгрузки: ${err.message}`, 'error', 7000);
-    }
-}
-
-// =========================== ЭКСПОРТ ПОЛНОЙ ===========================
-async function exportFullData() {
-    if (!filteredRows.length) { showToast('⚠️ Нет данных', 'warning'); return; }
-    updateProgress('Формируем Excel...', 20);
-    try {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Сводная');
-        const headers = ['Артикул','Наименование','Отдел','Подотдел','ПЦ','РРЦ','Цена dpac','закуп + НДС','Маржа %','Дата изм.','Условие','Снижение','Статус','AVS','Дата AVS','ТОП','№ Поставщика','Согласие','Сумма в dpac','Комментарий'];
-        const headerRow = worksheet.addRow(headers);
-        headerRow.eachCell(cell => {
-            cell.font = { bold: true, size: 10 };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0DBD4' } };
-            cell.border = { top:{style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
-        });
-        filteredRows.forEach(r => {
-            const row = worksheet.addRow([r.art, r.name, r.dept, r.subdept, r.price, r.rrp, r.dpac, r.zakupNds, r.margin/100, r.dateChange, r.condition, r.reduceIfNoSales, r.status, r.isAvs ? 'AVS' : '', r.avs, r.top, r.supplier, r.consent, r.sumDpac, r.comment || '']);
-            row.eachCell(cell => { cell.font = { size: 9 }; cell.border = { top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}}, bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}} }; });
-            row.getCell(9).numFmt = '0.0%';
-        });
-        worksheet.columns.forEach((col, i) => { col.width = [14,40,8,20,10,10,10,12,10,12,10,10,8,8,12,8,14,15,12,30][i] || 12; });
-        worksheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: 20 } };
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `ТОП0_сводная_${new Date().toISOString().slice(0,10)}.xlsx`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        updateProgress('Готово!', 100);
-        showToast(`✅ Выгружено ${filteredRows.length} артикулов`, 'success', 5000);
-    } catch (err) {
-        console.error(err);
-        updateProgress('Ошибка', 100);
-        showToast(`❌ Ошибка: ${err.message}`, 'error', 7000);
-    }
-}
-
-// =========================== ЭКСПОРТ ИЗМЕНЕНИЙ ===========================
-async function exportChanges() {
-    const rowsToExport = filteredRows.filter(r => r.userMargin !== null && r.userMargin !== undefined);
-    if (!rowsToExport.length) { 
-        showToast('⚠️ Нет артикулов с применённой маржой', 'warning', 6000); 
-        return; 
-    }
-    updateProgress('Формируем Excel...', 20);
-    try {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('С изменениями');
-        const headers = ['Артикул','Наименование','Отдел','Подотдел','ПЦ','РРЦ','Цена dpac','закуп + НДС','Маржа %','Нов ПЦ','Нов МАРЖ','Дата изм.','Условие','Статус','AVS','№ Поставщика','Согласие','Сумма в dpac','Комментарий'];
-        const headerRow = worksheet.addRow(headers);
-        headerRow.eachCell(cell => {
-            cell.font = { bold: true, size: 10 };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F5E9' } };
-            cell.border = { top:{style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
-        });
-        rowsToExport.forEach(r => {
-            const row = worksheet.addRow([r.art, r.name, r.dept, r.subdept, r.price, r.rrp, r.dpac, r.zakupNds, r.margin/100, r.newPrice, r.newMargin/100, r.dateChange, r.condition, r.status, r.isAvs ? 'AVS' : '', r.supplier, r.consent, r.sumDpac, r.comment || '']);
-            row.eachCell(cell => { cell.font = { size: 9 }; cell.border = { top:{style:'thin',color:{argb:'FFE8E2DA'}}, left:{style:'thin',color:{argb:'FFE8E2DA'}}, bottom:{style:'thin',color:{argb:'FFE8E2DA'}}, right:{style:'thin',color:{argb:'FFE8E2DA'}} }; });
-            row.getCell(9).numFmt = '0.0%';
-            row.getCell(11).numFmt = '0.0%';
-            const newPriceCell = row.getCell(10);
-            newPriceCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8E6C9' } };
-            newPriceCell.font = { size: 9, bold: true, color: { argb: 'FF1B5E20' } };
-        });
-        worksheet.columns.forEach((col, i) => { col.width = [14,40,8,20,10,10,10,12,10,10,10,12,10,8,8,14,15,12,30][i] || 12; });
-        worksheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: 19 } };
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `ТОП0_с_изменениями_${new Date().toISOString().slice(0,10)}.xlsx`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        updateProgress('Готово!', 100);
-        showToast(`✅ Выгружено ${rowsToExport.length} артикулов`, 'success', 5000);
-    } catch (err) {
-        console.error(err);
-        updateProgress('Ошибка', 100);
-        showToast(`❌ Ошибка: ${err.message}`, 'error', 7000);
     }
 }
 
@@ -1900,14 +2760,14 @@ document.addEventListener('dblclick', (e) => {
 syncMarginInputs('input');
 updateSelectionUI();
 
-setTimeout(() => showToast('📌 Добавлена колонка "Наполненность" — % от вместимости полки', 'info', 6000), 800);
+setTimeout(() => showToast('📌 Цветной Excel восстановлен во всех 3 кнопках выгрузки', 'info', 6000), 800);
 
 console.log('📉 ТОП 0 — Снижение цены готов');
+console.log('✅ Цветной Excel во всех выгрузках (2-уровневые заголовки, блоки магазинов, подсветка)');
 console.log('✅ Колонка "Наполненность" (запас / вместимость × 100%)');
 console.log('✅ Выбор магазина → плоская таблица в AVS');
 console.log('✅ "Все магазины" → блоки по магазинам');
 console.log('✅ Ограничение 999+ для больших значений');
-console.log('✅ Фильтр по отделу в обеих панелях');
 </script>
 </body>
 </html>
