@@ -624,7 +624,157 @@
             padding-right: 35px;
         }
         .filter-group select:hover { border-color: #FF8C00; box-shadow: 0 0 0 3px rgba(255,140,0,0.1); }
-        .filter-group select:focus { outline: none; border-color: #FF8C00; box-shadow: 0 0 0 3px rgba(255,140,0,0.2); }
+                .filter-group select:focus { outline: none; border-color: #FF8C00; box-shadow: 0 0 0 3px rgba(255,140,0,0.2); }
+
+        /* ===== 🆕 v2.6: Мультивыбор подотделов ===== */
+        .subdept-dropdown-btn {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+            font-family: inherit;
+        }
+        .subdept-dropdown-btn:hover {
+            border-color: #FF8C00;
+            box-shadow: 0 0 0 3px rgba(255,140,0,0.1);
+        }
+        .subdept-dropdown-btn.open {
+            border-color: #FF8C00;
+            box-shadow: 0 0 0 3px rgba(255,140,0,0.2);
+        }
+        .subdept-dropdown-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            z-index: 100;
+            max-height: 320px;
+            overflow: hidden;
+            flex-direction: column;
+        }
+        .subdept-dropdown-panel.open {
+            display: flex;
+        }
+        .subdept-dropdown-actions {
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-card);
+        }
+        .subdept-action-btn {
+            flex: 1;
+            padding: 4px 8px;
+            border-radius: 16px;
+            border: 1px solid #2c5f2d;
+            background: var(--bg-panel);
+            color: #2c5f2d;
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .subdept-action-btn:hover {
+            background: var(--success-bg);
+        }
+        .subdept-action-btn.subdept-action-clear {
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+        .subdept-action-btn.subdept-action-clear:hover {
+            background: #ffebee;
+        }
+        .subdept-checkbox-list {
+            overflow-y: auto;
+            padding: 6px 8px;
+            max-height: 240px;
+        }
+        .subdept-checkbox-list::-webkit-scrollbar { width: 5px; }
+        .subdept-checkbox-list::-webkit-scrollbar-thumb { background: #FF8C00; border-radius: 4px; }
+        .subdept-checkbox-list::-webkit-scrollbar-track { background: var(--bg-card); border-radius: 4px; }
+        .subdept-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: var(--text-primary);
+            transition: background 0.15s;
+            user-select: none;
+        }
+        .subdept-checkbox-item:hover {
+            background: var(--table-hover);
+        }
+        .subdept-checkbox-item input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            accent-color: #FF8C00;
+            flex-shrink: 0;
+        }
+        .subdept-checkbox-item.checked {
+            background: rgba(255,140,0,0.08);
+            font-weight: 600;
+        }
+        .subdept-empty-hint {
+            padding: 12px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        /* ===== 🆕 v2.6: Кнопка "Показать ещё +100" ===== */
+        .show-more-row td {
+            text-align: center !important;
+            padding: 12px !important;
+            background: var(--bg-card) !important;
+            border-top: 2px dashed var(--border-color) !important;
+        }
+        .show-more-btn {
+            background: #FF8C00;
+            color: #1e1e1e;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 28px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 8px rgba(255,140,0,0.3);
+        }
+        .show-more-btn:hover {
+            background: #e07c00;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,140,0,0.4);
+        }
+        .show-more-hint {
+            display: block;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .show-more-limit-hint {
+            display: block;
+            font-size: 0.7rem;
+            color: #e65100;
+            font-weight: 600;
+        }
         
         .advanced-filters { display: none; padding-top: 10px; border-top: 2px dashed var(--border-color); margin-top: 6px; }
         .advanced-filters.show { display: block; }
@@ -727,25 +877,35 @@
             white-space: nowrap; 
             z-index: 10;
         }
-        .full-table th:first-child, .full-table th:nth-child(2) {
+        /* 🔴 ПУНКТ 3: Закрепление 2 столбцов (Артикул, Наименование) — № магазина уходит при скролле */
+        .full-table th:nth-child(2),
+        .full-table td:nth-child(2) {
             position: sticky;
             left: 0;
-            z-index: 11;
+            z-index: 12;
             background: #FFB347;
+            min-width: 90px;
         }
-        .full-table td:first-child, .full-table td:nth-child(2) {
+        .full-table th:nth-child(3),
+        .full-table td:nth-child(3) {
             position: sticky;
-            left: 0;
-            z-index: 5;
-            background: var(--bg-panel);
+            left: 90px;
+            z-index: 12;
+            background: #FFB347;
+            min-width: 150px;
+            max-width: 190px;
+        }
+        .full-table td:nth-child(3) {
+            font-size: 0.55rem;
+            line-height: 1.3;
         }
         .full-table tbody tr:nth-child(even) td { background-color: var(--table-stripe); }
-        .full-table tbody tr:nth-child(even) td:first-child,
-        .full-table tbody tr:nth-child(even) td:nth-child(2) { background-color: var(--table-stripe); }
+        .full-table tbody tr:nth-child(even) td:nth-child(2),
+        .full-table tbody tr:nth-child(even) td:nth-child(3) { background-color: var(--table-stripe); }
         
         .full-table tbody tr:hover td { background-color: var(--table-hover); }
-        .full-table tbody tr:hover td:first-child,
-        .full-table tbody tr:hover td:nth-child(2) { background-color: var(--table-hover); }
+        .full-table tbody tr:hover td:nth-child(2),
+        .full-table tbody tr:hover td:nth-child(3) { background-color: var(--table-hover); }
         
         .full-table td.editable { background-color: #fffde7 !important; }
         .full-table td.editable:hover { background-color: #fff9c4 !important; }
@@ -783,14 +943,14 @@
         .full-table tr.edited-row td {
             background-color: #e3f2fd !important;
         }
-        .full-table tr.edited-row td:first-child,
-        .full-table tr.edited-row td:nth-child(2) {
+        .full-table tr.edited-row td:nth-child(2),
+        .full-table tr.edited-row td:nth-child(3) {
             background-color: #e3f2fd !important;
             border-left: 3px solid #1976d2;
         }
         .full-table tr.edited-row:nth-child(even) td { background-color: #bbdefb !important; }
-        .full-table tr.edited-row:nth-child(even) td:first-child,
-        .full-table tr.edited-row:nth-child(even) td:nth-child(2) { background-color: #bbdefb !important; }
+        .full-table tr.edited-row:nth-child(even) td:nth-child(2),
+        .full-table tr.edited-row:nth-child(even) td:nth-child(3) { background-color: #bbdefb !important; }
         
         .full-table tr.uto-row td:first-child { border-left: 4px solid #7b1fa2 !important; position: relative; }
         .full-table tr.uto-row td:first-child::after { content: "📊"; position: absolute; right: 2px; top: 50%; transform: translateY(-50%); font-size: 0.6rem; }
@@ -804,6 +964,18 @@
             font-weight: 700;
             color: #e65100;
             border-left: 3px solid #FF8C00;
+        }
+        
+        /* 🟢 ПУНКТ 4: Подсветка % разницы РРЦ и ПЦ */
+        .full-table td.percent-sale-discount {
+            background: #ffcdd2 !important;
+            color: #b71c1c;
+            font-weight: 700;
+        }
+        .full-table td.percent-sale-markup {
+            background: #c8e6c9 !important;
+            color: #1b5e20;
+            font-weight: 700;
         }
         
         .magportal-btn {
@@ -1122,7 +1294,6 @@
 </head>
 <body>
 <div class="app-container" id="appContainer">
-    <div class="app-container" id="appContainer">
     <div class="header">
         <h1>📊 STOCKWISE <small>Умный анализ запасов</small></h1>
         <div class="header-controls">
@@ -1344,9 +1515,22 @@
                     <label>📁 Отдел</label>
                     <select id="departmentFilter"><option value="all">Все отделы</option></select>
                 </div>
-                <div class="filter-group">
-                    <label>📌 Подотдел</label>
-                    <select id="subdepartmentFilter"><option value="all">Все подотделы</option></select>
+                                <div class="filter-group">
+                    <label>📌 Подотдел <span id="subdeptCountBadge" style="font-size:0.6rem; color:#FF8C00; font-weight:600;"></span></label>
+                    <div style="position:relative;">
+                        <button type="button" id="subdeptDropdownBtn" class="subdept-dropdown-btn">
+                            <span id="subdeptDropdownLabel">Все подотделы</span>
+                            <span style="color:#FF8C00;">▼</span>
+                        </button>
+                        <div id="subdeptDropdownPanel" class="subdept-dropdown-panel">
+                            <div class="subdept-dropdown-actions">
+                                <button type="button" id="subdeptSelectAllBtn" class="subdept-action-btn">✅ Все</button>
+                                <button type="button" id="subdeptClearAllBtn" class="subdept-action-btn subdept-action-clear">🗑️ Снять</button>
+                            </div>
+                            <div id="subdeptCheckboxList" class="subdept-checkbox-list"></div>
+                        </div>
+                    </div>
+                    <select id="subdepartmentFilter" style="display:none;"><option value="all">Все подотделы</option></select>
                 </div>
                 <div class="filter-group">
                     <label>📌 Тип</label>
@@ -1456,7 +1640,12 @@
                 </div>
                 
                 <div id="filterLoading" class="filter-loading">
-                    <span class="spinner-small"></span> Применяем фильтры...
+                    <span class="spinner-small"></span> 
+                    <span id="filterLoadingText">Применяем фильтры...</span>
+                    <span id="filterPercent" style="font-weight:700; margin-left:6px;">0%</span>
+                    <div class="progress-bar" style="margin-top:4px; height:4px;">
+                        <div class="progress-fill" id="filterProgressFill" style="width:0%;"></div>
+                    </div>
                 </div>
                 
                 <div class="color-legend">
@@ -1747,8 +1936,24 @@
 
 <script>
 // ==================== Toast система ====================
-function showToast(message, type = 'info', duration = 3000) {
+// 🆕 v2.8: время жизни тостов по типу
+const TOAST_DURATIONS = {
+    success: 3000,
+    info:    5000,
+    warning: 10000,   // ⚠️ оранжевый — 10 сек
+    error:   12000
+};
+
+function showToast(message, type = 'info', duration = null) {
+    if (duration === null) {
+        duration = TOAST_DURATIONS[type] ?? 4000;
+    }
+    
     const container = document.getElementById('toastContainer');
+    // 🆕 Ограничиваем количество видимых тостов — чтобы не забивали экран
+    while (container.children.length >= 4) {
+        container.firstChild.remove();
+    }
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `
@@ -1763,12 +1968,74 @@ function showToast(message, type = 'info', duration = 3000) {
         setTimeout(() => toast.remove(), 300);
     });
     
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
+    // 🆕 Пауза при наведении — таймер замирает
+    let timerId = null;
+    let remaining = duration;
+    let start = Date.now();
+    
+    function startTimer() {
+        start = Date.now();
+        timerId = setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, remaining);
+    }
+    
+    function pauseTimer() {
+        if (timerId) {
+            clearTimeout(timerId);
+            timerId = null;
+            remaining -= Date.now() - start;
+            if (remaining < 0) remaining = 0;
         }
-    }, duration);
+    }
+    
+    toast.addEventListener('mouseenter', pauseTimer);
+    toast.addEventListener('mouseleave', startTimer);
+    
+    startTimer();
+}
+
+// ⚡ ПУНКТ 5: кэш DOM-элементов (ускоряет частые обращения)
+const DOM_CACHE = {
+    storeFilter: null,
+    departmentFilter: null,
+    subdepartmentFilter: null,
+    typeFilter: null,
+    topFilter: null,
+    stockMinInput: null,
+    stockMaxInput: null,
+    transitMinInput: null,
+    transitMaxInput: null,
+    nameSearchInput: null,
+    barcodeSearchInput: null,
+    supplierSearchInput: null,
+    filterLoading: null,
+    filterProgressFill: null,
+    filterPercent: null,
+    filterLoadingText: null,
+    tableLoadingOverlay: null
+};
+function initDomCache() {
+    DOM_CACHE.storeFilter = document.getElementById('storeFilter');
+    DOM_CACHE.departmentFilter = document.getElementById('departmentFilter');
+    DOM_CACHE.subdepartmentFilter = document.getElementById('subdepartmentFilter');
+    DOM_CACHE.typeFilter = document.getElementById('typeFilter');
+    DOM_CACHE.topFilter = document.getElementById('topFilter');
+    DOM_CACHE.stockMinInput = document.getElementById('stockMinInput');
+    DOM_CACHE.stockMaxInput = document.getElementById('stockMaxInput');
+    DOM_CACHE.transitMinInput = document.getElementById('transitMinInput');
+    DOM_CACHE.transitMaxInput = document.getElementById('transitMaxInput');
+    DOM_CACHE.nameSearchInput = document.getElementById('nameSearchInput');
+    DOM_CACHE.barcodeSearchInput = document.getElementById('barcodeSearchInput');
+    DOM_CACHE.supplierSearchInput = document.getElementById('supplierSearchInput');
+    DOM_CACHE.filterLoading = document.getElementById('filterLoading');
+    DOM_CACHE.filterProgressFill = document.getElementById('filterProgressFill');
+    DOM_CACHE.filterPercent = document.getElementById('filterPercent');
+    DOM_CACHE.filterLoadingText = document.getElementById('filterLoadingText');
+    DOM_CACHE.tableLoadingOverlay = document.getElementById('tableLoadingOverlay');
 }
 
 // ==================== Копирование в буфер ====================
@@ -1875,7 +2142,10 @@ if (localStorage.getItem('stockwise_theme') === 'dark') {
 
 // ==================== Настройки ====================
 const DISPLAY_LIMIT_BASIC = 200;
-let DISPLAY_LIMIT = 200;
+const DISPLAY_LIMIT_STEP = 100;
+const DISPLAY_LIMIT_HARD = 500;
+let currentShowLimit = DISPLAY_LIMIT_BASIC;
+let selectedSubdepartments = new Set();
 let isOnlineMode = false;
 let editedRows = new Map();
 let filterTimeout = null;
@@ -1884,6 +2154,31 @@ let historyStack = [];
 let historyIndex = -1;
 const MAX_HISTORY = 50;
 let criticalAlertShown = false;
+
+// ⚡ ОПТИМИЗАЦИЯ: флаг устаревания аналитики
+let analyticsStale = true;
+
+// ⚡ ОПТИМИЗАЦИЯ: кэш visibleCols
+let cachedVisibleCols = null;
+function getVisibleCols() {
+    if (!cachedVisibleCols) {
+        cachedVisibleCols = FULL_COLUMNS.filter(col => visibleColumns.has(col));
+    }
+    return cachedVisibleCols;
+}
+function invalidateVisibleColsCache() {
+    cachedVisibleCols = null;
+}
+
+// ⚡ ОПТИМИЗАЦИЯ: scheduleFixSticky через requestAnimationFrame
+let stickyRaf = null;
+function scheduleFixSticky() {
+    if (stickyRaf) cancelAnimationFrame(stickyRaf);
+    stickyRaf = requestAnimationFrame(() => {
+        fixStickyColumns();
+        stickyRaf = null;
+    });
+}
 
 // ==================== Состояние ====================
 const STATE_KEY = 'stockwise_state';
@@ -1909,7 +2204,8 @@ function loadState() {
                 activeQuickFilter: parsed.activeQuickFilter || 'all',
                 visibleColumns: parsed.visibleColumns || null,
                 editedRows: parsed.editedRows || {},
-                alertsEnabled: parsed.alertsEnabled !== undefined ? parsed.alertsEnabled : true
+                alertsEnabled: parsed.alertsEnabled !== undefined ? parsed.alertsEnabled : true,
+                selectedSubdepartments: parsed.selectedSubdepartments || []
             };
         }
     } catch (e) {}
@@ -1928,11 +2224,21 @@ function loadState() {
         activeQuickFilter: 'all',
         visibleColumns: null,
         editedRows: {},
-        alertsEnabled: true
+        alertsEnabled: true,
+                selectedSubdepartments: []
     };
 }
 
+// 🆕 v2.7: debounced saveState — не блокирует UI при массовых правках
+let saveStateTimeout = null;
 function saveState() {
+    if (saveStateTimeout) clearTimeout(saveStateTimeout);
+    saveStateTimeout = setTimeout(() => {
+        saveStateImmediate();
+    }, 400);
+}
+
+function saveStateImmediate() {
     try {
         const state = {
             storeFilter: document.getElementById('storeFilter').value,
@@ -1952,7 +2258,8 @@ function saveState() {
                 acc[key] = val;
                 return acc;
             }, {}),
-            alertsEnabled: alertsEnabled
+            alertsEnabled: alertsEnabled,
+            selectedSubdepartments: Array.from(selectedSubdepartments)
         };
         localStorage.setItem(STATE_KEY, JSON.stringify(state));
     } catch (e) {}
@@ -2012,21 +2319,93 @@ function getTomorrowDay() {
 
 // ==================== БАЗОВЫЕ КОЛОНКИ ====================
 const BASE_COLUMNS = [
-    "№ магазина","Артикул","Наименование","BEST гамма","BEST NEXT","Гамма","ТОП","LOC","Статус","CPQ",
-    "min дн","max дн.","Авто min","min ЦО Проект","min ЦО ПАК-Подиум","min ЦО коорд","min 401 NEW","min 441 ПМ","min 500 Проект","min 902 B2B",
+    "№ магазина","Артикул","Наименование","BEST гамма","BEST NEXT","Гамма","ТОП","LOC","Статус","CPQ","Новинка",
+    "% разницы РРЦ и ПЦ","max дн.","Авто min","min ЦО Проект","min ЦО ПАК-Подиум","min ЦО коорд","min 401 NEW","min 441 ПМ","min 500 Проект","min 902 B2B",
     "max шт.","Брак","ЭКСПО","През. минимум","ТЖ/ПАК","Подиум магазина","Улич. Торг", "Доп. презентация","Наибольший резерв MIN","Наибольший резерв MIN (число)",
     "Вид минимума","Кол-во проектов",
     "Вместимость","Наполненность полки",
-    "Отгружено в сред. За 7 дн","Теор сток ГАММА","Запас, шт.","Запас, дн.","В пути, шт.","В пути, дн.","Размер упаковки",
+    "Отгружено в сред. За 7 дн","Теор сток ГАММА","Запас, шт.","Запас, дн.","В пути, шт.","В пути, дн.","Срок поставки в магазин","Размер упаковки",
     "УТО, руб.","ПУТО","УТО, шт.","Кол-во случаев перебоя за 30 дн","Кол-во дней в перебое","20/80","ТС","МС","Корекции","Недопоставки",
     "Подотдел","ТИП","Дни выхода заказа поставщика","Номер поставщика","Поставщик","Запас больше вместимости",
-    "Дата AVS","Штрихкод"
+    "Дата AVS","Штрихкод","Серия","Бренд","Коллекция","Стиль"
 ];
 
 const EDITABLE_COLUMNS = ["Вид минимума", "Кол-во проектов"];
 let FULL_COLUMNS = [...BASE_COLUMNS];
 let visibleColumns = new Set(FULL_COLUMNS);
-
+// 🆕 Кэшированные константы для calculateRow (вынесено из горячего цикла)
+const MIN_KEYWORDS = [
+    "Мин Магазин Амбиция проекта шт",
+    "Мин Магазин ПМ шт",
+    "Мин Магазин В2В шт",
+    "Мин Новый товар шт",
+    "Мин ЦО Амбиция проекта шт",
+    "Мин ЦО Пак-Подиум шт",
+    "Мин ЦО коорд. шт",
+    "Мин ЦО Проект",
+    "През. минимум",
+    "ТЖ/ПАК",
+    "Подиум магазина",
+    "Уличн. торговля",
+    "Доп. презентация",
+    "Авто min",
+    "мин",
+    "min"
+];
+const MIN_KEYWORDS_LOWER = MIN_KEYWORDS.map(k => k.toLowerCase());
+const MIN_TYPE_TO_DISPLAY = {
+    "Мин Магазин Амбиция проекта шт": "500 Проект",
+    "Мин Магазин ПМ шт": "441 ПМ",
+    "Мин Магазин В2В шт": "902 B2B",
+    "Мин Новый товар шт": "401 NEW",
+    "Мин ЦО Амбиция проекта шт": "ЦО Проект",
+    "Мин ЦО Пак-Подиум шт": "ЦО ПАК-Подиум",
+    "Мин ЦО коорд. шт": "ЦО коорд",
+    "Мин ЦО Проект": "ЦО Проект",
+    "През. минимум": "През. минимум",
+    "ТЖ/ПАК": "ТЖ/ПАК",
+    "Подиум магазина": "Подиум магазина",
+    "Уличн. торговля": "Улич. Торг",
+    "Доп. презентация": "Доп. презентация",
+    "Авто min": "Авто min"
+};
+const MIN_TYPE_TO_CODE = {
+    "Мин Магазин Амбиция проекта шт": "500",
+    "Мин Магазин ПМ шт": "441",
+    "Мин Магазин В2В шт": "902",
+    "Мин Новый товар шт": "401",
+    "Мин ЦО Амбиция проекта шт": "500",
+    "Мин ЦО Пак-Подиум шт": "500",
+    "Мин ЦО коорд. шт": "500",
+    "Мин ЦО Проект": "500",
+    "Мин Магазин Амбиция": "500",
+    "Мин Магазин ПМ": "441",
+    "Мин Магазин В2В": "902",
+    "Мин Новый товар": "401",
+    "Мин ЦО": "500",
+    "През. минимум": "През.",
+    "ТЖ/ПАК": "ТЖ/ПАК",
+    "Подиум магазина": "Подиум",
+    "Уличн. торговля": "Улич.",
+    "Доп. презентация": "Доп.",
+    "Авто min": "Авто"
+};
+const MIN_TYPE_TO_COLUMN = {
+    "Мин Магазин Амбиция проекта шт": "min 500 Проект",
+    "Мин Магазин ПМ шт": "min 441 ПМ",
+    "Мин Магазин В2В шт": "min 902 B2B",
+    "Мин Новый товар шт": "min 401 NEW",
+    "Мин ЦО Амбиция проекта шт": "min ЦО Проект",
+    "Мин ЦО Пак-Подиум шт": "min ЦО ПАК-Подиум",
+    "Мин ЦО коорд. шт": "min ЦО коорд",
+    "През. минимум": "През. минимум",
+    "ТЖ/ПАК": "ТЖ/ПАК",
+    "Подиум магазина": "Подиум магазина",
+    "Уличн. торговля": "Улич. Торг",
+    "Доп. презентация": "Доп. презентация",
+    "Брак": "Брак",
+    "ЭКСПО": "ЭКСПО"
+};
 const UTO_COLUMNS = ["УТО, руб.", "УТО, шт.", "Кол-во случаев перебоя за 30 дн", "Кол-во дней в перебое"];
 const BEST_COLUMNS = ["BEST гамма", "BEST NEXT"];
 const MIN_COLUMNS = ["Дни выхода заказа поставщика"];
@@ -2040,9 +2419,15 @@ const ZERO_AS_EMPTY_COLUMNS = [
 
 if (appState.visibleColumns && appState.visibleColumns.length) {
     visibleColumns = new Set(appState.visibleColumns);
+    FULL_COLUMNS.forEach(col => {
+        if (!visibleColumns.has(col)) {
+            visibleColumns.add(col);
+        }
+    });
 } else {
     FULL_COLUMNS.forEach(col => visibleColumns.add(col));
 }
+invalidateVisibleColsCache();
 
 if (appState.editedRows) {
     Object.entries(appState.editedRows).forEach(([key, val]) => {
@@ -2079,7 +2464,9 @@ const excelHeaderColors = {
     "№ магазина": "FFB347", "Артикул": "FFB347", "Наименование": "FFB347",
     "BEST гамма": "FFF8E1", "BEST NEXT": "FFF8E1", "Гамма": "FFB347",
     "ТОП": "FFB347", "LOC": "FFB347", "Статус": "FFB347", "CPQ": "FFB347",
-    "min дн": "E3F2FD", "max дн.": "FFF3E0", "Авто min": "E3F2FD",
+    "Новинка": "FFF8E1",
+    "% разницы РРЦ и ПЦ": "E3F2FD",
+    "max дн.": "FFF3E0", "Авто min": "E3F2FD",
     "min ЦО Проект": "E3F2FD", "min ЦО ПАК-Подиум": "E3F2FD", "min ЦО коорд": "E3F2FD",
     "min 401 NEW": "E3F2FD", "min 441 ПМ": "E3F2FD", "min 500 Проект": "E3F2FD", "min 902 B2B": "E3F2FD",
     "max шт.": "FFF3E0", "Брак": "E3F2FD", "ЭКСПО": "E3F2FD", "През. минимум": "E3F2FD",
@@ -2088,12 +2475,15 @@ const excelHeaderColors = {
     "Вместимость": "FFB347", "Наполненность полки": "E8F5E9",
     "Отгружено в сред. За 7 дн": "FFEBEE",
     "Теор сток ГАММА": "FFEBEE", "Запас, шт.": "FFEBEE", "Запас, дн.": "E8F5E9",
-    "В пути, шт.": "FFEBEE", "В пути, дн.": "E8F5E9", "Размер упаковки": "FFB347",
+    "В пути, шт.": "FFEBEE", "В пути, дн.": "E8F5E9",
+    "Срок поставки в магазин": "FFFFFF",
+    "Размер упаковки": "FFB347",
     "УТО, руб.": "F3E5F5", "УТО, шт.": "F3E5F5", "Кол-во случаев перебоя за 30 дн": "F3E5F5", "Кол-во дней в перебое": "F3E5F5",
     "20/80": "FFB347", "ТС": "FFB347", "МС": "FFB347", "Корекции": "FFFFFF", "Недопоставки": "FFFFFF",
     "Подотдел": "FFB347", "ТИП": "FFB347", "Дни выхода заказа поставщика": "FFFFFF",
     "Номер поставщика": "FFFFFF", "Поставщик": "FFFFFF", "Запас больше вместимости": "FFFFFF",
-    "Дата AVS": "FFB347", "Штрихкод": "FFB347"
+    "Дата AVS": "FFB347", "Штрихкод": "FFB347",
+    "Серия": "FFB347", "Бренд": "FFB347", "Коллекция": "FFB347", "Стиль": "FFB347"
 };
 
 function toNumber(value, defaultValue = 0) { 
@@ -2151,6 +2541,15 @@ function getStockColorClass(days) {
     return 'stock-normal';
 }
 
+// 🎨 ПУНКТ 7: Вспомогательная функция градиента для Excel
+function getGradientColor(value, min, max) {
+    const ratio = Math.min(Math.max((value - min) / (max - min), 0), 1);
+    const r = Math.round(255 * ratio);
+    const g = Math.round(255 * (1 - ratio));
+    const b = 100;
+    return `${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`.toUpperCase();
+}
+
 // ==================== ДАННЫЕ И КЕШИ ====================
 let gammaData = [], reservyData = [], utoData = [], bestsData = [], avtoMinData = [], maxData = [], ekspoData = [], postavkiData = [], korrekciiData = [], nedopostavkiData = [];
 let storesSet = new Set(), departmentsSet = new Set(), subdepartmentsSet = new Set(), typesSet = new Set();
@@ -2171,7 +2570,8 @@ const maxMap = new Map();
 const avtoMinMap = new Map();
 const bestsMap = new Map();
 const utoMap = new Map();
-const postavkiMap = new Map(); // КЛЮЧ: store|supplierCode, ЗНАЧЕНИЕ: дни заказа
+const postavkiMap = new Map();
+const postavkiSrokMap = new Map();
 const korrekciiMap = new Map();
 const nedopostavkiMap = new Map();
 const ekspoMap = new Map();
@@ -2191,7 +2591,6 @@ function getStoreValue(item, possibleKeys = []) {
     return "";
 }
 
-// ==================== ОБНОВЛЕННАЯ ФУНКЦИЯ getMinDataByType ====================
 function getMinDataByType(store, art, type) {
     const key = `${store}|${art}`;
     const items = reservyMap.get(key);
@@ -2200,7 +2599,6 @@ function getMinDataByType(store, art, type) {
     
     for (const item of items) {
         const reserveType = String(item["Резерв"] || "").trim();
-        // Проверяем, соответствует ли тип резерва искомому типу или содержит его
         if (reserveType && (reserveType === type || reserveType.includes(type) || type.includes(reserveType))) {
             const count = toNumber(item["Кол-во резерва"]);
             let startDate = null;
@@ -2237,7 +2635,6 @@ function getMinDataByType(store, art, type) {
     return result;
 }
 
-// ==================== ИСПРАВЛЕННАЯ ФУНКЦИЯ getActiveMinData ====================
 function getActiveMinData(store, art) {
     const key = `${store}|${art}`;
     const items = reservyMap.get(key);
@@ -2246,53 +2643,6 @@ function getActiveMinData(store, art) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Расширенный список ключевых слов для MIN'ов
-    const minKeywords = [
-        "Мин Магазин Амбиция проекта шт",
-        "Мин Магазин ПМ шт",
-        "Мин Магазин В2В шт",
-        "Мин Новый товар шт",
-        "Мин ЦО Амбиция проекта шт",
-        "Мин ЦО Пак-Подиум шт",
-        "Мин ЦО коорд. шт",
-        "Мин ЦО Проект",
-        "Мин Магазин Амбиция",
-        "Мин Магазин ПМ",
-        "Мин Магазин В2В",
-        "Мин Новый товар",
-        "Мин ЦО",
-        "Авто min",
-        "През. минимум",
-        "ТЖ/ПАК",
-        "Подиум магазина",
-        "Уличн. торговля",
-        "Доп. презентация",
-        "мин",
-        "min"
-    ];
-
-    // Сопоставление типа MIN с кодом для поля "Вид минимума"
-    const typeToCodeMap = {
-        "Мин Магазин Амбиция проекта шт": "500",
-        "Мин Магазин ПМ шт": "441",
-        "Мин Магазин В2В шт": "902",
-        "Мин Новый товар шт": "401",
-        "Мин ЦО Амбиция проекта шт": "500",
-        "Мин ЦО Пак-Подиум шт": "500",
-        "Мин ЦО коорд. шт": "500",
-        "Мин ЦО Проект": "500",
-        "Мин Магазин Амбиция": "500",
-        "Мин Магазин ПМ": "441",
-        "Мин Магазин В2В": "902",
-        "Мин Новый товар": "401",
-        "Мин ЦО": "500",
-        "През. минимум": "През.",
-        "ТЖ/ПАК": "ТЖ/ПАК",
-        "Подиум магазина": "Подиум",
-        "Уличн. торговля": "Улич.",
-        "Доп. презентация": "Доп.",
-        "Авто min": "Авто"
-    };
 
     let activeMin = null;
     let maxActiveCount = 0;
@@ -2301,11 +2651,10 @@ function getActiveMinData(store, art) {
         const reserveType = String(item["Резерв"] || "").trim();
         if (!reserveType) continue;
         
-        // Проверяем, содержит ли тип резерва ключевое слово MIN
         let isMin = false;
         const lowerReserveType = reserveType.toLowerCase();
-        for (const keyword of minKeywords) {
-            if (lowerReserveType.includes(keyword.toLowerCase())) {
+                for (const keyword of MIN_KEYWORDS_LOWER) {
+            if (lowerReserveType.includes(keyword)) {
                 isMin = true;
                 break;
             }
@@ -2316,7 +2665,6 @@ function getActiveMinData(store, art) {
         const count = toNumber(item["Кол-во резерва"]);
         if (count <= 0) continue;
 
-        // Парсим даты
         let startDate = null;
         let endDate = null;
         
@@ -2342,36 +2690,24 @@ function getActiveMinData(store, art) {
             if (endDate) endDate.setHours(0, 0, 0, 0);
         }
 
-        // Проверяем активность MIN на текущую дату
         let isActive = false;
         
-        // Если нет дат начала и окончания -> MIN активен всегда
         if (!startDate && !endDate) {
             isActive = true;
         }
-        // Если есть только дата начала
         else if (startDate && !endDate) {
             isActive = startDate <= today;
         }
-        // Если есть только дата окончания
         else if (!startDate && endDate) {
             isActive = endDate >= today;
         }
-        // Если есть обе даты
         else if (startDate && endDate) {
             isActive = startDate <= today && endDate >= today;
         }
 
         if (isActive && count > maxActiveCount) {
             maxActiveCount = count;
-            // Определяем код для поля "Вид минимума"
-            let code = "500";
-            for (const [key, val] of Object.entries(typeToCodeMap)) {
-                if (reserveType.includes(key) || key.includes(reserveType)) {
-                    code = val;
-                    break;
-                }
-            }
+                        let code = MIN_TYPE_TO_CODE[reserveType] || "500";
             activeMin = {
                 type: reserveType,
                 count: count,
@@ -2384,8 +2720,6 @@ function getActiveMinData(store, art) {
         }
     }
 
-    // Если нет активных MIN'ов, берем любой MIN с максимальным значением (без учета дат)
-    // НО: только если он не имеет даты начала в будущем
     if (!activeMin) {
         let maxCount = 0;
         for (const item of items) {
@@ -2394,8 +2728,8 @@ function getActiveMinData(store, art) {
             
             let isMin = false;
             const lowerReserveType = reserveType.toLowerCase();
-            for (const keyword of minKeywords) {
-                if (lowerReserveType.includes(keyword.toLowerCase())) {
+            for (const keyword of MIN_KEYWORDS_LOWER) {
+                if (lowerReserveType.includes(keyword)) {
                     isMin = true;
                     break;
                 }
@@ -2405,7 +2739,6 @@ function getActiveMinData(store, art) {
             const count = toNumber(item["Кол-во резерва"]);
             if (count <= 0) continue;
             
-            // Проверяем, не начинается ли MIN в будущем
             let startsInFuture = false;
             if (item["Дата начала"]) {
                 const startStr = String(item["Дата начала"]).trim();
@@ -2422,18 +2755,11 @@ function getActiveMinData(store, art) {
                 }
             }
             
-            // Пропускаем MIN'ы, которые начинаются в будущем
             if (startsInFuture) continue;
             
             if (count > maxCount) {
                 maxCount = count;
-                let code = "500";
-                for (const [key, val] of Object.entries(typeToCodeMap)) {
-                    if (reserveType.includes(key) || key.includes(reserveType)) {
-                        code = val;
-                        break;
-                    }
-                }
+                            let code = MIN_TYPE_TO_CODE[reserveType] || "500";
                 activeMin = {
                     type: reserveType,
                     count: count,
@@ -2524,19 +2850,63 @@ function buildMaps() {
         } 
     }
     
-    // --- ИСПРАВЛЕНИЕ: Детали поставки (поставщики) с учетом магазина ---
+    // 🔗 ПУНКТ 3: обновлённый парсинг postavkiData
     postavkiMap.clear();
+    postavkiSrokMap.clear();
     for (const item of postavkiData) { 
         const store = getStoreValue(item, ["Магазин", "№ магазина"]);
-        const supplierCode = String(item["Поставщик"] || item["№ поставщика"] || "").trim();
-        const daysOrder = String(item["Дни заказа"] || item["Дни выхода заказа"] || "").trim();
-        // КЛЮЧ: store|supplierCode
-        if (store && supplierCode && daysOrder) {
+        // 🔗 ПУНКТ 3: ищем "Поставщик" (не только "№ поставщика")
+        const supplierCode = String(
+            item["Поставщик"] || 
+            item["№ поставщика"] || 
+            item["Номер поставщика"] ||
+            item["№ Поставщика"] || 
+            ""
+        ).trim();
+        const daysOrder = String(
+            item["Дни заказа"] || 
+            item["Дни выхода заказа"] || 
+            item["Дни выхода заказа поставщика"] ||
+            ""
+        ).trim();
+        // 🔗 ПУНКТ 3: ищем несколько вариантов заголовка (со стрелкой и без)
+        let srokPostavki = "";
+        const srokCandidates = [
+            "Срок поставки в магазин ↪",
+            "Срок поставки в магазин↪",
+            "Срок поставки в магазин",
+            "Срок поставки ↪",
+            "Срок поставки"
+        ];
+        for (const c of srokCandidates) {
+            if (item[c] !== undefined && item[c] !== null && String(item[c]).trim() !== "") {
+                srokPostavki = String(item[c]).trim();
+                break;
+            }
+        }
+        // Fallback: ищем по ключам с "Срок поставки"
+        if (!srokPostavki) {
+            for (const key of Object.keys(item)) {
+                if (key.includes("Срок поставки")) {
+                    const v = String(item[key] || "").trim();
+                    if (v) { srokPostavki = v; break; }
+                }
+            }
+        }
+        
+        if (store && supplierCode) {
             const key = `${store}|${supplierCode}`;
-            postavkiMap.set(key, daysOrder);
+            if (daysOrder) {
+                postavkiMap.set(key, daysOrder);
+            }
+            if (srokPostavki) {
+                postavkiSrokMap.set(key, srokPostavki);
+            }
         } 
     }
     console.log(`📦 Дни заказа поставщиков (по магазинам): ${postavkiMap.size} комбинаций`);
+    console.log(`📦 Срок поставки в магазин: ${postavkiSrokMap.size} комбинаций`);
+    console.log(`📦 Срок поставки в магазин (пример):`, Array.from(postavkiSrokMap.entries()).slice(0, 3));
     
     korrekciiMap.clear();
     for (const item of korrekciiData) { 
@@ -2625,7 +2995,6 @@ function getFieldValue(item, possibleNames) {
     return "";
 }
 
-// ==================== ОБНОВЛЕННАЯ calculateRow ====================
 function calculateRow(gammaItem) {
     const artikul = String(gammaItem["Артикул"] || "").trim();
     const store = String(gammaItem["№ магазина"] || "").trim();
@@ -2651,28 +3020,25 @@ function calculateRow(gammaItem) {
         topValue = "";
     }
     
-    // --- ПОЛУЧАЕМ ДАННЫЕ ПО РЕЗЕРВАМ ---
+    const novinka = String(gammaItem["Новинка"] || "").trim();
+    
+    const rpc = toNumber(gammaItem["Сумма Рекомендуемая продажная цена"]) || 0;
+    const pc  = toNumber(gammaItem["Сумма Продажная цена магазина"]) || 0;
+    let percentSale = 0;
+    if (rpc > 0 && pc > 0) {
+        percentSale = round(((rpc - pc) / rpc) * 100, 1);
+    }
+    
+    const seriya = String(gammaItem["Серия"] || "").trim();
+    const brend = String(gammaItem["Бренд"] || "").trim();
+    const kollekciya = String(gammaItem["Коллекция"] || "").trim();
+    const stil = String(gammaItem["Стиль"] || "").trim();
+    
+    const supplierCodeForSrok = supplier || String(gammaItem["Номер поставщика"] || gammaItem["№ Поставщика"] || "").trim();
+    const srokPostavki = postavkiSrokMap.get(`${store}|${supplierCodeForSrok}`) || "";
+    
     const items = reservyMap.get(mapKey) || [];
 
-    // 1. Суммируем резервы по типам (для остальных колонок)
-    const typeToColumnMap = {
-        "Мин Магазин Амбиция проекта шт": "min 500 Проект",
-        "Мин Магазин ПМ шт": "min 441 ПМ",
-        "Мин Магазин В2В шт": "min 902 B2B",
-        "Мин Новый товар шт": "min 401 NEW",
-        "Мин ЦО Амбиция проекта шт": "min ЦО Проект",
-        "Мин ЦО Пак-Подиум шт": "min ЦО ПАК-Подиум",
-        "Мин ЦО коорд. шт": "min ЦО коорд",
-        "През. минимум": "През. минимум",
-        "ТЖ/ПАК": "ТЖ/ПАК",
-        "Подиум магазина": "Подиум магазина",
-        "Уличн. торговля": "Улич. Торг",
-        "Доп. презентация": "Доп. презентация",
-        "Брак": "Брак",
-        "ЭКСПО": "ЭКСПО"
-    };
-
-    // Инициализируем суммы для всех типов
     const sums = {
         "min 500 Проект": 0, "min 441 ПМ": 0, "min 902 B2B": 0, "min 401 NEW": 0,
         "min ЦО Проект": 0, "min ЦО ПАК-Подиум": 0, "min ЦО коорд": 0,
@@ -2680,18 +3046,15 @@ function calculateRow(gammaItem) {
         "Брак": 0, "ЭКСПО": 0
     };
 
-    // Суммируем все резервы
     for (const item of items) {
         const reserveType = String(item["Резерв"] || "").trim();
         const count = toNumber(item["Кол-во резерва"]);
-        const colName = typeToColumnMap[reserveType];
+                const colName = MIN_TYPE_TO_COLUMN[reserveType];
         if (colName && sums.hasOwnProperty(colName)) {
             sums[colName] += count;
         }
     }
 
-    // Извлекаем отдельные значения
-    const minDn = getMaxReserveByKeyword(store, artikul) || 0;
     const maxItem = maxMap.get(mapKey);
     const maxDn = maxItem ? (maxItem["Дни, значение"] || 0) : 0;
     const maxSht = maxItem ? (maxItem["Штуки, значение"] || 0) : 0;
@@ -2711,169 +3074,109 @@ function calculateRow(gammaItem) {
     const ulichnTorg = sums["Улич. Торг"] || 0;
     const dopPrezentaciya = sums["Доп. презентация"] || 0;
 
-    // --- 2. НАХОДИМ НАИБОЛЬШИЙ РЕЗЕРВ MIN (максимальное значение среди ВСЕХ активных MIN'ов) ---
-// Получаем все MIN'ы с датами
-const allMinData = [];
-const minKeywords = [
-    "Мин Магазин Амбиция проекта шт",
-    "Мин Магазин ПМ шт",
-    "Мин Магазин В2В шт",
-    "Мин Новый товар шт",
-    "Мин ЦО Амбиция проекта шт",
-    "Мин ЦО Пак-Подиум шт",
-    "Мин ЦО коорд. шт",
-    "Мин ЦО Проект",
-    "През. минимум",
-    "ТЖ/ПАК",
-    "Подиум магазина",
-    "Уличн. торговля",
-    "Доп. презентация",
-    "Авто min",
-    "мин",
-    "min"
-];
+        const allMinData = [];
 
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-// Проходим по всем резервам для этого артикула в магазине
-for (const item of items) {
-    const reserveType = String(item["Резерв"] || "").trim();
-    if (!reserveType) continue;
-    
-    // Проверяем, содержит ли тип резерва ключевое слово MIN
-    let isMin = false;
-    const lowerReserveType = reserveType.toLowerCase();
-    for (const keyword of minKeywords) {
-        if (lowerReserveType.includes(keyword.toLowerCase())) {
-            isMin = true;
-            break;
-        }
-    }
-    
-    if (!isMin) continue;
-    
-    const count = toNumber(item["Кол-во резерва"]);
-    if (count <= 0) continue;
-
-    // Парсим даты
-    let startDate = null;
-    let endDate = null;
-    if (item["Дата начала"]) {
-        const startStr = String(item["Дата начала"]).trim();
-        const parts = startStr.split('.');
-        if (parts.length === 3) {
-            startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-        } else {
-            startDate = new Date(startStr);
-        }
-        if (startDate) startDate.setHours(0, 0, 0, 0);
-    }
-    if (item["Дата окончания"]) {
-        const endStr = String(item["Дата окончания"]).trim();
-        const parts = endStr.split('.');
-        if (parts.length === 3) {
-            endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-        } else {
-            endDate = new Date(endStr);
-        }
-        if (endDate) endDate.setHours(0, 0, 0, 0);
-    }
-
-    // Проверяем, активен ли MIN на текущую дату
-    const isActive = (!startDate || startDate <= today) && (!endDate || endDate >= today);
-    
-    if (isActive) {
-        allMinData.push({
-            type: reserveType,
-            count: count,
-            startDate: startDate,
-            endDate: endDate
-        });
-    }
-}
-
-// Находим максимальное значение среди активных MIN'ов
-let maxMinValue = 0;
-let maxMinType = "";
-for (const min of allMinData) {
-    if (min.count > maxMinValue) {
-        maxMinValue = min.count;
-        maxMinType = min.type;
-    }
-}
-
-// Если нет активных MIN'ов, берем максимальный среди всех (без учета дат)
-if (maxMinValue === 0) {
-    for (const item of items) {
+        for (const item of items) {
         const reserveType = String(item["Резерв"] || "").trim();
         if (!reserveType) continue;
         
         let isMin = false;
         const lowerReserveType = reserveType.toLowerCase();
-        for (const keyword of minKeywords) {
-            if (lowerReserveType.includes(keyword.toLowerCase())) {
+        for (const keyword of MIN_KEYWORDS_LOWER) {
+            if (lowerReserveType.includes(keyword)) {
                 isMin = true;
                 break;
             }
         }
+        
         if (!isMin) continue;
         
         const count = toNumber(item["Кол-во резерва"]);
-        if (count > maxMinValue) {
-            maxMinValue = count;
-            maxMinType = reserveType;
+        if (count <= 0) continue;
+
+        let startDate = null;
+        let endDate = null;
+        if (item["Дата начала"]) {
+            const startStr = String(item["Дата начала"]).trim();
+            const parts = startStr.split('.');
+            if (parts.length === 3) {
+                startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+                startDate = new Date(startStr);
+            }
+            if (startDate) startDate.setHours(0, 0, 0, 0);
+        }
+        if (item["Дата окончания"]) {
+            const endStr = String(item["Дата окончания"]).trim();
+            const parts = endStr.split('.');
+            if (parts.length === 3) {
+                endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+                endDate = new Date(endStr);
+            }
+            if (endDate) endDate.setHours(0, 0, 0, 0);
+        }
+
+        const isActive = (!startDate || startDate <= today) && (!endDate || endDate >= today);
+        
+        if (isActive) {
+            allMinData.push({
+                type: reserveType,
+                count: count,
+                startDate: startDate,
+                endDate: endDate
+            });
         }
     }
-}
 
-// Сопоставляем тип резерва с названием колонки
-const typeToDisplayName = {
-    "Мин Магазин Амбиция проекта шт": "500 Проект",
-    "Мин Магазин ПМ шт": "441 ПМ",
-    "Мин Магазин В2В шт": "902 B2B",
-    "Мин Новый товар шт": "401 NEW",
-    "Мин ЦО Амбиция проекта шт": "ЦО Проект",
-    "Мин ЦО Пак-Подиум шт": "ЦО ПАК-Подиум",
-    "Мин ЦО коорд. шт": "ЦО коорд",
-    "Мин ЦО Проект": "ЦО Проект",
-    "През. минимум": "През. минимум",
-    "ТЖ/ПАК": "ТЖ/ПАК",
-    "Подиум магазина": "Подиум магазина",
-    "Уличн. торговля": "Улич. Торг",
-    "Доп. презентация": "Доп. презентация",
-    "Авто min": "Авто min"
-};
+    let maxMinValue = 0;
+    let maxMinType = "";
+    for (const min of allMinData) {
+        if (min.count > maxMinValue) {
+            maxMinValue = min.count;
+            maxMinType = min.type;
+        }
+    }
 
-const displayName = typeToDisplayName[maxMinType] || maxMinType;
-const naibolshiyRezervMin = maxMinValue > 0 ? `${displayName} (${maxMinValue})` : "";
-const naibolshiyRezervMinNumber = maxMinValue;
+        if (maxMinValue === 0) {
+        for (const item of items) {
+            const reserveType = String(item["Резерв"] || "").trim();
+            if (!reserveType) continue;
+            
+            let isMin = false;
+            const lowerReserveType = reserveType.toLowerCase();
+            for (const keyword of MIN_KEYWORDS_LOWER) {
+                if (lowerReserveType.includes(keyword)) {
+                    isMin = true;
+                    break;
+                }
+            }
+            if (!isMin) continue;
+            
+            const count = toNumber(item["Кол-во резерва"]);
+            if (count > maxMinValue) {
+                maxMinValue = count;
+                maxMinType = reserveType;
+            }
+        }
+    }
 
-    // --- 3. ОПРЕДЕЛЯЕМ АКТИВНЫЙ MIN НА ТЕКУЩУЮ ДАТУ (для Вид минимума и Кол-во проектов) ---
+        const displayName = MIN_TYPE_TO_DISPLAY[maxMinType] || maxMinType;
+    const naibolshiyRezervMin = maxMinValue > 0 ? `${displayName} (${maxMinValue})` : "";
+    const naibolshiyRezervMinNumber = maxMinValue;
+
     const activeMin = getActiveMinData(store, artikul);
     let activeMinType = "";
     let activeMinCount = 0;
 
-    if (activeMin) {
-        const typeMap = {
-            "Мин Магазин Амбиция проекта шт": "500",
-            "Мин Магазин ПМ шт": "441",
-            "Мин Магазин В2В шт": "902",
-            "Мин Новый товар шт": "401",
-            "Мин ЦО Амбиция проекта шт": "500",
-            "Мин ЦО Пак-Подиум шт": "500",
-            "Мин ЦО коорд. шт": "500",
-            "През. минимум": "През.",
-            "ТЖ/ПАК": "ТЖ/ПАК",
-            "Подиум магазина": "Подиум",
-            "Уличн. торговля": "Улич.",
-            "Доп. презентация": "Доп."
-        };
-        activeMinType = typeMap[activeMin.type] || "500";
+        if (activeMin) {
+        activeMinType = MIN_TYPE_TO_CODE[activeMin.type] || "500";
         activeMinCount = activeMin.count;
     }
 
-    // --- 4. РАСЧЕТ ОСТАЛЬНЫХ ПОКАЗАТЕЛЕЙ ---
     const teorStokGamma = toNumber(gammaItem["Сумма Кол-во в запасе"]) || 0;
     const otgruzheno = toNumber(gammaItem["Отгруженное кол-во"]) || 0;
     const otgruzhenoSred = otgruzheno > 0 ? round(otgruzheno / 6, 1) : 0;
@@ -2910,7 +3213,6 @@ const naibolshiyRezervMinNumber = maxMinValue;
     const pereboiCount = utoItem ? toNumber(utoItem["Кол-во случаев перебоя за 30 дней"]) || 0 : 0;
     const pereboiDays = utoItem ? toNumber(utoItem["Кол-во дней в перебое за 30 дней"]) || 0 : 0;
     const supplierCode = supplier || String(gammaItem["Номер поставщика"] || gammaItem["№ Поставщика"] || "").trim();
-    // Ищем дни заказа по КЛЮЧУ store|supplierCode
     const dniZakaza = postavkiMap.get(`${store}|${supplierCode}`) || "";
     const korrekcii = korrekciiMap.get(mapKey) || 0;
     const nedopostavki = nedopostavkiMap.get(mapKey) || 0;
@@ -2928,7 +3230,6 @@ const naibolshiyRezervMinNumber = maxMinValue;
         percentZapasa = Math.min(round((zapasSht / vmesimost) * 100, 0), 100);
     }
 
-    // --- 5. РАСЧЕТ ПУТО (Потенциальное УТО) ---
     let puto = 0;
     const zapasDaysNum = zapasDn;
     const vPutishShtNum = vPutishSht;
@@ -2957,7 +3258,8 @@ const naibolshiyRezervMinNumber = maxMinValue;
         "LOC": gammaItem["Признак LOC"] || "",
         "Статус": gammaItem["Статус"] || "",
         "CPQ": gammaItem["CPQ"] || "",
-        "min дн": cleanValue(minDn, "min дн"),
+        "Новинка": novinka,
+        "% разницы РРЦ и ПЦ": percentSale !== 0 ? percentSale + "%" : "",
         "max дн.": cleanValue(maxDn, "max дн."),
         "Авто min": cleanValue(avtoMin, "Авто min"),
         "min ЦО Проект": cleanValue(minTsProekt, "min ЦО Проект"),
@@ -2987,6 +3289,7 @@ const naibolshiyRezervMinNumber = maxMinValue;
         "Запас, дн.": zapasDn === 999 ? 999 : cleanValue(zapasDn, "Запас, дн."),
         "В пути, шт.": cleanValue(vPutishSht, "В пути, шт."),
         "В пути, дн.": vPutishDn === 999 ? 999 : cleanValue(vPutishDn, "В пути, дн."),
+        "Срок поставки в магазин": srokPostavki,
         "Размер упаковки": gammaItem["Размер упаковки"] || "",
         "УТО, руб.": cleanValue(utoRub, "УТО, руб."),
         "ПУТО": puto,
@@ -3005,13 +3308,34 @@ const naibolshiyRezervMinNumber = maxMinValue;
         "Поставщик": gammaItem["Имя поставщика"] || "",
         "Запас больше вместимости": zapasBolsheVmes,
         "Дата AVS": dateAVS,
-        "Штрихкод": barcode
+        "Штрихкод": barcode,
+        "Серия": seriya,
+        "Бренд": brend,
+        "Коллекция": kollekciya,
+        "Стиль": stil
     };
 }
 
 // ==================== БЫСТРЫЕ ФИЛЬТРЫ ====================
 function applyQuickFilter(filter) {
+    if (activeQuickFilter === filter && cachedData.filteredData.length) {
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        const statusMap = {
+            'all': '🔍 Показаны все товары',
+            'uto': '📊 Показаны товары с УТО',
+            'best': '⭐ Показаны товары с признаком Бест',
+            'min': `📋 Показаны товары с заказом на ${getTomorrowDay()}`,
+            'puto': '📌 Показаны товары с ПУТО'
+        };
+        const statusDiv = document.getElementById('quickFilterStatus');
+        if (statusDiv) statusDiv.textContent = statusMap[filter] || statusMap['all'];
+        return;
+    }
+    
     activeQuickFilter = filter;
+    currentShowLimit = DISPLAY_LIMIT_BASIC;
     
     document.querySelectorAll('.quick-filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.filter === filter);
@@ -3041,245 +3365,311 @@ function applyFilters() {
         return;
     }
     
-    const filterLoading = document.getElementById('filterLoading');
-    if (filterLoading) filterLoading.classList.add('active');
+    const filterLoading = DOM_CACHE.filterLoading || document.getElementById('filterLoading');
+    const filterProgressFill = DOM_CACHE.filterProgressFill || document.getElementById('filterProgressFill');
+    const filterPercent = DOM_CACHE.filterPercent || document.getElementById('filterPercent');
+    const filterLoadingText = DOM_CACHE.filterLoadingText || document.getElementById('filterLoadingText');
     
-    const overlay = document.getElementById('tableLoadingOverlay');
+    if (filterLoading) filterLoading.classList.add('active');
+    if (filterProgressFill) filterProgressFill.style.width = '5%';
+    if (filterPercent) filterPercent.textContent = '5%';
+    if (filterLoadingText) filterLoadingText.textContent = 'Подготовка данных...';
+    
+    const overlay = DOM_CACHE.tableLoadingOverlay || document.getElementById('tableLoadingOverlay');
     if (overlay) overlay.classList.add('active');
     
-    setTimeout(() => {
-        try {
-            const storeFilter = document.getElementById('storeFilter').value;
-            const deptFilter = document.getElementById('departmentFilter').value;
-            const subdeptFilter = document.getElementById('subdepartmentFilter').value;
-            const typeFilter = document.getElementById('typeFilter').value;
-            const topFilter = document.getElementById('topFilter').value;
-            const stockMin = parseInt(document.getElementById('stockMinInput').value) || 0;
-            const stockMax = parseInt(document.getElementById('stockMaxInput').value) || 999;
-            const transitMin = parseInt(document.getElementById('transitMinInput').value) || 0;
-            const transitMax = parseInt(document.getElementById('transitMaxInput').value) || 999;
-            const nameSearch = document.getElementById('nameSearchInput').value.trim().toLowerCase();
-            const barcodeSearch = document.getElementById('barcodeSearchInput').value.trim().toLowerCase();
-            const supplierSearch = document.getElementById('supplierSearchInput').value.trim().toLowerCase();
-            
-            const filterKey = JSON.stringify({
-                store: storeFilter, dept: deptFilter, subdept: subdeptFilter, type: typeFilter,
-                top: topFilter,
-                stockMin, stockMax, transitMin, transitMax,
-                online: isOnlineMode,
-                quickFilter: activeQuickFilter,
-                articles: articleFilterList ? Array.from(articleFilterList).sort().join(',') : 'all',
-                nameSearch: nameSearch,
-                barcodeSearch: barcodeSearch,
-                supplierSearch: supplierSearch
-            });
-            
-            if (cachedData.lastFilters === filterKey && cachedData.filteredData.length) {
-                filteredCalculatedResult = cachedData.filteredData;
-                renderFullTableWithFilter();
-                if (filterLoading) filterLoading.classList.remove('active');
-                if (overlay) overlay.classList.remove('active');
-                return;
-            }
-            
-            let result = [...cachedData.fullData];
-            
-            if (storeFilter !== 'all') {
-                result = result.filter(row => String(row["№ магазина"] || "") === storeFilter);
-            }
-            if (deptFilter !== 'all') {
-                result = result.filter(row => String(row["Отдел"] || "") === deptFilter);
-            }
-            if (subdeptFilter !== 'all') {
-                result = result.filter(row => String(row["Подотдел"] || "") === subdeptFilter);
-            }
-            
-            if (typeFilter !== 'all') {
-                if (subdeptFilter === 'all') {
-                    showToast('⚠️ Для фильтрации по типу сначала выберите подотдел', 'warning', 3000);
-                } else {
-                    result = result.filter(row => String(row["ТИП"] || "") === typeFilter);
-                }
-            }
-            
-            if (nameSearch) {
-                result = result.filter(row => {
-                    const name = String(row["Наименование"] || "").toLowerCase();
-                    return name.includes(nameSearch);
+    const setProgress = (pct, text) => {
+        if (filterProgressFill) filterProgressFill.style.width = pct + '%';
+        if (filterPercent) filterPercent.textContent = pct + '%';
+        if (text && filterLoadingText) filterLoadingText.textContent = text;
+    };
+    
+    // ⚡ ОПТИМИЗАЦИЯ: рендер в отдельном кадре
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            try {
+                setProgress(15, 'Чтение фильтров...');
+                
+                const storeFilter = DOM_CACHE.storeFilter ? DOM_CACHE.storeFilter.value : document.getElementById('storeFilter').value;
+                const deptFilter = DOM_CACHE.departmentFilter ? DOM_CACHE.departmentFilter.value : document.getElementById('departmentFilter').value;
+                const subdeptFilter = DOM_CACHE.subdepartmentFilter ? DOM_CACHE.subdepartmentFilter.value : document.getElementById('subdepartmentFilter').value;
+                const typeFilter = DOM_CACHE.typeFilter ? DOM_CACHE.typeFilter.value : document.getElementById('typeFilter').value;
+                const topFilter = DOM_CACHE.topFilter ? DOM_CACHE.topFilter.value : document.getElementById('topFilter').value;
+                const stockMin = parseInt(DOM_CACHE.stockMinInput ? DOM_CACHE.stockMinInput.value : document.getElementById('stockMinInput').value) || 0;
+                const stockMax = parseInt(DOM_CACHE.stockMaxInput ? DOM_CACHE.stockMaxInput.value : document.getElementById('stockMaxInput').value) || 999;
+                const transitMin = parseInt(DOM_CACHE.transitMinInput ? DOM_CACHE.transitMinInput.value : document.getElementById('transitMinInput').value) || 0;
+                const transitMax = parseInt(DOM_CACHE.transitMaxInput ? DOM_CACHE.transitMaxInput.value : document.getElementById('transitMaxInput').value) || 999;
+                const nameSearch = DOM_CACHE.nameSearchInput ? DOM_CACHE.nameSearchInput.value.trim().toLowerCase() : document.getElementById('nameSearchInput').value.trim().toLowerCase();
+                const barcodeSearch = DOM_CACHE.barcodeSearchInput ? DOM_CACHE.barcodeSearchInput.value.trim().toLowerCase() : document.getElementById('barcodeSearchInput').value.trim().toLowerCase();
+                const supplierSearch = DOM_CACHE.supplierSearchInput ? DOM_CACHE.supplierSearchInput.value.trim().toLowerCase() : document.getElementById('supplierSearchInput').value.trim().toLowerCase();
+                
+                const filterKey = JSON.stringify({
+                    store: storeFilter, dept: deptFilter, subdept: subdeptFilter, type: typeFilter,
+                    top: topFilter,
+                    stockMin, stockMax, transitMin, transitMax,
+                    online: isOnlineMode,
+                    quickFilter: activeQuickFilter,
+                    articles: articleFilterList ? Array.from(articleFilterList).sort().join(',') : 'all',
+                    nameSearch: nameSearch,
+                    barcodeSearch: barcodeSearch,
+                    supplierSearch: supplierSearch,
+                    subdeptsMulti: Array.from(selectedSubdepartments).sort().join('|')
                 });
-            }
-            
-            if (barcodeSearch) {
-                result = result.filter(row => {
-                    const barcode = String(row["Штрихкод"] || "").toLowerCase();
-                    return barcode.includes(barcodeSearch);
-                });
-            }
-            
-            if (supplierSearch) {
-                result = result.filter(row => {
-                    const supplier = String(row["Номер поставщика"] || "").toLowerCase();
-                    return supplier.includes(supplierSearch);
-                });
-            }
-            
-            if (isOnlineMode) {
-                if (topFilter !== 'all') {
-                    if (topFilter === '0') {
-                        result = result.filter(row => {
-                            const topVal = row["ТОП"];
-                            return topVal === undefined || 
-                                   topVal === null || 
-                                   topVal === "" || 
-                                   String(topVal).trim() === "" || 
-                                   String(topVal).replace(/\.00$/, '') === "0";
-                        });
-                    } else {
-                        result = result.filter(row => {
-                            const topVal = String(row["ТОП"] || "").replace(/\.00$/, '');
-                            return topVal === topFilter;
-                        });
-                    }
+                
+                setProgress(25, 'Проверка кэша...');
+                
+                if (cachedData.lastFilters === filterKey && cachedData.filteredData.length) {
+                    filteredCalculatedResult = cachedData.filteredData;
+                    setProgress(80, 'Готово (кэш)');
+                    renderFullTableWithFilter();
+                    setTimeout(() => {
+                        if (filterLoading) filterLoading.classList.remove('active');
+                        if (overlay) overlay.classList.remove('active');
+                    }, 100);
+                    return;
                 }
                 
-                if (stockMin <= stockMax) {
-                    const min = stockMin;
-                    const max = stockMax;
-                    result = result.filter(row => {
-                        const val = row["Запас, дн."];
-                        if (val === undefined || val === null || val === "") return true;
-                        const days = toNumber(val, 999);
-                        return days >= min && days <= max;
-                    });
-                }
+                setProgress(35, 'Фильтрация данных...');
+                let result = [...cachedData.fullData];
                 
-                if (transitMin <= transitMax) {
-                    const min = transitMin;
-                    const max = transitMax;
-                    result = result.filter(row => {
-                        const val = row["В пути, дн."];
-                        if (val === undefined || val === null || val === "") return true;
-                        const days = toNumber(val, 0);
-                        return days >= min && days <= max;
-                    });
-                }
-            }
-            
-            const beforeQuickFilter = result.length;
-            
-            if (activeQuickFilter === 'uto') {
-                result = result.filter(row => {
-                    const utoRub = toNumber(row["УТО, руб."], 0);
-                    const utoSht = toNumber(row["УТО, шт."], 0);
-                    return utoRub > 0 || utoSht > 0;
-                });
-            } else if (activeQuickFilter === 'best') {
-                result = result.filter(row => {
-                    return (row["BEST гамма"] && row["BEST гамма"] !== "") || 
-                           (row["BEST NEXT"] && row["BEST NEXT"] !== "");
-                });
-            } else if (activeQuickFilter === 'min') {
-                const tomorrow = getTomorrowDay();
-                result = result.filter(row => {
-                    const days = String(row["Дни выхода заказа поставщика"] || "").trim();
-                    if (!days) return false;
-                    // Разбиваем строку по запятым и проверяем, есть ли завтрашний день
-                    const dayList = days.split(',').map(d => d.trim());
-                    return dayList.includes(tomorrow);
-                });
-            } else if (activeQuickFilter === 'puto') {
-                result = result.filter(row => {
-                    return toNumber(row["ПУТО"], 0) === 1;
-                });
-            }
-            
-            let emptyType = null;
-            if (result.length === 0 && beforeQuickFilter > 0 && activeQuickFilter !== 'all') {
-                const quickFilterName = {
-                    'uto': 'УТО',
-                    'best': 'Бест',
-                    'min': 'Мины',
-                    'puto': 'ПУТО'
-                };
-                const filterName = quickFilterName[activeQuickFilter] || activeQuickFilter;
-                emptyType = 'empty_quickfilter';
-                showToast(`🔍 В выбранном диапазоне нет товаров с признаком "${filterName}"`, 'warning', 3000);
-            }
-            
-            if (articleFilterList && articleFilterList.size > 0) {
-                const foundItems = result.filter(row => articleFilterList.has(String(row["Артикул"] || "").trim()));
-                if (foundItems.length === 0) {
-                    emptyType = 'empty_articles';
-                    const storesWithArticles = new Set();
-                    cachedData.fullData.forEach(row => {
-                        if (articleFilterList.has(String(row["Артикул"] || "").trim())) {
-                            storesWithArticles.add(row["№ магазина"] || 'unknown');
-                        }
-                    });
-                    if (storesWithArticles.size > 0) {
-                        showToast(`🔍 Артикулы не найдены в текущем фильтре. Есть в магазинах: ${Array.from(storesWithArticles).join(', ')}`, 'warning', 5000);
-                    } else {
-                        showToast(`🔍 Артикулы не найдены ни в одном магазине`, 'warning', 4000);
-                    }
-                }
-                result = foundItems;
-            }
-            
-            if (result.length === 0 && !emptyType) {
                 if (storeFilter !== 'all') {
-                    const hasStoreData = cachedData.fullData.some(row => String(row["№ магазина"] || "") === storeFilter);
-                    if (!hasStoreData) {
-                        emptyType = 'no_store_data';
-                        showToast(`📭 В магазине ${storeFilter} нет данных по текущим фильтрам`, 'warning', 3000);
+                    result = result.filter(row => String(row["№ магазина"] || "") === storeFilter);
+                }
+                if (deptFilter !== 'all') {
+                    result = result.filter(row => String(row["Отдел"] || "") === deptFilter);
+                }
+                                                                if (selectedSubdepartments.size > 0) {
+                    // 🆕 v2.7: не создаём Set заново + убираем лишний String()
+                    const subdeptSet = selectedSubdepartments;
+                    result = result.filter(row => {
+                        const sub = row["Подотдел"];
+                        return sub != null && subdeptSet.has(String(sub));
+                    });
+                } else if (subdeptFilter !== 'all' && subdeptFilter !== '__multi__') {
+                    const targetSubdept = subdeptFilter;
+                    result = result.filter(row => {
+                        const sub = row["Подотдел"];
+                        return sub != null && String(sub) === targetSubdept;
+                    });
+                }
+                
+                if (typeFilter !== 'all') {
+                    if (subdeptFilter === 'all' && selectedSubdepartments.size === 0) {
+                        showToast('⚠️ Для фильтрации по типу сначала выберите подотдел', 'warning');
+                    } else {
+                        result = result.filter(row => String(row["ТИП"] || "") === typeFilter);
+                    }
+                }
+                
+                if (nameSearch) {
+                    result = result.filter(row => {
+                        const name = String(row["Наименование"] || "").toLowerCase();
+                        return name.includes(nameSearch);
+                    });
+                }
+                
+                if (barcodeSearch) {
+                    result = result.filter(row => {
+                        const barcode = String(row["Штрихкод"] || "").toLowerCase();
+                        return barcode.includes(barcodeSearch);
+                    });
+                }
+                
+                if (supplierSearch) {
+                    result = result.filter(row => {
+                        const supplier = String(row["Номер поставщика"] || "").toLowerCase();
+                        return supplier.includes(supplierSearch);
+                    });
+                }
+                
+                if (isOnlineMode) {
+                    if (topFilter !== 'all') {
+                        if (topFilter === '0') {
+                            result = result.filter(row => {
+                                const topVal = row["ТОП"];
+                                return topVal === undefined || 
+                                       topVal === null || 
+                                       topVal === "" || 
+                                       String(topVal).trim() === "" || 
+                                       String(topVal).replace(/\.00$/, '') === "0";
+                            });
+                        } else {
+                            result = result.filter(row => {
+                                const topVal = String(row["ТОП"] || "").replace(/\.00$/, '');
+                                return topVal === topFilter;
+                            });
+                        }
+                    }
+                    
+                    if (stockMin <= stockMax) {
+                        const min = stockMin;
+                        const max = stockMax;
+                        result = result.filter(row => {
+                            const val = row["Запас, дн."];
+                            if (val === undefined || val === null || val === "") return true;
+                            const days = toNumber(val, 999);
+                            return days >= min && days <= max;
+                        });
+                    }
+                    
+                    if (transitMin <= transitMax) {
+                        const min = transitMin;
+                        const max = transitMax;
+                        result = result.filter(row => {
+                            const val = row["В пути, дн."];
+                            if (val === undefined || val === null || val === "") return true;
+                            const days = toNumber(val, 0);
+                            return days >= min && days <= max;
+                        });
+                    }
+                }
+                
+                const beforeQuickFilter = result.length;
+                
+                if (activeQuickFilter === 'uto') {
+                    result = result.filter(row => {
+                        const utoRub = toNumber(row["УТО, руб."], 0);
+                        const utoSht = toNumber(row["УТО, шт."], 0);
+                        return utoRub > 0 || utoSht > 0;
+                    });
+                } else if (activeQuickFilter === 'best') {
+                    result = result.filter(row => {
+                        return (row["BEST гамма"] && row["BEST гамма"] !== "") || 
+                               (row["BEST NEXT"] && row["BEST NEXT"] !== "");
+                    });
+                } else if (activeQuickFilter === 'min') {
+                    const tomorrow = getTomorrowDay();
+                    result = result.filter(row => {
+                        const days = String(row["Дни выхода заказа поставщика"] || "").trim();
+                        if (!days) return false;
+                        const dayList = days.split(',').map(d => d.trim());
+                        return dayList.includes(tomorrow);
+                    });
+                } else if (activeQuickFilter === 'puto') {
+                    result = result.filter(row => {
+                        return toNumber(row["ПУТО"], 0) === 1;
+                    });
+                }
+                
+                let emptyType = null;
+                if (result.length === 0 && beforeQuickFilter > 0 && activeQuickFilter !== 'all') {
+                    const quickFilterName = {
+                        'uto': 'УТО',
+                        'best': 'Бест',
+                        'min': 'Мины',
+                        'puto': 'ПУТО'
+                    };
+                    const filterName = quickFilterName[activeQuickFilter] || activeQuickFilter;
+                    emptyType = 'empty_quickfilter';
+                    showToast(`🔍 В выбранном диапазоне нет товаров с признаком "${filterName}"`, 'warning');
+                }
+                
+                if (articleFilterList && articleFilterList.size > 0) {
+                    const foundItems = result.filter(row => articleFilterList.has(String(row["Артикул"] || "").trim()));
+                    if (foundItems.length === 0) {
+                        emptyType = 'empty_articles';
+                        const storesWithArticles = new Set();
+                        cachedData.fullData.forEach(row => {
+                            if (articleFilterList.has(String(row["Артикул"] || "").trim())) {
+                                storesWithArticles.add(row["№ магазина"] || 'unknown');
+                            }
+                        });
+                        if (storesWithArticles.size > 0) {
+                            showToast(`🔍 Артикулы не найдены в текущем фильтре. Есть в магазинах: ${Array.from(storesWithArticles).join(', ')}`, 'warning');
+                        } else {
+                            showToast(`🔍 Артикулы не найдены ни в одном магазине`, 'warning');
+                        }
+                    }
+                    result = foundItems;
+                }
+                
+                if (result.length === 0 && !emptyType) {
+                    if (storeFilter !== 'all') {
+                        const hasStoreData = cachedData.fullData.some(row => String(row["№ магазина"] || "") === storeFilter);
+                        if (!hasStoreData) {
+                            emptyType = 'no_store_data';
+                            showToast(`📭 В магазине ${storeFilter} нет данных по текущим фильтрам`, 'warning');
+                        } else {
+                            emptyType = 'empty_filters';
+                            showToast(`📭 Нет данных, соответствующих выбранным фильтрам. Попробуйте изменить условия.`, 'warning');
+                        }
                     } else {
                         emptyType = 'empty_filters';
-                        showToast(`📭 Нет данных, соответствующих выбранным фильтрам. Попробуйте изменить условия.`, 'warning', 3000);
                     }
-                } else {
-                    emptyType = 'empty_filters';
                 }
+                                // 🆕 v2.8: предупреждение о подвисании при большом объёме
+                // Если отфильтровано > 500 строк и НЕ выбран подотдел — предупреждаем
+                const nothingNarrow = (
+                    selectedSubdepartments.size === 0
+                    && storeFilter === 'all'
+                    && deptFilter === 'all'
+                    && typeFilter === 'all'
+                    && activeQuickFilter === 'all'
+                );
+                
+                if (result.length > DISPLAY_LIMIT_HARD && nothingNarrow) {
+                    showToast(
+                        `⚠️ Найдено ${result.length} товаров. Отрисовка может подвиснуть. Уточните фильтр — выберите магазин, отдел, подотдел или тип.`,
+                        'warning'
+                    );
+                }
+                
+                
+                setProgress(65, 'Формирование результата...');
+                cachedData.filteredData = result;
+                cachedData.lastFilters = filterKey;
+                filteredCalculatedResult = result;
+                
+                setProgress(80, 'Отрисовка таблицы...');
+                renderFullTableWithFilter(emptyType);
+                
+                setProgress(100, 'Готово');
+                
+                if (alertsEnabled && result.length) {
+                    setTimeout(() => checkCriticalItems(result), 0);
+                } else if (!alertsEnabled) {
+                    document.getElementById('alertBanner').classList.remove('show');
+                }
+                
+                analyticsStale = true;
+                if (document.getElementById('tab-analytics').classList.contains('active')) {
+                    updateAnalytics(result);
+                    analyticsStale = false;
+                }
+                
+            } catch (e) {
+                console.error('Ошибка при фильтрации:', e);
+                filteredCalculatedResult = [...cachedData.fullData];
+                renderFullTableWithFilter('error');
+                showToast(`Ошибка фильтрации: ${e.message}`, 'error');
+            } finally {
+                setProgress(100, 'Готово');
+                setTimeout(() => {
+                    if (filterLoading) filterLoading.classList.remove('active');
+                    if (overlay) overlay.classList.remove('active');
+                    if (filterProgressFill) filterProgressFill.style.width = '0%';
+                    if (filterPercent) filterPercent.textContent = '0%';
+                }, 200);
             }
-            
-            cachedData.filteredData = result;
-            cachedData.lastFilters = filterKey;
-            filteredCalculatedResult = result;
-            
-            renderFullTableWithFilter(emptyType);
-            
-            if (alertsEnabled && result.length) {
-                checkCriticalItems(result);
-            } else if (!alertsEnabled) {
-                document.getElementById('alertBanner').classList.remove('show');
-            }
-            
-            updateAnalytics(result);
-            
-        } catch (e) {
-            console.error('Ошибка при фильтрации:', e);
-            filteredCalculatedResult = [...cachedData.fullData];
-            renderFullTableWithFilter('error');
-            showToast(`Ошибка фильтрации: ${e.message}`, 'error');
-        } finally {
-            const filterLoading = document.getElementById('filterLoading');
-            if (filterLoading) filterLoading.classList.remove('active');
-            const overlay = document.getElementById('tableLoadingOverlay');
-            if (overlay) overlay.classList.remove('active');
-        }
-    }, 100);
+        }, 0);
+    });
 }
 
 function scheduleFilter() {
+    currentShowLimit = DISPLAY_LIMIT_BASIC;
+    
     if (filterTimeout) {
         clearTimeout(filterTimeout);
     }
+    // 🆕 v2.7: debounce 300 мс — при массовом клике по чекбоксам подотделов
+    // фильтрация запустится ОДИН раз после паузы
     filterTimeout = setTimeout(() => {
         applyFilters();
         filterTimeout = null;
-        saveState();
     }, 300);
 }
 
-// ==================== ФИЛЬТРАЦИЯ ПО АРТИКУЛАМ/ШТРИХКОДАМ/ПОСТАВЩИКУ ====================
+// ==================== ФИЛЬТРАЦИЯ ПО АРТИКУЛАМ ====================
 function applyArticleFilter() {
     const inputValue = document.getElementById('articleSearchInput').value.trim();
     const barcodeValue = document.getElementById('barcodeSearchInput').value.trim();
@@ -3434,7 +3824,6 @@ function checkCriticalItems(data) {
         message.textContent = `Обнаружены товары с критическим запасом без поставки (<3 дн)!`;
         count.textContent = criticalItems.length;
         banner.classList.add('show');
-        criticalAlertShown = true;
         
         if (!criticalAlertShown) {
             const top3 = criticalItems.slice(0, 3);
@@ -3450,20 +3839,20 @@ function checkCriticalItems(data) {
 
 // ==================== renderFullTableWithFilter ====================
 function renderFullTableWithFilter(emptyType = null) {
-    let dataToShow = filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData;
+    const allFilteredData = filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData;
     
-    const subdeptFilter = document.getElementById('subdepartmentFilter').value;
-    if (isOnlineMode && subdeptFilter !== 'all') {
-        DISPLAY_LIMIT = Infinity;
-    } else {
-        DISPLAY_LIMIT = DISPLAY_LIMIT_BASIC;
-    }
+    // 🆕 v2.8: ВСЕГДА 200 старт + кнопка "+100" до 500. Без исключений.
+    const storeFilterVal = document.getElementById('storeFilter').value;
+    const hasSubdeptSelection = selectedSubdepartments.size > 0;
     
-    if (DISPLAY_LIMIT !== Infinity && dataToShow.length > DISPLAY_LIMIT) {
-        dataToShow = dataToShow.slice(0, DISPLAY_LIMIT);
-    }
+    const effectiveLimit = Math.min(currentShowLimit, DISPLAY_LIMIT_HARD);
     
-    let visibleCols = FULL_COLUMNS.filter(col => visibleColumns.has(col));
+    const totalFiltered = allFilteredData.length;
+    const truncated = totalFiltered > effectiveLimit;
+    const dataToShow = truncated ? allFilteredData.slice(0, effectiveLimit) : allFilteredData;
+    
+    // ⚡ ОПТИМИЗАЦИЯ: используем кэш visibleCols
+    let visibleCols = getVisibleCols();
     
     const thead = document.getElementById("tableHeader");
     if (!thead) return;
@@ -3478,6 +3867,9 @@ function renderFullTableWithFilter(emptyType = null) {
         }
         if (col === "Наполненность полки") {
             th.title = 'Процент заполнения полки (запас / вместимость)';
+        }
+        if (col === "% разницы РРЦ и ПЦ") {
+            th.title = 'Процент разницы между РПЦ и ПЦ: (РПЦ - ПЦ) / РПЦ × 100. Отрицательный = наценка (зелёный), положительный = скидка (красный)';
         }
         theadRow.appendChild(th);
     });
@@ -3549,6 +3941,17 @@ function renderFullTableWithFilter(emptyType = null) {
     
     const fragment = document.createDocumentFragment();
     
+    // ⚡ ПУНКТ 5: предкомпилируем колонки-флаги, чтобы не искать их в цикле
+    const isUtoCol = {};
+    const isBestCol = {};
+    const isMinCol = {};
+    visibleCols.forEach(col => {
+        isUtoCol[col] = UTO_COLUMNS.includes(col);
+        isBestCol[col] = BEST_COLUMNS.includes(col);
+        isMinCol[col] = MIN_COLUMNS.includes(col);
+    });
+    const tomorrowDay = getTomorrowDay();
+    
     for (const row of dataToShow) {
         const tr = document.createElement("tr");
         const rowKey = `${row["№ магазина"]}|${row["Артикул"]}`;
@@ -3562,9 +3965,8 @@ function renderFullTableWithFilter(emptyType = null) {
         const hasBest = (row["BEST гамма"] && row["BEST гамма"] !== "") || 
                         (row["BEST NEXT"] && row["BEST NEXT"] !== "");
         
-        const tomorrow = getTomorrowDay();
         const daysString = String(row["Дни выхода заказа поставщика"] || "").trim();
-        const hasMin = daysString.split(',').map(d => d.trim()).includes(tomorrow);
+        const hasMin = daysString.split(',').map(d => d.trim()).includes(tomorrowDay);
         
         if (isEdited) tr.classList.add('edited-row');
         if (hasUto) tr.classList.add('uto-row');
@@ -3586,7 +3988,7 @@ function renderFullTableWithFilter(emptyType = null) {
         visibleCols.forEach(col => {
             const td = document.createElement("td");
             
-            if (col === "Вид минимума") {
+                        if (col === "Вид минимума") {
                 const select = document.createElement("select");
                 const defaultVal = editedData?.видМинимума || "";
                 const emptyOpt = document.createElement("option");
@@ -3602,6 +4004,7 @@ function renderFullTableWithFilter(emptyType = null) {
                     select.appendChild(opt);
                 });
                 
+                // 🆕 v2.7: оптимизированный — БЕЗ renderFullTableWithFilter()
                 select.addEventListener('change', function() {
                     const val = this.value;
                     const key = `${row["№ магазина"]}|${row["Артикул"]}`;
@@ -3614,21 +4017,46 @@ function renderFullTableWithFilter(emptyType = null) {
                         editedRows.get(key).comment = "ручная корректировка";
                     }
                     pushHistory(key, 'видМинимума', oldVal, val);
-                    renderFullTableWithFilter();
+                    
+                    // ⚡ Обновляем ТОЛЬКО строку и счётчик — не пересобираем DOM
+                    updateRowEditedState(tr, key);
+                    
                     saveState();
                 });
                 
                 td.appendChild(select);
                 td.classList.add('editable');
                 
-            } else if (col === "Кол-во проектов") {
+                        } else if (col === "Кол-во проектов") {
                 const input = document.createElement("input");
                 input.type = "number";
                 input.min = "0";
                 input.step = "1";
+                                // 🆕 Защита от мусорных значений.
+                // Разрешены: пусто, 0, положительные числа, и специальное значение -1 (отмена MIN).
+                input.addEventListener('blur', function() {
+                    const raw = String(this.value).trim();
+                    if (raw === "" || raw === "-") {
+                        // Пустое — оставляем как есть (пользователь мог стереть, чтобы ввести заново)
+                        return;
+                    }
+                    const n = toNumber(raw, NaN);
+                    if (!isFinite(n)) {
+                        // Не число — сбрасываем в пусто
+                        this.value = "";
+                        showToast('⚠️ Введите число (или -1 для отмены MIN)', 'warning', 2000);
+                        return;
+                    }
+                    if (n < 0 && n !== -1) {
+                        // Отрицательные, кроме -1 — недопустимы
+                        this.value = "0";
+                        showToast('⚠️ Допустимо только -1 (отмена MIN) или значения ≥ 0', 'warning', 2000);
+                    }
+                });
                 const defaultVal = editedData?.колВоПроектов || "";
                 input.value = defaultVal;
-                input.placeholder = "0";
+                input.placeholder = "0 (или -1 = отмена)";
+input.title = "Введите количество проектов. -1 = отменить MIN для этого артикула";
                 input.style.width = "100%";
                 input.style.padding = "1px 4px";
                 input.style.border = "1px solid var(--input-border)";
@@ -3637,6 +4065,7 @@ function renderFullTableWithFilter(emptyType = null) {
                 input.style.background = "var(--input-bg)";
                 input.style.color = "var(--text-primary)";
                 
+                // 🆕 v2.7: оптимизированный — БЕЗ renderFullTableWithFilter()
                 input.addEventListener('change', function() {
                     const val = this.value;
                     const key = `${row["№ магазина"]}|${row["Артикул"]}`;
@@ -3649,7 +4078,10 @@ function renderFullTableWithFilter(emptyType = null) {
                         editedRows.get(key).comment = "ручная корректировка";
                     }
                     pushHistory(key, 'колВоПроектов', oldVal, val);
-                    renderFullTableWithFilter();
+                    
+                    // ⚡ Обновляем ТОЛЬКО строку и счётчик
+                    updateRowEditedState(tr, key);
+                    
                     saveState();
                 });
                 
@@ -3694,16 +4126,41 @@ function renderFullTableWithFilter(emptyType = null) {
                 td.textContent = percent > 0 ? `${percent}%` : '-';
                 td.title = `Запас: ${row["Запас, шт."] || 0} шт, Вместимость: ${row["Вместимость"] || 0} шт`;
                 
+            } else if (col === "% разницы РРЦ и ПЦ") {
+                const value = row["% разницы РРЦ и ПЦ"] || "";
+                td.textContent = value;
+                if (value) {
+                    const p = toNumber(value);
+                    if (p > 0) td.classList.add('percent-sale-discount');
+                    else if (p < 0) td.classList.add('percent-sale-markup');
+                }
+                
             } else if (col === "Штрихкод") {
                 const barcode = row["Штрихкод"] || '';
                 td.textContent = barcode;
                 td.title = barcode || 'Нет штрихкода';
                 
             } else {
-                let value = row[col];
+                                let value = row[col];
                 if (value === undefined || value === null) value = '';
-                if (typeof value === 'number' && value !== 0) value = value.toFixed(2);
+                // 🆕 Целые числа показываем как есть, дробные — с 1 знаком
+                if (typeof value === 'number' && value !== 0) {
+                    if (Number.isInteger(value)) {
+                        value = String(value);
+                    } else {
+                        value = value.toFixed(1);
+                    }
+                }
                 td.textContent = value;
+                
+                // 📏 ПУНКТ 4: Наименование — чуть меньше и компактнее
+                if (col === "Наименование") {
+                    td.style.fontSize = '0.55rem';
+                    td.style.maxWidth = '190px';
+                    td.style.overflow = 'hidden';
+                    td.style.textOverflow = 'ellipsis';
+                    td.title = value;
+                }
                 
                 if (col === "Запас, дн.") {
                     const days = toNumber(value, 999);
@@ -3714,22 +4171,21 @@ function renderFullTableWithFilter(emptyType = null) {
                     td.classList.add(getStockColorClass(days));
                 }
                 
-                if (UTO_COLUMNS.includes(col)) {
+                if (isUtoCol[col]) {
                     const val = toNumber(value, 0);
                     if (val > 0) {
                         td.classList.add('uto-highlight');
                     }
                 }
                 
-                if (BEST_COLUMNS.includes(col)) {
+                if (isBestCol[col]) {
                     if (value !== undefined && value !== null && value !== "") {
                         td.classList.add('best-highlight');
                     }
                 }
                 
-                if (MIN_COLUMNS.includes(col)) {
-                    const tomorrow = getTomorrowDay();
-                    if (String(value || "").trim().split(',').map(d => d.trim()).includes(tomorrow)) {
+                if (isMinCol[col]) {
+                    if (String(value || "").trim().split(',').map(d => d.trim()).includes(tomorrowDay)) {
                         td.classList.add('min-highlight');
                     }
                 }
@@ -3743,16 +4199,141 @@ function renderFullTableWithFilter(emptyType = null) {
         fragment.appendChild(tr);
     }
     
-    tbody.innerHTML = '';
+        tbody.innerHTML = '';
     tbody.appendChild(fragment);
     
-    const statsDiv = document.getElementById('statsInfo');
-    if (statsDiv) {
-        const totalCount = filteredCalculatedResult.length || cachedData.fullData.length;
-        const limitText = DISPLAY_LIMIT === Infinity ? 'все' : `первые ${DISPLAY_LIMIT}`;
-        const editedCount = editedRows.size;
-        statsDiv.innerHTML = `📊 Всего: ${totalCount} товаров | 📺 ${limitText} | ✏️ Изменено: ${editedCount}`;
+        if (truncated) {
+        const showMoreTr = document.createElement('tr');
+        showMoreTr.className = 'show-more-row';
+        const showMoreTd = document.createElement('td');
+        showMoreTd.colSpan = visibleCols.length || 55;
+        
+        const remaining = totalFiltered - effectiveLimit;
+        const nextStep = Math.min(DISPLAY_LIMIT_STEP, remaining);
+        const canExtend = (effectiveLimit + nextStep) <= DISPLAY_LIMIT_HARD;
+        const atLimit = effectiveLimit >= DISPLAY_LIMIT_HARD;
+        
+        if (canExtend && !atLimit) {
+            // ✅ Кнопка "+100"
+            showMoreTd.innerHTML = `
+                <button type="button" class="show-more-btn" id="showMoreBtn">
+                    ⬇️ Показать ещё +${nextStep} строк
+                </button>
+                <span class="show-more-hint">
+                    Показано ${effectiveLimit} из ${totalFiltered}. Осталось ${remaining}.
+                </span>
+            `;
+        } else {
+            // ⚠️ Достигли 500
+            showMoreTd.innerHTML = `
+                <span class="show-more-limit-hint">
+                    ⚠️ Достигнут лимит отображения (${DISPLAY_LIMIT_HARD} строк).
+                    <br>Осталось ${remaining}. Уточните фильтр (магазин / отдел / подотдел / тип), чтобы увидеть больше.
+                </span>
+            `;
+        }
+        
+        showMoreTr.appendChild(showMoreTd);
+        tbody.appendChild(showMoreTr);
+        
+        const btn = document.getElementById('showMoreBtn');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                currentShowLimit = Math.min(currentShowLimit + DISPLAY_LIMIT_STEP, DISPLAY_LIMIT_HARD);
+                renderFullTableWithFilter();
+                const wrapper = document.getElementById('pivotWrapper');
+                if (wrapper) {
+                    wrapper.scrollTop = wrapper.scrollTop + 10;
+                }
+            });
+        }
     }
+    
+    scheduleFixSticky();
+    
+                const statsDiv = document.getElementById('statsInfo');
+    if (statsDiv) {
+        const editedCount = editedRows.size;
+        const limitText = truncated 
+            ? `📺 показано ${effectiveLimit} из ${totalFiltered}` 
+            : `📺 все ${totalFiltered}`;
+        statsDiv.innerHTML = `📊 Всего: ${totalFiltered} товаров | ${limitText} | ✏️ Изменено: ${editedCount}`;
+    }
+}
+
+// 🆕 v2.7: точечное обновление строки после правки ячейки (без перерендера)
+function updateRowEditedState(tr, rowKey) {
+    if (!tr) return;
+    const editedData = editedRows.get(rowKey);
+    const hasEdits = editedData && (editedData.видМинимума || editedData.колВоПроектов);
+    
+    // Класс строки (синий фон)
+    if (hasEdits) {
+        tr.classList.add('edited-row');
+    } else {
+        tr.classList.remove('edited-row');
+    }
+    
+    // Цвет артикула (синий, если строка отредактирована)
+    const articleSpan = tr.querySelector('td:nth-child(2) span[ondblclick]');
+    if (articleSpan) {
+        if (hasEdits) {
+            articleSpan.style.color = '#1976d2';
+            articleSpan.style.fontWeight = '700';
+        } else {
+            articleSpan.style.color = 'var(--text-primary)';
+            articleSpan.style.fontWeight = '600';
+        }
+    }
+    
+    // Счётчик "Изменено: N"
+    updateEditedCount();
+}
+
+// 🆕 v2.7: обновление statsInfo без пересборки таблицы
+function updateEditedCount() {
+    const statsDiv = document.getElementById('statsInfo');
+    if (!statsDiv) return;
+    
+    const allFilteredData = filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData;
+    const totalFiltered = allFilteredData.length;
+    const editedCount = editedRows.size;
+    
+    // 🆕 v2.8: всегда 200 старт, +100 до 500
+    const effectiveLimit = Math.min(currentShowLimit, DISPLAY_LIMIT_HARD);
+    const truncated = totalFiltered > effectiveLimit;
+    const limitText = truncated 
+        ? `📺 показано ${effectiveLimit} из ${totalFiltered}` 
+        : `📺 все ${totalFiltered}`;
+    
+    statsDiv.innerHTML = `📊 Всего: ${totalFiltered} товаров | ${limitText} | ✏️ Изменено: ${editedCount}`;
+}
+
+function fixStickyColumns() {
+    const table = document.getElementById('masterTable');
+    if (!table) return;
+    // В CSS закреплены th:nth-child(2) и th:nth-child(3) — это индексы 1 и 2 (0-based),
+    // но первая колонка (index 0) НЕ закреплена, поэтому left считается ТОЛЬКО для 1 и 2,
+    // а первый закреплённый столбец (Артикул, index 1) должен иметь left = 0.
+    // Никакого сдвига от нулевой колонки быть не должно.
+    const headers = table.querySelectorAll('thead th');
+    let left = 0;
+    [1, 2].forEach(i => {
+        if (headers[i]) {
+            headers[i].style.left = left + 'px';
+            left += headers[i].offsetWidth;
+        }
+    });
+    table.querySelectorAll('tbody tr').forEach(tr => {
+        const cells = tr.querySelectorAll('td');
+        let l = 0;
+        [1, 2].forEach(i => {
+            if (cells[i]) {
+                cells[i].style.left = l + 'px';
+                l += cells[i].offsetWidth;
+            }
+        });
+    });
 }
 
 // ==================== АНАЛИТИКА ====================
@@ -4014,7 +4595,6 @@ function renderStockDistribution(storeStats) {
 }
 
 // ==================== ЭКСПОРТ ФУНКЦИИ ====================
-
 function exportArticles(articles) {
     if (!articles || articles.length === 0) {
         showToast('Нет артикулов для экспорта', 'warning');
@@ -4541,9 +5121,9 @@ function updateFiltersFromGamma() {
     const deptSelect = document.getElementById('departmentFilter');
     deptSelect.innerHTML = '<option value="all">Все отделы</option>';
     Array.from(departmentsSet).sort().forEach(dept => deptSelect.innerHTML += `<option value="${dept}">${dept}</option>`);
-    const subdeptSelect = document.getElementById('subdepartmentFilter');
-    subdeptSelect.innerHTML = '<option value="all">Все подотделы</option>';
-    Array.from(subdepartmentsSet).sort().forEach(subdept => subdeptSelect.innerHTML += `<option value="${subdept}">${subdept}</option>`);
+    
+    buildSubdeptCheckboxList();
+    
     const typeSelect = document.getElementById('typeFilter');
     typeSelect.innerHTML = '<option value="all">Все типы</option>';
     Array.from(typesSet).sort().forEach(type => typeSelect.innerHTML += `<option value="${type}">${type}</option>`);
@@ -4554,11 +5134,86 @@ function updateFiltersFromGamma() {
     if (appState.departmentFilter && appState.departmentFilter !== 'all') {
         deptSelect.value = appState.departmentFilter;
     }
-    if (appState.subdepartmentFilter && appState.subdepartmentFilter !== 'all') {
-        subdeptSelect.value = appState.subdepartmentFilter;
-    }
     if (appState.typeFilter && appState.typeFilter !== 'all') {
         typeSelect.value = appState.typeFilter;
+    }
+}
+
+function buildSubdeptCheckboxList() {
+    const container = document.getElementById('subdeptCheckboxList');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    const sorted = Array.from(subdepartmentsSet).sort();
+    if (sorted.length === 0) {
+        container.innerHTML = '<div class="subdept-empty-hint">Нет данных. Загрузите отчёт «Гамма».</div>';
+        syncSubdeptDropdownUI();
+        return;
+    }
+    
+    sorted.forEach(subdept => {
+        const label = document.createElement('label');
+        label.className = 'subdept-checkbox-item';
+        if (selectedSubdepartments.has(subdept)) label.classList.add('checked');
+        
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = subdept;
+        cb.checked = selectedSubdepartments.has(subdept);
+        
+        cb.addEventListener('change', function() {
+            if (this.checked) {
+                selectedSubdepartments.add(subdept);
+                label.classList.add('checked');
+            } else {
+                selectedSubdepartments.delete(subdept);
+                label.classList.remove('checked');
+            }
+            syncSubdeptDropdownUI();
+            currentShowLimit = DISPLAY_LIMIT_BASIC;
+            scheduleFilter();
+            saveState();
+        });
+        
+        const text = document.createElement('span');
+        text.textContent = subdept;
+        
+        label.appendChild(cb);
+        label.appendChild(text);
+        container.appendChild(label);
+    });
+    
+    syncSubdeptDropdownUI();
+}
+
+function syncSubdeptDropdownUI() {
+    const label = document.getElementById('subdeptDropdownLabel');
+    const badge = document.getElementById('subdeptCountBadge');
+    const hiddenSelect = document.getElementById('subdepartmentFilter');
+    
+    const count = selectedSubdepartments.size;
+    const total = subdepartmentsSet.size;
+    
+    if (label) {
+        if (count === 0) {
+            label.textContent = 'Все подотделы';
+        } else if (count === 1) {
+            label.textContent = Array.from(selectedSubdepartments)[0];
+        } else {
+            label.textContent = `Выбрано: ${count} из ${total}`;
+        }
+    }
+    if (badge) {
+        badge.textContent = count > 0 ? `(${count})` : '';
+    }
+    if (hiddenSelect) {
+        if (count === 0) {
+            hiddenSelect.value = 'all';
+        } else if (count === 1) {
+            hiddenSelect.value = Array.from(selectedSubdepartments)[0];
+        } else {
+            hiddenSelect.value = '__multi__';
+        }
     }
 }
 
@@ -4593,7 +5248,7 @@ function updateStatusDisplay(reportName, success) {
     document.getElementById('uploadSummary').innerHTML = `📁 Загружено: ${loadedCount} / 10 отчетов`;
 }
 
-// ==================== ЭКСПОРТ ИЗМЕНЕНИЙ ====================
+// ==================== ЭКСПОРТ ИЗМЕНЕНИЙ (с цветной раскраской) ====================
 async function exportChanges() {
     if (editedRows.size === 0) {
         showToast('Нет изменений для экспорта', 'warning');
@@ -4617,7 +5272,7 @@ async function exportChanges() {
             let comment = data.comment || "";
             
             if (!minType && !quantity) continue;
-            if (!quantity) quantity = "0";
+            if (quantity === "" || quantity === null || quantity === undefined) quantity = "0";
             
             if (!comment) {
                 comment = data.isAnomaly ? "аномалия" : "ручная корректировка";
@@ -4650,8 +5305,17 @@ async function exportChanges() {
         
         const headers = ["Магазин", "Артикул", "Тип", "Количество", "Дата начала", "Дата окончания", "Комментарии"];
         const headerRow = worksheet.addRow(headers);
-        headerRow.font = { bold: true };
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
         headerRow.alignment = { horizontal: "center", vertical: "middle" };
+        headerRow.eachCell(cell => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C5F2D' } };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FF1F4520' } },
+                left: { style: 'thin', color: { argb: 'FF1F4520' } },
+                bottom: { style: 'medium', color: { argb: 'FF1F4520' } },
+                right: { style: 'thin', color: { argb: 'FF1F4520' } }
+            };
+        });
         
         exportData.sort((a, b) => {
             if (a["Магазин"] !== b["Магазин"]) {
@@ -4660,8 +5324,17 @@ async function exportChanges() {
             return a["Артикул"].localeCompare(b["Артикул"]);
         });
         
+        // 🎨 ПУНКТ 8: цветовая раскраска exportChanges
+        const typeColors = {
+            '401': { fill: 'FFE3F2FD', font: 'FF0D47A1' },
+            '441': { fill: 'FFFFE0B2', font: 'FFE65100' },
+            '500': { fill: 'FFC8E6C9', font: 'FF1B5E20' },
+            '902': { fill: 'FFE1BEE7', font: 'FF4A148C' },
+            '0':   { fill: 'FFECEFF1', font: 'FF607D8B' }
+        };
+        
         for (const row of exportData) {
-            worksheet.addRow([
+            const dataRow = worksheet.addRow([
                 row["Магазин"],
                 row["Артикул"],
                 row["Тип"],
@@ -4670,6 +5343,42 @@ async function exportChanges() {
                 row["Дата окончания"],
                 row["Комментарии"]
             ]);
+            
+            // Общая рамка
+            dataRow.eachCell({ includeEmpty: true }, (cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                    left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                    bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                    right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+                };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+            
+            // Тип — цвет по типу MIN
+            const typeCell = dataRow.getCell(3);
+            const typeVal = String(row["Тип"]);
+            const c = typeColors[typeVal] || typeColors['0'];
+            typeCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: c.fill } };
+            typeCell.font = { color: { argb: c.font }, bold: true };
+            
+            // Количество — жёлтый если > 0
+            const qtyCell = dataRow.getCell(4);
+            if (toNumber(row["Количество"]) > 0) {
+                qtyCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF59D' } };
+                qtyCell.font = { bold: true };
+            }
+            
+            // Комментарий — красный если "аномалия", синий если "ручная"
+            const commentCell = dataRow.getCell(7);
+            const comment = String(row["Комментарии"]);
+            if (comment.includes('аномалия')) {
+                commentCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } };
+                commentCell.font = { color: { argb: 'FFB71C1C' }, bold: true };
+            } else if (comment.includes('ручная')) {
+                commentCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } };
+                commentCell.font = { color: { argb: 'FF0D47A1' } };
+            }
         }
         
         worksheet.getColumn(1).width = 15;
@@ -4752,6 +5461,7 @@ function toggleMode() {
         filtersArea.style.maxHeight = '650px';
         EDITABLE_COLUMNS.forEach(col => visibleColumns.add(col));
         visibleColumns.add("Наполненность полки");
+        invalidateVisibleColsCache();
         generateColumnToggles();
         showToast('🌐 Включен онлайн-режим', 'info');
     } else {
@@ -4763,6 +5473,7 @@ function toggleMode() {
         advancedFilters.classList.remove('show');
         filtersArea.style.maxHeight = '400px';
         EDITABLE_COLUMNS.forEach(col => visibleColumns.delete(col));
+        invalidateVisibleColsCache();
         showToast('📌 Включен базовый режим', 'info');
     }
     
@@ -4787,6 +5498,7 @@ function generateColumnToggles() {
         checkbox.addEventListener('change', function() {
             if (this.checked) visibleColumns.add(col);
             else visibleColumns.delete(col);
+            invalidateVisibleColsCache();
             renderFullTableWithFilter();
             saveState();
         });
@@ -4909,9 +5621,14 @@ async function computeSummaryAsync() {
         if (currentCalculation.cancelled) { loadingDiv.style.display = 'none'; return; }
         const end = Math.min(start + chunkSize, total);
         const chunk = gammaData.slice(start, end);
-        for (const item of chunk) { 
-            const row = calculateRow(item); 
-            if (row) results.push(row); 
+                for (const item of chunk) { 
+            try {
+                const row = calculateRow(item); 
+                if (row) results.push(row); 
+            } catch (err) {
+                // 🆕 одна битая строка не должна ронять весь расчёт
+                console.warn(`⚠️ Ошибка в строке артикул=${item["Артикул"]}:`, err);
+            }
         }
         const percent = Math.round((end / total) * 100);
         progressFill.style.width = `${percent}%`;
@@ -4938,7 +5655,7 @@ async function computeSummaryAsync() {
     showToast(`✅ Расчет завершен! Найдено ${results.length} товаров.`, 'success');
 }
 
-// ==================== ЭКСПОРТ ВСЕХ ДАННЫХ ====================
+// ==================== ЭКСПОРТ ВСЕХ ДАННЫХ (с расширенной раскраской) ====================
 async function exportAllData() {
     const dataToExport = filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData;
     if (!dataToExport.length) { 
@@ -4946,8 +5663,7 @@ async function exportAllData() {
         return; 
     }
     
-    // Используем ВИДИМЫЕ колонки для экспорта
-    const visibleCols = FULL_COLUMNS.filter(col => visibleColumns.has(col));
+    const visibleCols = getVisibleCols();
     if (!visibleCols.length) {
         showToast('Нет видимых колонок для экспорта', 'warning');
         return;
@@ -4961,16 +5677,79 @@ async function exportAllData() {
         const worksheet = workbook.addWorksheet('Сводная STOCKWISE');
         worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
         
-        const headerRow = worksheet.addRow(visibleCols);
-        headerRow.font = { bold: true, color: { argb: "FF000000" } };
+                const headerRow = worksheet.addRow(visibleCols);
+        headerRow.font = { bold: true, color: { argb: 'FF1E1E1E' }, size: 9 };
         headerRow.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
-        headerRow.height = 30;
+        headerRow.height = 45;  // повышенная высота для 2-3 строк переноса
+        
+                // 🆕 Карта цветов для групп столбцов шапки
+        // (по вашим требованиям)
+        const HEADER_GROUP_COLORS = {
+            // Новинка — оранжевый
+            "Новинка": "FE7E00",
+            // % разницы РРЦ и ПЦ — бежево-коричневый
+            "% разницы РРЦ и ПЦ": "CD9575",
+            // max дн. — жёлто-горчичный
+            "max дн.": "F1DA5B",
+            // Группа MIN-ов — голубой
+            "Авто min": "5BD9F1",
+            "min ЦО Проект": "5BD9F1",
+            "min ЦО ПАК-Подиум": "5BD9F1",
+            "min ЦО коорд": "5BD9F1",
+            "min 401 NEW": "5BD9F1",
+            "min 441 ПМ": "5BD9F1",
+            "min 500 Проект": "5BD9F1",
+            "min 902 B2B": "5BD9F1",
+            // Группа презентации — зелёный
+            "Брак": "2AD580",
+            "ЭКСПО": "2AD580",
+            "През. минимум": "2AD580",
+            "ТЖ/ПАК": "2AD580",
+            "Подиум магазина": "2AD580",
+            "Улич. Торг": "2AD580",
+            "Доп. презентация": "2AD580",
+            // Отгружено/Теор сток — коричневатый
+            "Отгружено в сред. За 7 дн": "D57A2A",
+            "Теор сток ГАММА": "D57A2A",
+            // УТО/ПУТО — пурпурный
+            "УТО, руб.": "E269E2",
+            "ПУТО": "00C0FF",
+            "УТО, шт.": "E269E2",
+            // Ещё один ПУТО-акцент — синий (по вашему списку)
+            // Если два "ПУТО" не нужно — оставляйте только один вариант
+            // "ПУТО": "69BBE2",   // ← альтернатива
+            // Корекции/Недопоставки — красно-оранжевый
+            "Корекции": "E27369",
+            "Недопоставки": "E27369"
+        };
+        
+        // 🆕 «Лёгкое затемнение» для парных групп,
+        // чтобы визуально отличать соседние столбцы одного цвета.
+        // Например: Брак → 2AD580, ЭКСПО → 25C073 (на 5% темнее).
+        const DARKEN_VARIANTS = {
+            "ЭКСПО": "25C073",
+            "През. минимум": "25C073",
+            "Подиум магазина": "25C073",
+            "Доп. презентация": "25C073",
+            "min ЦО ПАК-Подиум": "4FC9E0",
+            "min ЦО коорд": "4FC9E0",
+            "min 441 ПМ": "4FC9E0",
+            "min 500 Проект": "4FC9E0",
+            "Теор сток ГАММА": "C46E25",
+            "УТО, шт.": "D55CD5"
+        };
         
         visibleCols.forEach((col, idx) => {
             const cell = headerRow.getCell(idx + 1);
-            const color = excelHeaderColors[col] || "FFB347";
+            // Приоритет: сначала проверяем затемнённые варианты, потом обычные, потом дефолт
+            const color = DARKEN_VARIANTS[col] || HEADER_GROUP_COLORS[col] || excelHeaderColors[col] || "FFB347";
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${color}` } };
-            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FF808080' } },
+                left: { style: 'thin', color: { argb: 'FF808080' } },
+                bottom: { style: 'medium', color: { argb: 'FF808080' } },
+                right: { style: 'thin', color: { argb: 'FF808080' } }
+            };
         });
         
         for (const row of dataToExport) {
@@ -4991,20 +5770,224 @@ async function exportAllData() {
             const dataRow = worksheet.addRow(rowData);
             visibleCols.forEach((col, idx) => {
                 const cell = dataRow.getCell(idx + 1);
-                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                    left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                    bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                    right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+                };
+                
+                const val = row[col];
+                const numVal = toNumber(val, 0);
+                let fillArgb = null;
+                let fontColor = null;
+                let isBold = false;
+                
+                // ===== ТОП =====
+                if (col === "ТОП") {
+                    const topStr = String(val).replace(/\.00$/, '').replace(/\.0+$/, '').trim();
+                    if (topStr === "0") { fillArgb = 'FFECEFF1'; fontColor = 'FF607D8B'; isBold = true; }
+                    else if (topStr === "1") { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; isBold = true; }
+                    else if (topStr === "2") { fillArgb = 'FFFFE0B2'; fontColor = 'FFE65100'; isBold = true; }
+                    else if (topStr !== '') { fillArgb = 'FFFFF9C4'; fontColor = 'FF827717'; isBold = true; }
+                }
+                
+                // ===== ТС (токсичный сток) =====
+                if (col === "ТС") {
+                    if (numVal === 1) { fillArgb = 'FFC62828'; fontColor = 'FFFFFFFF'; isBold = true; }
+                    else { fillArgb = 'FFF5F5F5'; fontColor = 'FFBBBBBB'; }
+                }
+                
+                // ===== МС (мёртвый сток) =====
+                if (col === "МС") {
+                    if (numVal > 0) { fillArgb = 'FFEF9A9A'; fontColor = 'FFB71C1C'; isBold = true; }
+                }
+                
+                // ===== 20/80 =====
+                if (col === "20/80" && numVal > 0) { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; isBold = true; }
+                
+                // ===== MAX в днях — жёлтый =====
+                if (col === "max дн." && numVal > 0) { fillArgb = 'FFFFF59D'; fontColor = 'FF827717'; isBold = true; }
+                
+                // ===== MIN 441/500/401/902 =====
+                if (['min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'min 902 B2B'].includes(col) && numVal > 0) {
+                    fillArgb = 'FFE3F2FD'; fontColor = 'FF0D47A1'; isBold = true;
+                }
+                
+                // ===== Запас, дн. — градиент =====
+                if (col === "Запас, дн.") {
+                    if (numVal >= 999) { fillArgb = 'FFC62828'; fontColor = 'FFFFFFFF'; isBold = true; }
+                    else if (numVal >= 100) { fillArgb = 'FFFFCC80'; fontColor = 'FFE65100'; isBold = true; }
+                    else if (numVal >= 30) { fillArgb = 'FFFFF9C4'; fontColor = 'FF827717'; }
+                    else if (numVal > 0 && numVal < 7) { fillArgb = 'FFFFCDD2'; fontColor = 'FFB71C1C'; isBold = true; }
+                    else if (numVal >= 7 && numVal < 14) { fillArgb = 'FFFFE0B2'; fontColor = 'FFE65100'; }
+                    else if (numVal >= 14 && numVal < 22) { fillArgb = 'FFFFF9C4'; fontColor = 'FF827717'; }
+                    else if (numVal >= 22 && numVal < 999) { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; }
+                }
+                
+                // ===== В пути, дн. =====
+                if (col === "В пути, дн." && numVal > 0) {
+                    if (numVal < 7) { fillArgb = 'FFFFCDD2'; fontColor = 'FFB71C1C'; }
+                    else if (numVal < 14) { fillArgb = 'FFFFE0B2'; fontColor = 'FFE65100'; }
+                    else if (numVal < 22) { fillArgb = 'FFFFF9C4'; fontColor = 'FF827717'; }
+                    else if (numVal < 999) { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; }
+                }
+                
+                // ===== УТО =====
+                if ((col === "УТО, руб." || col === "УТО, шт.") && numVal > 0) {
+                    fillArgb = 'FFE1BEE7'; fontColor = 'FF4A148C'; isBold = true;
+                }
+                
+                // ===== ПУТО =====
+                if (col === "ПУТО" && numVal === 1) {
+                    fillArgb = 'FFFFE0B2'; fontColor = 'FFE65100'; isBold = true;
+                }
+                
+                // ===== BEST =====
+                if ((col === "BEST гамма" || col === "BEST NEXT") && val) {
+                    fillArgb = 'FFFFF59D'; fontColor = 'FF827717'; isBold = true;
+                }
+                
+                // ===== Дни выхода заказа (мины) =====
+                if (col === "Дни выхода заказа поставщика") {
+                    const tomorrow = getTomorrowDay();
+                    const days = String(val).split(',').map(d => d.trim());
+                    if (days.includes(tomorrow)) {
+                        fillArgb = 'FFC62828'; fontColor = 'FFFFFFFF'; isBold = true;
+                    }
+                }
+                
+                // ===== Вместимость — без цвета (по требованию) =====
+                // if (col === "Вместимость" && numVal > 0) {
+                //     fillArgb = 'FF' + getGradientColor(numVal, 0, 200);
+                // }
+                
+                // ===== Наибольший резерв MIN (число) — БЕЗ цвета =====
+                // (по требованию убрано, ничего не делаем)
+                
+                // ===== Срок поставки в магазин — КРАСНЫЙ если пусто/не найдено =====
+                if (col === "Срок поставки в магазин") {
+                    const srok = String(val || '').trim();
+                    if (!srok || srok === '0' || srok === '—' || srok === '-') {
+                        fillArgb = 'FFFFCDD2';
+                        fontColor = 'FFB71C1C';
+                        isBold = true;
+                    } else {
+                        fillArgb = 'FFC8E6C9';
+                        fontColor = 'FF1B5E20';
+                    }
+                }
+                
+                // ===== Наполненность полки =====
+                if (col === "Наполненность полки" && numVal > 0) {
+                    if (numVal <= 30) { fillArgb = 'FFFFCDD2'; fontColor = 'FFB71C1C'; isBold = true; }
+                    else if (numVal <= 60) { fillArgb = 'FFFFE0B2'; fontColor = 'FFE65100'; }
+                    else { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; }
+                }
+                
+                // ===== % разницы РРЦ и ПЦ =====
+                if (col === "% разницы РРЦ и ПЦ" && val) {
+                    const p = toNumber(val);
+                    if (p > 0) { fillArgb = 'FFFFCDD2'; fontColor = 'FFB71C1C'; isBold = true; } // скидка
+                    else if (p < 0) { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; isBold = true; } // наценка
+                }
+                
+                // ===== Запас больше вместимости =====
+                if (col === "Запас больше вместимости") {
+                    if (val === 'да') { fillArgb = 'FFFFCDD2'; fontColor = 'FFB71C1C'; isBold = true; }
+                    else if (val === 'нет') { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; }
+                }
+                
+                                // 🆕 Условная заливка по значениям ячеек (по ТЗ)
+                // Приоритет: если ниже сработает правило — перезапишет fillArgb.
+                
+                // ===== Новинка — оранжевый текст, если значение есть =====
+                if (col === "Новинка" && val && String(val).trim() !== "" && String(val) !== "0") {
+                    fillArgb = 'FFFE7E00';
+                    fontColor = 'FF1E1E1E';
+                    isBold = true;
+                }
+                
+                // ===== Запас, шт. — розовый для 0, светло-зелёный для >0 =====
+                if (col === "Запас, шт.") {
+                    if (numVal === 0) {
+                        fillArgb = 'FFFFC0CB';   // светло-розовый
+                        fontColor = 'FFB71C1C';
+                    } else if (numVal > 0) {
+                        fillArgb = 'FFC8F0C8';   // светло-зелёный
+                        fontColor = 'FF1B5E20';
+                    }
+                }
+                
+                // ===== Запас, дн. / В пути, шт. / В пути, дн. — розовый для 0 =====
+                if (['Запас, дн.', 'В пути, шт.', 'В пути, дн.'].includes(col)) {
+                    if (numVal === 0) {
+                        fillArgb = 'FFFFC0CB';
+                        fontColor = 'FFB71C1C';
+                    }
+                }
+                
+                // ===== Вместимость — светло-голубой для чисел > 0 =====
+                if (col === "Вместимость" && numVal > 0) {
+                    fillArgb = 'FFD0EFFF';   // светло-голубой
+                    fontColor = 'FF0D47A1';
+                }
+                
+                // ===== Отгружено в сред. За 7 дн — светло-зелёный для чисел > 0 =====
+                if (col === "Отгружено в сред. За 7 дн" && numVal > 0) {
+                    fillArgb = 'FFD5F5D5';
+                    fontColor = 'FF1B5E20';
+                }
+                
+                // ===== Корекции / Недопоставки — красно-оранжевый для чисел > 0 =====
+                if (['Корекции', 'Недопоставки'].includes(col) && numVal !== 0 && val !== '' && val !== null) {
+                    fillArgb = 'FFE27369';
+                    fontColor = 'FFFFFFFF';
+                    isBold = true;
+                }
+                
+                // ===== Применяем заливку =====
+                if (fillArgb) {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillArgb } };
+                }
+                                if (fontColor) {
+                    cell.font = { color: { argb: fontColor }, bold: isBold, size: 9 };
+                } else {
+                    cell.font = { size: 9 };
+                }
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
             });
         }
         
+        // 🆕 Компактная ширина столбцов: ограничиваем 14 символами,
+        // длинные заголовки переносятся через wrapText.
+        // Так на одной странице поместится больше колонок.
         worksheet.columns.forEach((column, idx) => {
-            let maxLength = visibleCols[idx].length + 3;
+            const headerLen = visibleCols[idx].length;
+            // Базовый размер по заголовку (но не более 14)
+            let width = Math.min(headerLen + 2, 14);
+            // Но если данные в колонке короткие — берём по данным
+            let maxDataLen = 0;
             worksheet.getColumn(idx + 1).eachCell({ includeEmpty: true }, (cell) => {
-                const cellValue = cell.value ? String(cell.value).length : 0;
-                maxLength = Math.max(maxLength, cellValue + 2);
+                if (cell.row === 1) return; // шапку не считаем
+                const v = cell.value ? String(cell.value).length : 0;
+                if (v > maxDataLen) maxDataLen = v;
             });
-            worksheet.getColumn(idx + 1).width = Math.min(maxLength, 35);
+            width = Math.max(width, Math.min(maxDataLen + 2, 14));
+            worksheet.getColumn(idx + 1).width = width;
         });
         
-        worksheet.autoFilter = { from: 'A1', to: `${String.fromCharCode(64 + visibleCols.length)}${dataToExport.length + 1}` };
+        // Универсальная функция: 1 → A, 26 → Z, 27 → AA, 55 → BC
+        function colLetter(n) {
+    let s = '';
+    while (n > 0) {
+        const m = (n - 1) % 26;
+        s = String.fromCharCode(65 + m) + s;
+        n = (n - m - 1) / 26;
+    }
+    return s;
+}
+worksheet.autoFilter = { from: 'A1', to: `${colLetter(visibleCols.length)}${dataToExport.length + 1}` };
         
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -5112,8 +6095,12 @@ function switchTab(tabId) {
     document.getElementById(`tab-${tabId}`).classList.add('active');
     document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
     
+    // ⚡ ОПТИМИЗАЦИЯ: обновляем аналитику только если устарела
     if (tabId === 'analytics' && cachedData.fullData.length) {
-        updateAnalytics(filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData);
+        if (analyticsStale || !document.getElementById('statCriticalValue').textContent) {
+            updateAnalytics(filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData);
+            analyticsStale = false;
+        }
     }
     if (tabId === 'alerts') {
         if (!document.getElementById('alertSummary').style.display || document.getElementById('alertSummary').style.display === 'none') {
@@ -5139,6 +6126,7 @@ let errorFilters = {
 
 let appliedFixes = [];
 
+// 🔴 ПУНКТ 1: Обновлённая scanAlerts — фильтрация zapas без MIN 500
 function scanAlerts() {
     const data = filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData;
     if (!data.length) {
@@ -5174,9 +6162,25 @@ function scanAlerts() {
                 const vmesimost = toNumber(row["Вместимость"], 0);
                 const zapasSht = toNumber(row["Запас, шт."], 0);
                 const otgruzhenoSred = toNumber(row["Отгружено в сред. За 7 дн"], 0);
-                const gamma = String(row["Гамма"] || "").trim();
-                const isNew = gamma === "401" || gamma === "Новинка" || gamma === "NEW";
+                const novinka = String(row["Новинка"] || "").trim();
+                const isNew = novinka !== "" && novinka !== "0";
                 const transitDays = toNumber(row["В пути, дн."], 0);
+                const store = row["№ магазина"] || '';
+                const article = row["Артикул"] || '';
+                
+                                const edited = editedRows.get(`${store}|${article}`);
+                
+                // Эффективное значение кол-ва проектов для MIN 500
+                // Если пользователь правил поле «Вид минимума» на 500 — берём введённое кол-во,
+                // иначе берём исходное значение из строки.
+                // Значение -1 означает «отменить MIN» → не считаем его активным.
+                const min500Effective = (edited?.видМинимума === '500')
+                    ? toNumber(edited.колВоПроектов)
+                    : min500;
+                
+                // -1 в колВоПроектов означает «отменить MIN» → не считаем активным
+                const hasMin500Active = (min500Effective > 0) ||
+                                        (edited?.видМинимума === '500' && min500Effective !== -1);
                 
                 let overstockReasons = [];
                 let deficitReasons = [];
@@ -5196,7 +6200,7 @@ function scanAlerts() {
                         alertData.critical.push({ ...row, reason: 'УТО + запас <7 дн' });
                     }
                     if (hasBest) deficitReasons.push('Бест заканчивается (<7 дн)');
-                    const hasMin = min441 > 0 || min500 > 0 || min401 > 0;
+                    const hasMin = min441 > 0 || min500Effective > 0 || min401 > 0;
                     if (!hasMin) deficitReasons.push('Нет ни одного MIN');
                 }
                 if (days < 14 && days > 0 && hasBest) {
@@ -5206,13 +6210,16 @@ function scanAlerts() {
                     deficitReasons.push('Бест заканчивается, ничего не в пути');
                 }
                 
+                // MIN 441 > Вместимость
                 if (min441 > vmesimost && vmesimost > 0 && min441 > 0) {
                     errorReasons.push(`MIN 441 (${min441}) > вместимости (${vmesimost})`);
                 }
+                // Новинка без MIN 401
                 if (isNew && min401 === 0) {
                     errorReasons.push('Новинка без MIN 401');
                 }
-                if (zapasSht > vmesimost && vmesimost > 0) {
+                // 🔴 ПУНКТ 1: Запас > Вместимость — ТОЛЬКО если есть активный MIN 500
+                if (zapasSht > vmesimost && vmesimost > 0 && days > 60 && hasMin500Active) {
                     errorReasons.push(`Запас (${zapasSht}) > вместимости (${vmesimost})`);
                 }
                 
@@ -5230,26 +6237,38 @@ function scanAlerts() {
                         mainReason: deficitReasons[0]
                     });
                 }
+                
                 if (errorReasons.length > 0) {
-                    let errorType = 'unknown';
-                    if (errorReasons[0].includes('MIN 441')) errorType = 'min441';
-                    else if (errorReasons[0].includes('Новинка без MIN 401')) errorType = 'min401';
-                    else if (errorReasons[0].includes('Запас')) errorType = 'zapas';
+                    const errorTypes = [];
+                    if (min441 > vmesimost && vmesimost > 0 && min441 > 0) errorTypes.push('min441');
+                    if (isNew && min401 === 0) errorTypes.push('min401');
+                    // 🔴 ПУНКТ 1: zapas только если есть активный MIN 500
+                    if (zapasSht > vmesimost && vmesimost > 0 && days > 60 && hasMin500Active) errorTypes.push('zapas');
                     
-                    alertData.errors.push({ 
-                        ...row, 
-                        reasons: errorReasons,
-                        mainReason: errorReasons[0],
-                        errorType: errorType,
-                        _min441: min441,
-                        _min500: min500,
-                        _min401: min401,
-                        _vmesimost: vmesimost,
-                        _zapasSht: zapasSht,
-                        _isNew: isNew,
-                        _days: days,
-                        _otgruzhenoSred: otgruzhenoSred
-                    });
+                    for (const errType of errorTypes) {
+                        let mainReason = '';
+                        if (errType === 'min441') mainReason = `MIN 441 (${min441}) > вместимости (${vmesimost})`;
+                        else if (errType === 'min401') mainReason = 'Новинка без MIN 401';
+                        else if (errType === 'zapas') mainReason = `Запас (${zapasSht}) > вместимости (${vmesimost})`;
+                        
+                        alertData.errors.push({ 
+                            ...row, 
+                            reasons: errorReasons,
+                            mainReason: mainReason,
+                            errorType: errType,
+                            _min441: min441,
+                            _min500: min500Effective,
+                            _min500Original: min500,
+                            _min401: min401,
+                            _vmesimost: vmesimost,
+                            _zapasSht: zapasSht,
+                            _isNew: isNew,
+                            _days: days,
+                            _otgruzhenoSred: otgruzhenoSred,
+                            _edited: edited,
+                            _hasMin500Active: hasMin500Active
+                        });
+                    }
                 }
             }
             
@@ -5344,8 +6363,7 @@ function renderTopErrors() {
     const tbody = document.getElementById('topErrorsBody');
     tbody.innerHTML = '';
     
-    let items = alertData.errors;
-    items = items.filter(row => {
+    let items = alertData.errors.filter(row => {
         if (row.errorType === 'min441' && !errorFilters.min441) return false;
         if (row.errorType === 'min401' && !errorFilters.min401) return false;
         if (row.errorType === 'zapas' && !errorFilters.zapas) return false;
@@ -5366,7 +6384,7 @@ function renderTopErrors() {
         let solution = '';
         let currentMinValue = '';
         
-        if (min441 > vmesimost && vmesimost > 0 && min441 > 0) {
+        if (row.errorType === 'min441') {
             errorDesc = `MIN 441 (${min441}) > вместимости (${vmesimost})`;
             solution = `📉 Уменьшить MIN 441 до ${Math.floor(vmesimost)} шт`;
             currentMinValue = min441;
@@ -5374,10 +6392,9 @@ function renderTopErrors() {
             errorDesc = 'Новинка без MIN 401';
             solution = `📈 Добавить MIN 401 (${vmesimost > 0 ? Math.ceil(vmesimost * 0.5) : 50} шт)`;
             currentMinValue = min401;
-        } else if (zapasSht > vmesimost && vmesimost > 0) {
+        } else if (row.errorType === 'zapas') {
             const days = toNumber(row["Запас, дн."], 999);
             let recommendation = '';
-            let currentMinDisplay = min500 > 0 ? `(MIN 500 = ${min500})` : '(MIN 500 не установлен)';
             
             if (days > 60 && days < 999) {
                 const newMin = Math.floor(vmesimost * 0.6);
@@ -5388,7 +6405,7 @@ function renderTopErrors() {
                 currentMinValue = min500;
             } else {
                 const recZapas = Math.floor(vmesimost * 0.8);
-                recommendation = `Снизить запас до ${recZapas} шт или уменьшить MIN 500 ${currentMinDisplay}`;
+                recommendation = `Снизить запас до ${recZapas} шт или уменьшить MIN 500`;
                 currentMinValue = min500;
             }
             errorDesc = `Запас (${zapasSht}) > вместимости (${vmesimost})`;
@@ -5604,8 +6621,8 @@ function exportSingleAlert(article, store) {
     const min401 = toNumber(row["min 401 NEW"], 0);
     const vmesimost = toNumber(row["Вместимость"], 0);
     const zapasSht = toNumber(row["Запас, шт."], 0);
-    const gamma = String(row["Гамма"] || "").trim();
-    const isNew = gamma === "401" || gamma === "Новинка" || gamma === "NEW";
+    const novinka = String(row["Новинка"] || "").trim();
+    const isNew = novinka !== "" && novinka !== "0";
     
     if (min441 > vmesimost && vmesimost > 0 && min441 > 0) {
         problem = `MIN 441 (${min441}) > вместимости (${vmesimost})`;
@@ -5673,7 +6690,8 @@ function clearErrorFilters() {
     showToast('🗑️ Все фильтры ошибок сняты', 'info', 1500);
 }
 
-// ===== ПРЕДЛОЖИТЬ ИСПРАВЛЕНИЯ (ОБНОВЛЁННАЯ ВЕРСИЯ) =====
+// ===== ПРЕДЛОЖИТЬ ИСПРАВЛЕНИЯ =====
+// 🔴 ПУНКТ 1: suggestFixes — пропускаем товары без активного MIN 500 для zapas
 function suggestFixes() {
     const checkboxes = document.querySelectorAll('.error-filter');
     const activeFilters = {};
@@ -5713,8 +6731,9 @@ function suggestFixes() {
         const store = row["№ магазина"] || '';
         const article = row["Артикул"] || '';
         const name = row["Наименование"] || '';
+        const hasMin500Active = row._hasMin500Active || false;
         
-        if (min441 > vmesimost && vmesimost > 0 && min441 > 0) {
+        if (row.errorType === 'min441') {
             const newMin = Math.floor(vmesimost);
             suggestions.push({
                 store,
@@ -5731,7 +6750,7 @@ function suggestFixes() {
             });
         }
         
-        if (isNew && min401 === 0) {
+        if (row.errorType === 'min401') {
             const recVal = vmesimost > 0 ? Math.ceil(vmesimost * 0.5) : 50;
             suggestions.push({
                 store,
@@ -5748,7 +6767,12 @@ function suggestFixes() {
             });
         }
         
-        if (zapasSht > vmesimost && vmesimost > 0) {
+        if (row.errorType === 'zapas') {
+            // 🔴 ПУНКТ 1: Не предлагаем исправления, если MIN 500 не установлен
+            if (!hasMin500Active) {
+                continue;
+            }
+            
             let recommendation = '';
             let newMinValue = '500';
             let quantity = 0;
@@ -6035,6 +7059,14 @@ function initAlertCardHandlers() {
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 document.addEventListener('DOMContentLoaded', function() {
+        // ⚡ ПУНКТ 5: инициализируем кэш DOM
+    initDomCache();
+    
+    // 🆕 v2.6: восстанавливаем мультивыбор подотделов
+    if (appState.selectedSubdepartments && appState.selectedSubdepartments.length) {
+        appState.selectedSubdepartments.forEach(s => selectedSubdepartments.add(s));
+    }
+    
     if (!appState.alertsEnabled) {
         alertsEnabled = false;
         document.getElementById('alertToggleBtn').textContent = '🔔 Включить';
@@ -6072,6 +7104,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             if (cachedData.fullData.length) {
                 updateAnalytics(filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData);
+                analyticsStale = false;
                 showToast('🔄 Аналитика обновлена', 'info');
             }
         }
@@ -6181,6 +7214,55 @@ document.addEventListener('DOMContentLoaded', function() {
         scheduleFilter(); 
     });
     
+        // 🆕 v2.6: дропдаун мультивыбора подотделов
+    const subdeptBtn = document.getElementById('subdeptDropdownBtn');
+    const subdeptPanel = document.getElementById('subdeptDropdownPanel');
+    
+    if (subdeptBtn && subdeptPanel) {
+        subdeptBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            subdeptPanel.classList.toggle('open');
+            subdeptBtn.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+            if (!subdeptPanel.contains(e.target) && e.target !== subdeptBtn) {
+                subdeptPanel.classList.remove('open');
+                subdeptBtn.classList.remove('open');
+            }
+        });
+    }
+    
+    const subdeptSelectAll = document.getElementById('subdeptSelectAllBtn');
+    if (subdeptSelectAll) {
+        subdeptSelectAll.addEventListener('click', () => {
+            selectedSubdepartments.clear();
+            subdepartmentsSet.forEach(s => selectedSubdepartments.add(s));
+            document.querySelectorAll('#subdeptCheckboxList input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+                cb.closest('.subdept-checkbox-item').classList.add('checked');
+            });
+            syncSubdeptDropdownUI();
+            currentShowLimit = DISPLAY_LIMIT_BASIC;
+            scheduleFilter();
+            saveState();
+        });
+    }
+    
+    const subdeptClearAll = document.getElementById('subdeptClearAllBtn');
+    if (subdeptClearAll) {
+        subdeptClearAll.addEventListener('click', () => {
+            selectedSubdepartments.clear();
+            document.querySelectorAll('#subdeptCheckboxList input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.subdept-checkbox-item').classList.remove('checked');
+            });
+            syncSubdeptDropdownUI();
+            currentShowLimit = DISPLAY_LIMIT_BASIC;
+            scheduleFilter();
+            saveState();
+        });
+    }
+     
     const toggleMainBtn = document.getElementById('toggleReportsCascadeBtn');
     const reportsDiv = document.getElementById('reportsCascadeContainer');
     let mainOpen = false;
@@ -6208,6 +7290,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('refreshAnalyticsBtn').addEventListener('click', () => {
         if (cachedData.fullData.length) {
             updateAnalytics(filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData);
+            analyticsStale = false;
             showToast('🔄 Аналитика обновлена', 'info');
         }
     });
@@ -6257,8 +7340,16 @@ document.addEventListener('DOMContentLoaded', function() {
     renderFullTableWithFilter();
     generateColumnToggles();
     
-    console.log('📌 STOCKWISE v2.1 готов!');
-
+    // ⚡ ОПТИМИЗАЦИЯ: обработчик ресайза через scheduleFixSticky
+    window.addEventListener('resize', function() {
+        scheduleFixSticky();
+    });
+    
+    // ⚡ ОПТИМИЗАЦИЯ: сохраняем состояние при закрытии
+        // 🆕 v2.7: при закрытии — принудительное сохранение без debounce
+    window.addEventListener('beforeunload', saveStateImmediate);
+    
+    console.log('📌 STOCKWISE v2.4 готов!');
     console.log('📊 Умный анализ запасов');
     console.log('🏪 Двойной клик или Enter → MagPortal');
     console.log('🚨 Вкладка "Аномалии" — сканирование ошибок с фильтрацией');
@@ -6271,7 +7362,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('📝 Комментарии в экспорте MIN: "ручная корректировка" или "аномалия"');
     console.log('⌨️ F1 - Аналитика, F2 - Таблица, F3 - Аномалии, F5 - Обновить');
     console.log('❓ Кнопка "Инструкция" для быстрого ознакомления');
-    console.log('🆕 Новое: ПУТО, активный MIN по датам, фильтр "Мины" по магазину+поставщику');
+    console.log('🆕 v2.4: Убрано закрепление "№ магазина", закреплены только "Артикул" и "Наименование"');
+    console.log('🆕 v2.4: В Excel убрана заливка "Вместимость" и "Наибольший резерв MIN (число)"');
+    console.log('🆕 v2.4: "Срок поставки в магазин" выделяется красным (пусто) / зелёным (заполнено)');
+    console.log('🆕 v2.4: Исправлено подтягивание "Срок поставки в магазин" из отчёта "Детали поставки"');
+    console.log('🆕 v2.4: "Наименование" компактнее (0.55rem, max 190px, обрезка с ...)');
+    console.log('🆕 v2.4: Ускорение фильтрации — debounce 150мс, прогресс-бар 5→25→35→65→80→100%, кэш DOM');
 });
 </script>
 </body>
