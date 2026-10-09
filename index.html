@@ -2541,6 +2541,63 @@ function getStockColorClass(days) {
     return 'stock-normal';
 }
 
+// 🆕 Корректный парсинг русских дат с двузначным годом
+// YY 00-49 → 20YY, YY 50-99 → 19YY
+// 🆕 Корректный парсинг дат из отчёта "Резервы":
+// - "01.01.40" → 2040-01-01 (YY 00-49 → 20YY, YY 50-99 → 19YY)
+// - "29.09.26" → 2026-09-29
+// - 46294 (Excel serial number) → 2026-09-29
+// - "46294" (число в строке) → 2026-09-29
+// - Date object → как есть
+function parseRuDate(str) {
+    if (str === undefined || str === null || str === "") return null;
+
+    // Если уже Date
+    if (str instanceof Date) {
+        return isNaN(str.getTime()) ? null : str;
+    }
+
+    // Если число — это Excel serial date (дни от 1899-12-30)
+    if (typeof str === 'number' && isFinite(str)) {
+        // Excel epoch: serial 1 = 1900-01-01 (с багом 1900-02-29)
+        // 25569 = serial для 1970-01-01 → (serial - 25569) * 86400 = Unix-секунды
+        const ms = Math.round((str - 25569) * 86400 * 1000);
+        const d = new Date(ms);
+        if (isNaN(d.getTime())) return null;
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    // Строка
+    const s = String(str).trim();
+
+    // Если строка — чисто число ("46294") — тоже Excel serial
+    if (/^\d+(\.\d+)?$/.test(s)) {
+        const num = parseFloat(s);
+        const ms = Math.round((num - 25569) * 86400 * 1000);
+        const d = new Date(ms);
+        if (isNaN(d.getTime())) return null;
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    // Формат DD.MM.YY или DD.MM.YYYY
+    const parts = s.split('.');
+    if (parts.length !== 3) {
+        const fallback = new Date(s);
+        return isNaN(fallback.getTime()) ? null : fallback;
+    }
+    const [dd, mm, yy] = parts.map(p => p.trim());
+    let year = parseInt(yy, 10);
+    if (yy.length === 2) {
+        year = year < 50 ? 2000 + year : 1900 + year;
+    }
+    const d = new Date(year, parseInt(mm, 10) - 1, parseInt(dd, 10));
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
 // 🎨 ПУНКТ 7: Вспомогательная функция градиента для Excel
 function getGradientColor(value, min, max) {
     const ratio = Math.min(Math.max((value - min) / (max - min), 0), 1);
@@ -2603,26 +2660,12 @@ function getMinDataByType(store, art, type) {
             const count = toNumber(item["Кол-во резерва"]);
             let startDate = null;
             let endDate = null;
-            if (item["Дата начала"]) {
-                const startStr = String(item["Дата начала"]).trim();
-                const parts = startStr.split('.');
-                if (parts.length === 3) {
-                    startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                } else {
-                    startDate = new Date(startStr);
-                }
-                if (startDate) startDate.setHours(0, 0, 0, 0);
-            }
-            if (item["Дата окончания"]) {
-                const endStr = String(item["Дата окончания"]).trim();
-                const parts = endStr.split('.');
-                if (parts.length === 3) {
-                    endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                } else {
-                    endDate = new Date(endStr);
-                }
-                if (endDate) endDate.setHours(0, 0, 0, 0);
-            }
+                    if (item["Дата начала"]) {
+            startDate = parseRuDate(item["Дата начала"]);
+        }
+        if (item["Дата окончания"]) {
+            endDate = parseRuDate(item["Дата окончания"]);
+        }
             result.push({
                 count: count,
                 startDate: startDate,
@@ -2643,71 +2686,43 @@ function getActiveMinData(store, art) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-
     let activeMin = null;
     let maxActiveCount = 0;
-    
+
     for (const item of items) {
         const reserveType = String(item["Резерв"] || "").trim();
         if (!reserveType) continue;
-        
+
         let isMin = false;
         const lowerReserveType = reserveType.toLowerCase();
-                for (const keyword of MIN_KEYWORDS_LOWER) {
+        for (const keyword of MIN_KEYWORDS_LOWER) {
             if (lowerReserveType.includes(keyword)) {
                 isMin = true;
                 break;
             }
         }
-        
         if (!isMin) continue;
-        
+
         const count = toNumber(item["Кол-во резерва"]);
         if (count <= 0) continue;
 
-        let startDate = null;
-        let endDate = null;
-        
+                let startDate = null, endDate = null;
         if (item["Дата начала"]) {
-            const startStr = String(item["Дата начала"]).trim();
-            const parts = startStr.split('.');
-            if (parts.length === 3) {
-                startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-            } else {
-                startDate = new Date(startStr);
-            }
-            if (startDate) startDate.setHours(0, 0, 0, 0);
+            startDate = parseRuDate(item["Дата начала"]);
         }
-        
         if (item["Дата окончания"]) {
-            const endStr = String(item["Дата окончания"]).trim();
-            const parts = endStr.split('.');
-            if (parts.length === 3) {
-                endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-            } else {
-                endDate = new Date(endStr);
-            }
-            if (endDate) endDate.setHours(0, 0, 0, 0);
+            endDate = parseRuDate(item["Дата окончания"]);
         }
 
         let isActive = false;
-        
-        if (!startDate && !endDate) {
-            isActive = true;
-        }
-        else if (startDate && !endDate) {
-            isActive = startDate <= today;
-        }
-        else if (!startDate && endDate) {
-            isActive = endDate >= today;
-        }
-        else if (startDate && endDate) {
-            isActive = startDate <= today && endDate >= today;
-        }
+        if (!startDate && !endDate) isActive = true;
+        else if (startDate && !endDate) isActive = startDate <= today;
+        else if (!startDate && endDate) isActive = endDate >= today;
+        else isActive = startDate <= today && endDate >= today;
 
         if (isActive && count > maxActiveCount) {
             maxActiveCount = count;
-                        let code = MIN_TYPE_TO_CODE[reserveType] || "500";
+            const code = MIN_TYPE_TO_CODE[reserveType] || "500";
             activeMin = {
                 type: reserveType,
                 count: count,
@@ -2725,7 +2740,7 @@ function getActiveMinData(store, art) {
         for (const item of items) {
             const reserveType = String(item["Резерв"] || "").trim();
             if (!reserveType) continue;
-            
+
             let isMin = false;
             const lowerReserveType = reserveType.toLowerCase();
             for (const keyword of MIN_KEYWORDS_LOWER) {
@@ -2735,31 +2750,17 @@ function getActiveMinData(store, art) {
                 }
             }
             if (!isMin) continue;
-            
+
             const count = toNumber(item["Кол-во резерва"]);
             if (count <= 0) continue;
-            
-            let startsInFuture = false;
-            if (item["Дата начала"]) {
-                const startStr = String(item["Дата начала"]).trim();
-                const parts = startStr.split('.');
-                let startDate = null;
-                if (parts.length === 3) {
-                    startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                } else {
-                    startDate = new Date(startStr);
-                }
-                if (startDate) {
-                    startDate.setHours(0, 0, 0, 0);
-                    startsInFuture = startDate > today;
-                }
-            }
-            
+
+            const startDate = item["Дата начала"] ? parseRuDate(item["Дата начала"]) : null;
+            const startsInFuture = startDate && startDate > today;
             if (startsInFuture) continue;
-            
+
             if (count > maxCount) {
                 maxCount = count;
-                            let code = MIN_TYPE_TO_CODE[reserveType] || "500";
+                const code = MIN_TYPE_TO_CODE[reserveType] || "500";
                 activeMin = {
                     type: reserveType,
                     count: count,
@@ -2775,7 +2776,73 @@ function getActiveMinData(store, art) {
 
     return activeMin;
 }
+// 🆕 Возвращает наибольший ДЕЙСТВУЮЩИЙ MIN по списку типов резервов.
+function getActiveMinByTypes(store, art, reserveTypes) {
+    const key = `${store}|${art}`;
+    const items = reservyMap.get(key);
+    if (!items) return null;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const typeSet = new Set(reserveTypes);
+    let activeMax = null;
+    let fallbackMax = null;
+
+    for (const item of items) {
+        const reserveType = String(item["Резерв"] || "").trim();
+        if (!typeSet.has(reserveType)) continue;
+
+        const count = toNumber(item["Кол-во резерва"]);
+        if (count <= 0) continue;
+
+        let startDate = null, endDate = null;
+        if (item["Дата начала"]) {
+            startDate = parseRuDate(item["Дата начала"]);
+        }
+        if (item["Дата окончания"]) {
+            endDate = parseRuDate(item["Дата окончания"]);
+        }
+
+        const startsInFuture = startDate && startDate > today;
+        const isActive =
+            (!startDate || startDate <= today) &&
+            (!endDate   || endDate   >= today);
+
+        if (isActive) {
+            if (!activeMax || count > activeMax.count) {
+                activeMax = { count, type: reserveType, startDate, endDate, isActive: true };
+            }
+        } else if (!startsInFuture) {
+            if (!fallbackMax || count > fallbackMax.count) {
+                fallbackMax = { count, type: reserveType, startDate, endDate, isActive: false };
+            }
+        }
+    }
+
+    return activeMax || fallbackMax;
+}
+
+// 🆕 Наибольший действующий MIN среди групп ПМ / 500 / 401 / 902
+function getBestActiveMinForAnomaly(store, article) {
+    const groups = [
+        { code: '441', types: ["Мин Магазин ПМ шт"] },
+        { code: '500', types: ["Мин Магазин Амбиция проекта шт"] },
+        { code: '401', types: ["Мин Новый товар шт"] },
+        { code: '902', types: ["Мин Магазин В2В шт"] }
+    ];
+
+    let best = null;
+    for (const g of groups) {
+        const found = getActiveMinByTypes(store, article, g.types);
+        if (found && found.count > 0) {
+            if (!best || found.count > best.count) {
+                best = { code: g.code, count: found.count, type: found.type };
+            }
+        }
+    }
+    return best;
+}
 function buildMaps() {
     console.log("🔧 Построение кешей...");
     
@@ -3039,18 +3106,39 @@ function calculateRow(gammaItem) {
     
     const items = reservyMap.get(mapKey) || [];
 
+        // 🆕 Для MIN-групп берём НАИБОЛЬШИЙ ДЕЙСТВУЮЩИЙ MIN, а не сумму всех записей
+    // (аналогично логике аномалий — «сумма 18 + 22 = 40» больше не показывается)
+    const minGroups = [
+        { code: '441', column: "min 441 ПМ",      types: ["Мин Магазин ПМ шт"] },
+        { code: '500', column: "min 500 Проект",  types: ["Мин Магазин Амбиция проекта шт"] },
+        { code: '401', column: "min 401 NEW",     types: ["Мин Новый товар шт"] },
+        { code: '902', column: "min 902 B2B",     types: ["Мин Магазин В2В шт"] }
+    ];
+    
     const sums = {
         "min 500 Проект": 0, "min 441 ПМ": 0, "min 902 B2B": 0, "min 401 NEW": 0,
         "min ЦО Проект": 0, "min ЦО ПАК-Подиум": 0, "min ЦО коорд": 0,
         "През. минимум": 0, "ТЖ/ПАК": 0, "Подиум магазина": 0, "Улич. Торг": 0, "Доп. презентация": 0,
         "Брак": 0, "ЭКСПО": 0
     };
-
+    
+    // MIN-группы: наибольший ДЕЙСТВУЮЩИЙ MIN (или fallback, если активных нет)
+    for (const g of minGroups) {
+        const found = getActiveMinByTypes(store, artikul, g.types);
+        sums[g.column] = found ? found.count : 0;
+    }
+    
+    // Остальные группы (ЦО, презентация, Брак, ЭКСПО) — по-прежнему сумма
+    const otherColumns = [
+        "min ЦО Проект", "min ЦО ПАК-Подиум", "min ЦО коорд",
+        "През. минимум", "ТЖ/ПАК", "Подиум магазина", "Улич. Торг", "Доп. презентация",
+        "Брак", "ЭКСПО"
+    ];
     for (const item of items) {
         const reserveType = String(item["Резерв"] || "").trim();
         const count = toNumber(item["Кол-во резерва"]);
-                const colName = MIN_TYPE_TO_COLUMN[reserveType];
-        if (colName && sums.hasOwnProperty(colName)) {
+        const colName = MIN_TYPE_TO_COLUMN[reserveType];
+        if (colName && otherColumns.includes(colName)) {
             sums[colName] += count;
         }
     }
@@ -3097,27 +3185,13 @@ function calculateRow(gammaItem) {
         const count = toNumber(item["Кол-во резерва"]);
         if (count <= 0) continue;
 
-        let startDate = null;
+                let startDate = null;
         let endDate = null;
         if (item["Дата начала"]) {
-            const startStr = String(item["Дата начала"]).trim();
-            const parts = startStr.split('.');
-            if (parts.length === 3) {
-                startDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-            } else {
-                startDate = new Date(startStr);
-            }
-            if (startDate) startDate.setHours(0, 0, 0, 0);
+            startDate = parseRuDate(item["Дата начала"]);
         }
         if (item["Дата окончания"]) {
-            const endStr = String(item["Дата окончания"]).trim();
-            const parts = endStr.split('.');
-            if (parts.length === 3) {
-                endDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-            } else {
-                endDate = new Date(endStr);
-            }
-            if (endDate) endDate.setHours(0, 0, 0, 0);
+            endDate = parseRuDate(item["Дата окончания"]);
         }
 
         const isActive = (!startDate || startDate <= today) && (!endDate || endDate >= today);
@@ -6147,7 +6221,11 @@ function scanAlerts() {
                 critical: []
             };
             
-            for (const row of data) {
+                        for (const row of data) {
+                // ✅ СНАЧАЛА объявляем store и article — они нужны ниже
+                const store = row["№ магазина"] || '';
+                const article = row["Артикул"] || '';
+                
                 const days = toNumber(row["Запас, дн."], 999);
                 const utoRub = toNumber(row["УТО, руб."], 0);
                 const utoSht = toNumber(row["УТО, шт."], 0);
@@ -6156,36 +6234,39 @@ function scanAlerts() {
                                 (row["BEST NEXT"] && row["BEST NEXT"] !== "");
                 const mc = toNumber(row["МС"], 0);
                 const ts = toNumber(row["ТС"], 0);
-                const min441 = toNumber(row["min 441 ПМ"], 0);
-                const min500 = toNumber(row["min 500 Проект"], 0);
-                const min401 = toNumber(row["min 401 NEW"], 0);
+               
+                                // 🆕 Для каждой группы берём СВОЙ наибольший ДЕЙСТВУЮЩИЙ MIN
+                const activeMin441 = getActiveMinByTypes(store, article, ["Мин Магазин ПМ шт"]);
+                const activeMin500 = getActiveMinByTypes(store, article, ["Мин Магазин Амбиция проекта шт"]);
+                const activeMin401 = getActiveMinByTypes(store, article, ["Мин Новый товар шт"]);
+                const activeMin902 = getActiveMinByTypes(store, article, ["Мин Магазин В2В шт"]);
+
+                const min441 = activeMin441?.count || toNumber(row["min 441 ПМ"], 0);
+                const min500 = activeMin500?.count || toNumber(row["min 500 Проект"], 0);
+                const min401 = activeMin401?.count || toNumber(row["min 401 NEW"], 0);
+                const min902 = activeMin902?.count || toNumber(row["min 902 B2B"], 0);
+
                 const vmesimost = toNumber(row["Вместимость"], 0);
                 const zapasSht = toNumber(row["Запас, шт."], 0);
                 const otgruzhenoSred = toNumber(row["Отгружено в сред. За 7 дн"], 0);
                 const novinka = String(row["Новинка"] || "").trim();
                 const isNew = novinka !== "" && novinka !== "0";
                 const transitDays = toNumber(row["В пути, дн."], 0);
-                const store = row["№ магазина"] || '';
-                const article = row["Артикул"] || '';
-                
-                                const edited = editedRows.get(`${store}|${article}`);
-                
-                // Эффективное значение кол-ва проектов для MIN 500
-                // Если пользователь правил поле «Вид минимума» на 500 — берём введённое кол-во,
-                // иначе берём исходное значение из строки.
-                // Значение -1 означает «отменить MIN» → не считаем его активным.
-                const min500Effective = (edited?.видМинимума === '500')
-                    ? toNumber(edited.колВоПроектов)
-                    : min500;
-                
-                // -1 в колВоПроектов означает «отменить MIN» → не считаем активным
-                const hasMin500Active = (min500Effective > 0) ||
-                                        (edited?.видМинимума === '500' && min500Effective !== -1);
-                
+
+                const edited = editedRows.get(`${store}|${article}`);
+
+                // min500Effective — приоритет у ручной правки пользователя
+                let min500Effective = activeMin500?.count || 0;
+                if (edited?.видМинимума === '500') {
+                    const userQty = toNumber(edited.колВоПроектов);
+                    min500Effective = userQty === -1 ? 0 : userQty;
+                }
+                const hasMin500Active = min500Effective > 0;
+
                 let overstockReasons = [];
                 let deficitReasons = [];
                 let errorReasons = [];
-                
+
                 if (days > 90 && days < 999) {
                     if (mc === 1) overstockReasons.push('Мёртвый сток (МС=1)');
                     if (ts === 1) overstockReasons.push('Токсичный сток (ТС=1)');
@@ -6193,7 +6274,7 @@ function scanAlerts() {
                     if (otgruzhenoSred === 0) overstockReasons.push('Продажи = 0, запас >60 дн');
                     if (zapasSht > vmesimost && vmesimost > 0) overstockReasons.push('Запас > вместимости');
                 }
-                
+
                 if (days < 7 && days > 0) {
                     if (hasUto) {
                         deficitReasons.push('🟥 КРИТИЧЕСКИ: УТО + запас <7 дн');
@@ -6209,11 +6290,13 @@ function scanAlerts() {
                 if (transitDays === 0 && days < 14 && days > 0 && hasBest) {
                     deficitReasons.push('Бест заканчивается, ничего не в пути');
                 }
-                
-                // MIN 441 > Вместимость
-                if (min441 > vmesimost && vmesimost > 0 && min441 > 0) {
-                    errorReasons.push(`MIN 441 (${min441}) > вместимости (${vmesimost})`);
+
+                // MIN 441 > Вместимость — берём НАИБОЛЬШИЙ ДЕЙСТВУЮЩИЙ MIN 441
+                const min441ForCheck = activeMin441?.count || 0;
+                if (min441ForCheck > vmesimost && vmesimost > 0 && min441ForCheck > 0) {
+                    errorReasons.push(`MIN 441 (${min441ForCheck}) > вместимости (${vmesimost})`);
                 }
+
                 // Новинка без MIN 401
                 if (isNew && min401 === 0) {
                     errorReasons.push('Новинка без MIN 401');
@@ -6238,18 +6321,17 @@ function scanAlerts() {
                     });
                 }
                 
-                if (errorReasons.length > 0) {
+                                if (errorReasons.length > 0) {
                     const errorTypes = [];
-                    if (min441 > vmesimost && vmesimost > 0 && min441 > 0) errorTypes.push('min441');
+                    // 🆕 Для min441 берём НАИБОЛЬШИЙ ДЕЙСТВУЮЩИЙ MIN 441
+                    if (min441ForCheck > vmesimost && vmesimost > 0 && min441ForCheck > 0) errorTypes.push('min441');
                     if (isNew && min401 === 0) errorTypes.push('min401');
                     // 🔴 ПУНКТ 1: zapas только если есть активный MIN 500
                     if (zapasSht > vmesimost && vmesimost > 0 && days > 60 && hasMin500Active) errorTypes.push('zapas');
                     
-                    for (const errType of errorTypes) {
+                                        for (const errType of errorTypes) {
                         let mainReason = '';
-                        if (errType === 'min441') mainReason = `MIN 441 (${min441}) > вместимости (${vmesimost})`;
-                        else if (errType === 'min401') mainReason = 'Новинка без MIN 401';
-                        else if (errType === 'zapas') mainReason = `Запас (${zapasSht}) > вместимости (${vmesimost})`;
+                        if (errType === 'min441') mainReason = `MIN 441 (${min441ForCheck}) > вместимости (${vmesimost})`;
                         
                         alertData.errors.push({ 
                             ...row, 
@@ -6372,11 +6454,17 @@ function renderTopErrors() {
     
     items = items.slice(0, 10);
     
-    items.forEach((row, idx) => {
+        items.forEach((row, idx) => {
         const tr = document.createElement('tr');
-        const min441 = toNumber(row["min 441 ПМ"], 0);
-        const min500 = toNumber(row["min 500 Проект"], 0);
-        const min401 = toNumber(row["min 401 NEW"], 0);
+        // 🆕 Для отображения MIN в таблице ошибок берём наибольший ДЕЙСТВУЮЩИЙ MIN
+        const store = row["№ магазина"] || '';
+        const article = row["Артикул"] || '';
+        const min441Active = getActiveMinByTypes(store, article, ["Мин Магазин ПМ шт"]);
+        const min500Active = getActiveMinByTypes(store, article, ["Мин Магазин Амбиция проекта шт"]);
+        const min401Active = getActiveMinByTypes(store, article, ["Мин Новый товар шт"]);
+        const min441 = min441Active?.count || 0;
+        const min500 = min500Active?.count || 0;
+        const min401 = min401Active?.count || 0;
         const vmesimost = toNumber(row["Вместимость"], 0);
         const zapasSht = toNumber(row["Запас, шт."], 0);
         
@@ -6719,19 +6807,24 @@ function suggestFixes() {
     
     let suggestions = [];
     
-    for (const row of filteredErrors) {
-        const min441 = row._min441 || toNumber(row["min 441 ПМ"], 0);
-        const min500 = row._min500 || toNumber(row["min 500 Проект"], 0);
+            for (const row of filteredErrors) {
+        // ✅ Объявляем один раз — в начале
+        const store = row["№ магазина"] || '';
+        const article = row["Артикул"] || '';
+        const name = row["Наименование"] || '';
+        const hasMin500Active = row._hasMin500Active || false;
+        
+        // 🆕 В suggestFixes() берём наибольший ДЕЙСТВУЮЩИЙ MIN 441 и MIN 500
+        const activeMin441 = getActiveMinByTypes(store, article, ["Мин Магазин ПМ шт"]);
+        const activeMin500 = getActiveMinByTypes(store, article, ["Мин Магазин Амбиция проекта шт"]);
+        const min441 = activeMin441?.count || row._min441 || toNumber(row["min 441 ПМ"], 0);
+        const min500 = activeMin500?.count || row._min500 || toNumber(row["min 500 Проект"], 0);
         const min401 = row._min401 || toNumber(row["min 401 NEW"], 0);
         const vmesimost = row._vmesimost || toNumber(row["Вместимость"], 0);
         const zapasSht = row._zapasSht || toNumber(row["Запас, шт."], 0);
         const days = row._days || toNumber(row["Запас, дн."], 999);
         const otgruzhenoSred = row._otgruzhenoSred || toNumber(row["Отгружено в сред. За 7 дн"], 0);
         const isNew = row._isNew || false;
-        const store = row["№ магазина"] || '';
-        const article = row["Артикул"] || '';
-        const name = row["Наименование"] || '';
-        const hasMin500Active = row._hasMin500Active || false;
         
         if (row.errorType === 'min441') {
             const newMin = Math.floor(vmesimost);
