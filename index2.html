@@ -124,13 +124,17 @@
         #tsPivotTable { table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 0.55rem; }
         #tsPivotTable col.col-art { width: 85px; }
         #tsPivotTable col.col-name { width: 170px; }
+        #tsPivotTable col.col-status { width: 70px; }
+        #tsPivotTable col.col-subdept { width: 80px; }
         #tsPivotTable col.col-top { width: 40px; }
         #tsPivotTable col.col-zap { width: 56px; }
         #tsPivotTable col.col-ts { width: 32px; }
         #tsPivotTable col.col-dn { width: 56px; }
         #tsPivotTable col.col-vp { width: 56px; }
         #tsPivotTable thead th.corner-1,
-        #tsPivotTable thead th.corner-2 {
+        #tsPivotTable thead th.corner-2,
+        #tsPivotTable thead th.corner-3,
+        #tsPivotTable thead th.corner-4 {
             position: sticky;
             background: linear-gradient(135deg, #8d4a2b 0%, #b35a2e 100%) !important;
             color: #fff5e6 !important;
@@ -143,6 +147,8 @@
         }
         #tsPivotTable thead th.corner-1 { left: 0; }
         #tsPivotTable thead th.corner-2 { left: 85px; }
+        #tsPivotTable thead th.corner-3 { left: 255px; }
+        #tsPivotTable thead th.corner-4 { left: 325px; }
         #tsPivotTable thead th {
             position: sticky;
             color: white;
@@ -185,6 +191,23 @@
             text-align: left;
             padding-left: 4px;
             max-width: 170px;
+        }
+        #tsPivotTable tbody td.cell-status {
+            position: sticky;
+            left: 255px;
+            background: #ffffff;
+            z-index: 6;
+            text-align: center;
+            font-size: 0.5rem;
+        }
+        #tsPivotTable tbody td.cell-subdept {
+            position: sticky;
+            left: 325px;
+            background: #ffffff;
+            z-index: 6;
+            text-align: center;
+            font-size: 0.5rem;
+            border-right: 2px solid #c8e6c9;
         }
         #tsPivotTable tbody tr:hover td { filter: brightness(0.96); }
     </style>
@@ -246,7 +269,7 @@
             </ul>
 
             <p style="margin-top:14px; padding-top:8px; border-top:1px solid #c8e6c9; text-align:center; color:#999; font-size:0.65rem;">
-                ТС Аналитика v3.4 (с ПУТО)
+                ТС Аналитика v3.5 (с ПУТО + Статус/Подотдел в сводной)
             </p>
         </div>
     </div>
@@ -693,7 +716,6 @@
             }
 
             // --- РАСЧЁТ ПУТО (Потенциальное УТО) ---
-            // Логика как в STOCKWISE: запас < 21 дня, запас > 0, и нет поставки в пути
             let puto = 0;
             if (zapasDn < 21 && zapasDn > 0 && (vPutishSht === 0 || vPutishDn === 0)) {
                 puto = 1;
@@ -971,12 +993,15 @@
                 const salePrice = toNumber(row['Продажная цена магазина'], 0);
                 const otgruzhenoSred = toNumber(row['Отгружено в сред. За 7 дн'], 0);
                 const isTs = toNumber(row['ТС'], 0) === 1;
+                const status = row['Статус'] || '';
+                const subdept = row['Подотдел'] || '';
 
                 if (!byArticleAllStores[art]) {
                     byArticleAllStores[art] = {
                         name: name, stores: new Set(), total: 0, hasUto: false,
                         utoStores: new Set(), putoStores: new Set(), tsStores: new Set(), storeDetails: {},
-                        min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0
+                        min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0,
+                        status: '', subdept: ''
                     };
                 }
                 const aAll = byArticleAllStores[art];
@@ -992,11 +1017,13 @@
                 if (min401 > 0) aAll.min401 = min401;
                 if (naibMin) aAll.naibMin = naibMin;
                 if (salePrice > 0) aAll.salePrice = salePrice;
+                if (status && !aAll.status) aAll.status = status;
+                if (subdept && !aAll.subdept) aAll.subdept = subdept;
                 aAll.avgSales += otgruzhenoSred;
                 aAll.storeDetails[store] = {
                     days, transit, zapasSht, utoRub, utoSht, hasUto, puto, hasPuto, top,
                     min441, min500, min401, naibMin, salePrice, otgruzhenoSred,
-                    isTs
+                    isTs, status, subdept
                 };
             }
 
@@ -1038,6 +1065,8 @@
                 const naibMin = row['Наибольший резерв MIN'] || '';
                 const salePrice = toNumber(row['Продажная цена магазина'], 0);
                 const otgruzhenoSred = toNumber(row['Отгружено в сред. За 7 дн'], 0);
+                const status = row['Статус'] || '';
+                const subdept = row['Подотдел'] || '';
 
                 if (!byStore[store]) byStore[store] = { items: [], total: 0, articles: new Set() };
                 byStore[store].items.push(row);
@@ -1065,7 +1094,8 @@
                 aData.avgSales += otgruzhenoSred;
                 aData.storeDetails[store] = {
                     days, transit, zapasSht, utoRub, utoSht, hasUto, puto, hasPuto, top,
-                    min441, min500, min401, naibMin, salePrice, otgruzhenoSred
+                    min441, min500, min401, naibMin, salePrice, otgruzhenoSred,
+                    status, subdept
                 };
             }
             for (const [art, data] of Object.entries(byArticle)) {
@@ -1260,14 +1290,12 @@
             for (const item of candidates) {
                 const tr = document.createElement('tr');
 
-                // --- Лучший УТО-магазин (по продажам) ---
                 let bestUtoStore = '', bestSales = 0;
                 for (const s of item.utoStores) {
                     const sales = item.storeDetails[s]?.otgruzhenoSred || 0;
                     if (sales > bestSales) { bestSales = sales; bestUtoStore = s; }
                 }
 
-                // --- Лучший ПУТО-магазин (наименьший запас дней, но продажи > 0) ---
                 let bestPutoStore = '', bestPutoScore = -1;
                 for (const s of (item.putoStores || [])) {
                     const d = item.storeDetails[s];
@@ -1280,7 +1308,6 @@
                     }
                 }
 
-                // --- Худший ТС-магазин (наименьшие продажи, максимальный запас) ---
                 let worstTsStore = '', worstSales = Infinity, worstDays = 0;
                 for (const s of item.tsStores) {
                     const d = item.storeDetails[s];
@@ -1292,7 +1319,6 @@
                     }
                 }
 
-                // --- Формируем рекомендацию ---
                 const recParts = [];
                 if (bestUtoStore && worstTsStore) {
                     recParts.push(`📦 Трансфер из ${worstTsStore} (ТС, ${worstDays} дн) → ${bestUtoStore} (УТО, продажи ${bestSales})`);
@@ -1311,7 +1337,6 @@
 
                 const rec = recParts.length ? recParts.join('<br>') : '—';
 
-                // --- Колонка ПУТО магазинов ---
                 const putoStoresDisplay = (item.putoStores || []).length
                     ? `<span class="badge badge-puto">${item.putoStores.join(', ')}</span>`
                     : '<span style="color:#999;">—</span>';
@@ -1391,6 +1416,8 @@
             colgroup.innerHTML = `
                 <col class="col-art">
                 <col class="col-name">
+                <col class="col-status">
+                <col class="col-subdept">
                 ${stores.map(() => `
                     <col class="col-top">
                     <col class="col-zap">
@@ -1414,6 +1441,18 @@
             thName.className = 'corner-2';
             thName.rowSpan = 2;
             hRow1.appendChild(thName);
+
+            const thStatus = document.createElement('th');
+            thStatus.textContent = 'Статус';
+            thStatus.className = 'corner-3';
+            thStatus.rowSpan = 2;
+            hRow1.appendChild(thStatus);
+
+            const thSubdept = document.createElement('th');
+            thSubdept.textContent = 'Подотдел';
+            thSubdept.className = 'corner-4';
+            thSubdept.rowSpan = 2;
+            hRow1.appendChild(thSubdept);
 
             stores.forEach((s, idx) => {
                 const th = document.createElement('th');
@@ -1460,6 +1499,18 @@
                 tdName.textContent = data.name || '';
                 tdName.title = data.name || '';
                 tr.appendChild(tdName);
+
+                const tdStatus = document.createElement('td');
+                tdStatus.className = 'cell-status';
+                tdStatus.textContent = data.status || '-';
+                tdStatus.title = data.status || '';
+                tr.appendChild(tdStatus);
+
+                const tdSubdept = document.createElement('td');
+                tdSubdept.className = 'cell-subdept';
+                tdSubdept.textContent = data.subdept || '-';
+                tdSubdept.title = data.subdept || '';
+                tr.appendChild(tdSubdept);
 
                 stores.forEach((store, storeIdx) => {
                     const details = data.storeDetails[store] || null;
@@ -1528,7 +1579,7 @@
             if (articles.length > 50) {
                 const tr = document.createElement('tr');
                 const td = document.createElement('td');
-                td.colSpan = 2 + stores.length * subCols.length;
+                td.colSpan = 4 + stores.length * subCols.length;
                 td.textContent = `... и ещё ${articles.length - 50}`;
                 td.style.textAlign = 'center';
                 td.style.color = '#999';
@@ -1544,7 +1595,7 @@
 
         function exportTsAll() {
             if (!tsData.items.length) { showToast('Нет ТС-позиций', 'warning'); return; }
-            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'Продажная цена магазина'];
+            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Статус', 'Подотдел', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of tsData.items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1584,7 +1635,7 @@
         function exportTsArticle(article) {
             const items = tsData.items.filter(r => String(r['Артикул'] || '') === article);
             if (!items.length) { showToast('Артикул не найден', 'warning'); return; }
-            const cols = ['№ магазина', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'];
+            const cols = ['№ магазина', 'Наименование', 'Статус', 'Подотдел', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1613,7 +1664,7 @@
             }
             const items = tsData.byStore[type]?.items || [];
             if (!items.length) { showToast(`Нет данных для магазина ${type}`, 'warning'); return; }
-            const cols = ['Артикул', 'Наименование', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'Продажная цена магазина'];
+            const cols = ['Артикул', 'Наименование', 'Статус', 'Подотдел', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1725,12 +1776,14 @@
 
             const wb = new ExcelJS.Workbook();
             const ws = wb.addWorksheet('Сводная_ТС', {
-                views: [{ state: 'frozen', xSplit: 2, ySplit: 2 }]
+                views: [{ state: 'frozen', xSplit: 4, ySplit: 2 }]
             });
 
             ws.getColumn(1).width = 12;
             ws.getColumn(2).width = 28;
-            let colIdx = 3;
+            ws.getColumn(3).width = 14; // Статус
+            ws.getColumn(4).width = 16; // Подотдел
+            let colIdx = 5;
             stores.forEach(() => {
                 ws.getColumn(colIdx++).width = 8;
                 ws.getColumn(colIdx++).width = 10;
@@ -1743,22 +1796,26 @@
             row1.height = 24;
             row1.getCell(1).value = 'Артикул';
             row1.getCell(2).value = 'Наименование';
+            row1.getCell(3).value = 'Статус';
+            row1.getCell(4).value = 'Подотдел';
             stores.forEach((s, i) => {
-                row1.getCell(3 + i * subCols.length).value = `🏪 Магазин ${s}`;
+                row1.getCell(5 + i * subCols.length).value = `🏪 Магазин ${s}`;
             });
 
             const row2 = ws.getRow(2);
             row2.height = 18;
             stores.forEach((s, i) => {
                 subCols.forEach((c, j) => {
-                    row2.getCell(3 + i * subCols.length + j).value = c;
+                    row2.getCell(5 + i * subCols.length + j).value = c;
                 });
             });
 
             ws.mergeCells(1, 1, 2, 1);
             ws.mergeCells(1, 2, 2, 2);
+            ws.mergeCells(1, 3, 2, 3);
+            ws.mergeCells(1, 4, 2, 4);
             stores.forEach((s, i) => {
-                const startC = 3 + i * subCols.length;
+                const startC = 5 + i * subCols.length;
                 const endC = startC + subCols.length - 1;
                 ws.mergeCells(1, startC, 1, endC);
             });
@@ -1782,11 +1839,11 @@
             const centerAlign = { horizontal: 'center', vertical: 'middle' };
             const leftAlign = { horizontal: 'left', vertical: 'middle' };
 
-            [1, 2].forEach(c => {
+            [1, 2, 3, 4].forEach(c => {
                 const cell = ws.getCell(1, c);
                 cell.fill = warmFill; cell.font = warmFont; cell.alignment = centerAlign; cell.border = thinWhiteBorder;
             });
-            [1, 2].forEach(c => {
+            [1, 2, 3, 4].forEach(c => {
                 const cell = ws.getCell(2, c);
                 cell.fill = warmFill; cell.border = thinWhiteBorder;
             });
@@ -1794,7 +1851,7 @@
             stores.forEach((s, i) => {
                 const hdrColor = STORE_HEADER_COLORS[i % STORE_HEADER_COLORS.length].replace('#', '').toUpperCase();
                 const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + hdrColor } };
-                const startC = 3 + i * subCols.length;
+                const startC = 5 + i * subCols.length;
                 for (let c = startC; c < startC + subCols.length; c++) {
                     const cell = ws.getCell(1, c);
                     cell.fill = fill; cell.font = whiteFont; cell.alignment = centerAlign; cell.border = thinWhiteBorder;
@@ -1823,12 +1880,24 @@
                 cellName.alignment = leftAlign;
                 cellName.border = thinGrayBorder;
 
+                const cellStatus = row.getCell(3);
+                cellStatus.value = data.status || '-';
+                cellStatus.font = { size: 10, name: 'Calibri' };
+                cellStatus.alignment = centerAlign;
+                cellStatus.border = thinGrayBorder;
+
+                const cellSubdept = row.getCell(4);
+                cellSubdept.value = data.subdept || '-';
+                cellSubdept.font = { size: 10, name: 'Calibri' };
+                cellSubdept.alignment = centerAlign;
+                cellSubdept.border = thinGrayBorder;
+
                 stores.forEach((store, i) => {
                     const details = data.storeDetails[store] || null;
                     const isTs = details ? (details.isTs === true || data.tsStores.has(store)) : false;
                     const storeBg = STORE_COLORS[i % STORE_COLORS.length].replace('#', '').toUpperCase();
                     const storeFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + storeBg } };
-                    const base = 3 + i * subCols.length;
+                    const base = 5 + i * subCols.length;
 
                     const cellTop = row.getCell(base);
                     if (details) {
@@ -2127,7 +2196,7 @@
                 origReset();
                 try { localStorage.setItem('ts_stores', JSON.stringify([])); } catch (e) {}
             };
-            console.log('📊 ТС Аналитика v3.4 (с ПУТО в рекомендациях по трансферу)');
+            console.log('📊 ТС Аналитика v3.5 (с ПУТО + Статус/Подотдел в сводной)');
         });
 
         window.openMagPortal = openMagPortal;
