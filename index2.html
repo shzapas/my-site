@@ -13,7 +13,7 @@
         .header { background: linear-gradient(135deg, #1a4a1a 0%, #2d6b2d 100%); border-radius: 14px 14px 0 0; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; color: white; border-bottom: 4px solid #0d3d0d; }
         .header h1 { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
         .header h1 small { font-size: 0.65rem; background: rgba(255, 255, 255, 0.12); padding: 2px 12px; border-radius: 30px; font-weight: 400; }
-        .header-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+        .header-controls { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .btn { padding: 5px 16px; border: none; border-radius: 30px; font-weight: 600; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #4caf50; color: white; }
         .btn-primary:hover { background: #388e3c; }
@@ -26,6 +26,11 @@
         .btn-outline { background: transparent; color: white; border: 1.5px solid rgba(255, 255, 255, 0.3); }
         .btn-outline:hover { background: rgba(255, 255, 255, 0.1); }
         .btn-sm { padding: 3px 12px; font-size: 0.6rem; }
+        .btn-xs { padding: 2px 8px; font-size: 0.55rem; }
+        .btn-copy { background: #0288d1; color: white; }
+        .btn-copy:hover { background: #01579b; }
+        .btn-sheets { background: #0f9d58; color: white; }
+        .btn-sheets:hover { background: #0b7a43; }
         .dashboard { display: flex; gap: 16px; margin-top: 16px; }
         .left-panel { width: 300px; flex-shrink: 0; background: white; border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); border: 1px solid #c8e6c9; max-height: calc(100vh - 140px); overflow-y: auto; }
         .left-panel::-webkit-scrollbar { width: 4px; }
@@ -57,11 +62,133 @@
         .filter-row .filter-group { flex: 1; }
         .filter-actions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
         .filter-actions .btn { flex: 1; padding: 4px 8px; font-size: 0.6rem; text-align: center; min-width: 60px; }
+        .quick-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+        .chip { padding: 3px 10px; border-radius: 12px; border: 1px solid #a5d6a7; background: #fafffa; font-size: 0.55rem; cursor: pointer; transition: 0.2s; font-weight: 600; color: #2e5e2e; }
+        .chip:hover { background: #c8e6c9; border-color: #2e7d32; }
+        .chip.active { background: #2e7d32; color: white; border-color: #1b5e20; }
+        .chip.dead { border-color: #c62828; color: #c62828; }
+        .chip.dead:hover, .chip.dead.active { background: #c62828; color: white; }
         .store-filter-group { display: flex; flex-wrap: wrap; gap: 3px; margin: 4px 0; }
         .store-filter-group label { display: flex; align-items: center; gap: 2px; font-size: 0.55rem; cursor: pointer; padding: 1px 6px; border-radius: 10px; border: 1px solid #c8e6c9; background: #fafffa; transition: 0.2s; }
         .store-filter-group label:hover { border-color: #4caf50; }
         .store-filter-group label.active { border-color: #2e7d32; background: #e8f5e9; }
         .store-filter-group label input[type="checkbox"] { width: 10px; height: 10px; accent-color: #2e7d32; cursor: pointer; }
+
+        /* ============ МУЛЬТИ-ВЫБОР ПОДОТДЕЛОВ ============ */
+        .multiselect { position: relative; }
+        .multiselect-control {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            align-items: center;
+            min-height: 26px;
+            padding: 3px 8px;
+            border: 1px solid #a5d6a7;
+            border-radius: 12px;
+            background: #fafffa;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .multiselect-control:hover { border-color: #4caf50; }
+        .multiselect.open .multiselect-control { border-color: #2e7d32; box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12); }
+        .multiselect-placeholder { color: #999; font-size: 0.6rem; }
+        .multiselect-tag {
+            background: #c8e6c9;
+            color: #1b5e20;
+            border-radius: 10px;
+            padding: 1px 4px 1px 7px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .multiselect-tag .tag-remove {
+            cursor: pointer;
+            font-weight: 700;
+            padding: 0 2px;
+            opacity: 0.7;
+        }
+        .multiselect-tag .tag-remove:hover { opacity: 1; color: #c62828; }
+        .multiselect-arrow {
+            margin-left: auto;
+            font-size: 0.55rem;
+            color: #666;
+            transition: transform 0.2s;
+        }
+        .multiselect.open .multiselect-arrow { transform: rotate(180deg); }
+        .multiselect-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #c8e6c9;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            padding: 4px 0;
+        }
+        .multiselect.open .multiselect-dropdown { display: block; }
+        .multiselect-dropdown::-webkit-scrollbar { width: 4px; }
+        .multiselect-dropdown::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 4px; }
+        .multiselect-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .multiselect-option:hover { background: #e8f5e9; }
+        .multiselect-option input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            accent-color: #2e7d32;
+            cursor: pointer;
+        }
+        .multiselect-option.all-option {
+            font-weight: 700;
+            border-bottom: 1px solid #e8f5e9;
+            margin-bottom: 2px;
+            padding-bottom: 6px;
+        }
+        .multiselect-actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 10px 0;
+            border-top: 1px solid #e8f5e9;
+            margin-top: 4px;
+        }
+        .multiselect-actions button {
+            background: transparent;
+            border: none;
+            color: #2e7d32;
+            font-size: 0.55rem;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 3px 6px;
+        }
+        .multiselect-actions button:hover { text-decoration: underline; }
+        .multiselect-search {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #e8f5e9;
+            padding: 5px 10px;
+            font-size: 0.6rem;
+            outline: none;
+            font-family: inherit;
+        }
+
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 12px; }
         .stat-card { background: #fafffa; border-radius: 10px; padding: 10px 12px; border: 1px solid #c8e6c9; cursor: pointer; transition: 0.2s; }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); border-color: #4caf50; }
@@ -72,6 +199,7 @@
         .stat-card.warning .value { color: #f57f17; }
         .stat-card.purple .value { color: #6a1b9a; }
         .stat-card.success .value { color: #2e7d32; }
+        .stat-card.money .value { color: #0f9d58; }
         .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid #c8e6c9; max-height: 350px; overflow-y: auto; }
         .table-wrapper::-webkit-scrollbar { width: 4px; height: 4px; }
         .table-wrapper::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 4px; }
@@ -95,7 +223,7 @@
         .right-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
         .right-header h3 { font-size: 0.85rem; color: #2e5e2e; }
         .action-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
-        .toast-container { position: fixed; bottom: 16px; right: 16px; z-index: 9999; max-width: 360px; width: 100%; }
+        .toast-container { position: fixed; bottom: 16px; left: 16px; z-index: 10001; max-width: 360px; width: 100%; }
         .toast { background: #1e2e1e; color: white; padding: 8px 14px; border-radius: 8px; margin-bottom: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 0.75rem; }
         .toast.success { background: #2e7d32; border-left: 4px solid #4caf50; }
         .toast.error { background: #c62828; border-left: 4px solid #ef5350; }
@@ -103,7 +231,7 @@
         .toast.info { background: #0d47a1; border-left: 4px solid #42a5f5; }
         .toast-close { cursor: pointer; margin-left: auto; font-weight: bold; opacity: 0.7; }
         .toast-close:hover { opacity: 1; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px; }
         .modal-overlay.show { display: flex; }
         .modal-content { background: white; border-radius: 14px; max-width: 650px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 20px 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); border: 2px solid #c8e6c9; }
@@ -120,6 +248,14 @@
         .top-other { background: #fff9c4 !important; color: #827717 !important; font-weight: 600 !important; text-align: center; }
         .ts-cell-1 { background: #c62828 !important; color: white !important; font-weight: 700 !important; text-align: center; }
         .ts-cell-0 { background: #f5f5f5 !important; color: #bbb !important; text-align: center; }
+
+        .sparkline-block { margin: 10px 0; padding: 8px 10px; background: #fafffa; border-radius: 10px; border: 1px solid #c8e6c9; }
+        .sparkline-block .sp-header { font-weight: 600; font-size: 0.65rem; color: #2e5e2e; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .spark-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; font-size: 0.55rem; }
+        .spark-row .sp-store { width: 50px; font-weight: 600; color: #2e5e2e; text-align: right; }
+        .spark-row .sp-bar-wrap { flex: 1; height: 10px; background: #e8f5e9; border-radius: 6px; overflow: hidden; position: relative; }
+        .spark-row .sp-bar { height: 100%; background: linear-gradient(90deg, #66bb6a 0%, #c62828 100%); border-radius: 6px; transition: width 0.4s; }
+        .spark-row .sp-count { width: 32px; text-align: right; font-weight: 700; color: #c62828; }
 
         #tsPivotTable { table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 0.55rem; }
         #tsPivotTable col.col-art { width: 85px; }
@@ -210,6 +346,169 @@
             border-right: 2px solid #c8e6c9;
         }
         #tsPivotTable tbody tr:hover td { filter: brightness(0.96); }
+
+        .history-item { font-size: 0.55rem; padding: 3px 6px; background: #fafffa; border-radius: 6px; margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid #e8f5e9; }
+        .history-item:hover { border-color: #4caf50; }
+        .history-item .h-date { font-weight: 600; color: #2e5e2e; }
+        .history-item .h-stat { color: #666; }
+        .history-item .h-delta.up { color: #c62828; font-weight: 700; }
+        .history-item .h-delta.down { color: #2e7d32; font-weight: 700; }
+        .history-item .h-del { color: #c62828; cursor: pointer; font-weight: bold; padding: 0 4px; }
+
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            background: #fafffa;
+            border: 1.5px solid #a5d6a7;
+            border-radius: 20px;
+            padding: 3px 10px;
+            min-width: 280px;
+            transition: 0.2s;
+        }
+        .search-wrapper:focus-within {
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12);
+        }
+        .search-wrapper .search-icon { font-size: 0.7rem; margin-right: 4px; opacity: 0.6; }
+        .search-wrapper .search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.65rem;
+            flex: 1;
+            color: #1e2e1e;
+            padding: 3px 0;
+            font-family: inherit;
+            min-width: 100px;
+        }
+        .search-wrapper .search-clear {
+            cursor: pointer;
+            color: #999;
+            font-weight: 700;
+            padding: 0 2px;
+            font-size: 0.7rem;
+            display: none;
+        }
+        .search-wrapper.has-text .search-clear { display: block; }
+        .search-wrapper .search-clear:hover { color: #c62828; }
+        .search-wrapper.match { border-color: #2e7d32; background: #e8f5e9; }
+        .search-wrapper.no-match { border-color: #c62828; background: #ffebee; }
+
+        mark.hl {
+            background: #fff59d;
+            color: #1e2e1e;
+            padding: 0 1px;
+            border-radius: 2px;
+            font-weight: 700;
+        }
+
+        .cart-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 10px 18px;
+            box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            z-index: 9998;
+            transition: 0.2s;
+            border: 2px solid white;
+        }
+        .cart-fab:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(46, 125, 50, 0.5); }
+        .cart-fab.show { display: flex; }
+        .cart-fab .cart-count {
+            background: #f57f17;
+            color: #1e1e1e;
+            border-radius: 20px;
+            padding: 1px 8px;
+            font-size: 0.65rem;
+            min-width: 22px;
+            text-align: center;
+        }
+
+        .cart-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 400px;
+            max-height: 60vh;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            border: 2px solid #c8e6c9;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .cart-panel.show { display: flex; }
+        .cart-panel-header {
+            background: linear-gradient(135deg, #1a4a1a 0%, #2d6b2d 100%);
+            color: white;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+        .cart-panel-header .cart-close { cursor: pointer; font-size: 1rem; opacity: 0.8; }
+        .cart-panel-header .cart-close:hover { opacity: 1; }
+        .cart-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 10px;
+            font-size: 0.6rem;
+        }
+        .cart-panel-body::-webkit-scrollbar { width: 4px; }
+        .cart-panel-body::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 4px; }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 6px;
+            border-bottom: 1px solid #e8f5e9;
+            gap: 6px;
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item:hover { background: #fafffa; }
+        .cart-item .ci-main { flex: 1; min-width: 0; }
+        .cart-item .ci-art { font-weight: 700; color: #2e7d32; }
+        .cart-item .ci-name { color: #666; font-size: 0.55rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cart-item .ci-qty { font-weight: 700; color: #c62828; padding: 0 4px; }
+        .cart-item .ci-del { cursor: pointer; color: #c62828; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .cart-item .ci-del:hover { background: #ffebee; }
+        .cart-panel-footer {
+            display: flex;
+            gap: 4px;
+            padding: 8px 10px;
+            border-top: 2px solid #e8f5e9;
+            background: #fafffa;
+            flex-wrap: wrap;
+        }
+        .cart-panel-footer .btn { flex: 1; min-width: 70px; font-size: 0.55rem; padding: 5px 8px; }
+
+        .row-cb { width: 14px; height: 14px; accent-color: #2e7d32; cursor: pointer; }
+        tr.row-selected td { background: #fff8e1 !important; }
+
+        .reload-hint {
+            font-size: 0.55rem;
+            color: #666;
+            padding: 4px 6px;
+            background: #fff8e1;
+            border-radius: 6px;
+            margin-top: 4px;
+            border-left: 3px solid #f9a825;
+            display: none;
+        }
+        .reload-hint.show { display: block; }
     </style>
 </head>
 <body>
@@ -220,67 +519,77 @@
             <div class="header-controls">
                 <button class="btn btn-outline" onclick="toggleHelp()">❓ Помощь</button>
                 <button class="btn btn-outline" onclick="toggleTheme()">🌙 Тёмная</button>
+                <button class="btn btn-outline" onclick="showHistory()">📅 История</button>
             </div>
         </div>
 
         <div id="helpModal" class="modal-overlay">
     <div class="modal-content">
         <button class="modal-close" onclick="closeHelp()">✕</button>
-        <h2>📊 ТС Аналитика</h2>
-        <div class="subtitle">Краткая инструкция</div>
+        <h2>📊 ТС Аналитика v6.0</h2>
+        <div class="subtitle">Мульти-подотделы, обновление данных, поиск, корзина</div>
 
         <div style="font-size:0.8rem; line-height:1.6;">
 
-            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:12px;">📁 1. Загрузка</h3>
-            <p>Нажмите <b>«📁 Загрузить отчёты из папки»</b> и выберите папку с файлами <b>Гамма + Резервы + УТО</b>. Имена должны содержать: <code>гамма</code>, <code>резерв</code>, <code>УТО</code>. Обязателен только Гамма — остальные опциональны.</p>
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:12px;">📌 1. Мульти-выбор подотделов</h3>
+            <p>Кликните на поле <b>«Подотделы»</b> — откроется список с чекбоксами. Отметьте несколько — они отобразятся бейджами. У каждого бейджа есть ✕ для быстрого удаления. <b>Ctrl не нужен</b>.</p>
 
-            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🧮 2. Расчёт</h3>
-            <p>Нажмите <b>«🧮 ВЫЧИСЛИТЬ»</b>. Система посчитает запас, MIN, найдёт ТС и сформирует рекомендации.</p>
-
-            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🎛️ 3. Фильтры</h3>
-            <p><b>Магазин</b>, <b>Подотдел</b>, <b>ТОП</b> (0/1/2), <b>Запас (дн)</b> — например <code>100-999</code> для переполненных. Кнопки: <b>✅ Применить</b> / <b>🔄 Сбросить</b>.</p>
-            <p>Внизу — чекбоксы магазинов для ТС (сохраняются в браузере).</p>
-
-            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">📊 4. Таблицы</h3>
-            <p><b>🔴 ТОП-10</b> — самые проблемные артикулы по числу магазинов с ТС.</p>
-            <p><b>🟣 ТС → УТО</b> — где ТС, а где дефицит (упущенные продажи). Показывает маршрут.</p>
-            <p><b>🟠 Трансфер между магазинами</b> — универсальные рекомендации с <b>конкретным количеством</b> штук.</p>
-            <p style="background:#e3f2fd; padding:5px 8px; border-left:3px solid #1565c0; border-radius:4px; font-size:0.72rem; margin-top:4px;">
-                💡 Формула: <b>Излишек</b> = запас − (45 × продажи / 7). <b>Нужда</b> = (45 × продажи / 7) − запас. <b>К передаче</b> = min(излишек, нужда), но ≥3 шт. 45 дней — настройка <code>TARGET_DAYS</code>.
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🔄 2. Обновить данные</h3>
+            <p>После загрузки папки появляется кнопка <b>«🔄 Обновить»</b>. Нажмите её — браузер сам перечитает те же файлы (если они обновились). Не нужно выбирать папку заново.</p>
+            <p style="background:#fff8e1; padding:5px 8px; border-left:3px solid #f9a825; border-radius:4px; font-size:0.72rem;">
+                ⚠️ Браузер запомнит файлы на время сессии. Если закрыть вкладку — придётся выбрать папку снова. Это ограничение безопасности браузера.
             </p>
-            <p><b>🟢 Сводная</b> — все магазины по артикулу. Цвета: ТОП 0 серый / 1 зелёный / 2 оранжевый, ТС=1 красный, <b>«-»</b> = магазин отсутствует в отчёте.</p>
 
-            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">📤 5. Экспорт</h3>
-            <p>Кнопки <b>📤 Выгрузить</b> в каждой таблице. Сводная выгружается с полными цветами (ExcelJS). Имена: <code>ТС_все</code>, <code>ТОП10_ТС</code>, <code>Кросс_трансфер</code>, <code>Сводная_ТС</code> и т.д. с датой.</p>
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🔍 3. Поиск</h3>
+            <p>Артикул / название / штрихкод. Мульти-поиск: <code>11067374, 487274164</code>. Фильтрует все таблицы сразу.</p>
 
-            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">⚙️ Настройки в коде</h3>
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🛒 4. Корзина</h3>
+            <p>Галочки ☑ в таблицах → плавающая кнопка внизу справа → экспорт в текст / Sheets / Excel.</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🧮 5. Загрузка и расчёт</h3>
+            <p>Загрузите папку (<code>гамма</code>, <code>резерв</code>, <code>УТО</code>) → нажмите <b>«ВЫЧИСЛИТЬ»</b>.</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">🎛️ 6. Фильтры</h3>
+            <p>Магазин, Подотделы (мульти), ТОП, Запас (дн). Чипы: 100+ / 365+ / 0-15. Магазины для ТС — чекбоксы внизу.</p>
+
+            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">💡 7. Ещё внутри</h3>
             <ul style="margin-left:16px; font-size:0.72rem;">
-                <li><code>TARGET_DAYS = 45</code> — целевой запас в днях</li>
-                <li><code>MIN_TRANSFER = 3</code> — мин. штук для рекомендации</li>
-                <li>Стартовые запасы ТОП 1/2: 10 / 5 / 3 шт</li>
-            </ul>
-
-            <h3 style="color:#2e7d32; font-size:0.9rem; margin-top:10px;">💡 Полезное</h3>
-            <ul style="margin-left:16px; font-size:0.72rem;">
-                <li>Клик по артикулу → MagPortal</li>
-                <li>Клик по KPI-карточке → выгрузка соответствующей таблицы</li>
-                <li>Пустые таблицы — нажмите <b>🧮 ВЫЧИСЛИТЬ</b></li>
-                <li>Нет рекомендаций — уменьшите <code>TARGET_DAYS</code> до 30</li>
+                <li>💰 KPI «Потенциальная выручка»</li>
+                <li>📅 История расчётов</li>
+                <li>📊 Sparkline топ-10 магазинов</li>
+                <li>🛡️ Защита от двойного трансфера</li>
+                <li>📗 Копирование для Google Sheets</li>
             </ul>
 
             <p style="margin-top:14px; padding-top:8px; border-top:1px solid #c8e6c9; text-align:center; color:#999; font-size:0.65rem;">
-                ТС Аналитика v3.5 (с ПУТО + Статус/Подотдел в сводной)
+                ТС Аналитика v6.0 — мульти-подотделы + обновление
             </p>
         </div>
     </div>
 </div>
+
+        <div id="historyModal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 500px;">
+                <button class="modal-close" onclick="closeHistory()">✕</button>
+                <h2>📅 История расчётов</h2>
+                <div class="subtitle">Сохранённые snapshot'ы ТС. Клик — детали.</div>
+                <div id="historyList"></div>
+                <div style="margin-top:10px; text-align:right;">
+                    <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Очистить всю историю</button>
+                </div>
+            </div>
+        </div>
 
         <div class="dashboard">
             <div class="left-panel">
                 <div class="upload-section">
                     <button class="btn btn-success" onclick="selectFolder()">📁 Загрузить отчёты из папки</button>
                     <button class="btn btn-primary" onclick="loadSingleReport()">📎 Загрузить файлы</button>
+                    <button class="btn btn-warning" id="reloadBtn" onclick="reloadLastFiles()" style="display:none;">🔄 Обновить данные</button>
                     <div id="folderPath" class="folder-path"></div>
+                    <div id="reloadHint" class="reload-hint">
+                        📌 Файлы загружены. Нажмите <b>«🔄 Обновить»</b> после правок в Excel — браузер перечитает те же файлы.
+                    </div>
                 </div>
 
                 <div class="upload-status">
@@ -303,8 +612,21 @@
                     </div>
 
                     <div class="filter-group">
-                        <label>📌 Подотдел</label>
-                        <select id="subdepartmentFilter"><option value="all">Все подотделы</option></select>
+                        <label>📌 Подотделы</label>
+                        <div class="multiselect" id="subdeptMultiselect">
+                            <div class="multiselect-control" onclick="toggleMultiselect(event)">
+                                <span id="subdeptTags"></span>
+                                <span class="multiselect-arrow">▼</span>
+                            </div>
+                            <div class="multiselect-dropdown" id="subdeptDropdown">
+                                <input type="text" class="multiselect-search" placeholder="Поиск подотдела..." oninput="filterSubdeptOptions(this.value)" onclick="event.stopPropagation()">
+                                <div id="subdeptOptions"></div>
+                                <div class="multiselect-actions">
+                                    <button onclick="selectAllSubdepts(event)">✅ Все</button>
+                                    <button onclick="clearAllSubdepts(event)">🗑️ Очистить</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="filter-row">
@@ -321,6 +643,14 @@
                             <label>📅 Запас (дн)</label>
                             <input type="text" id="stockRange" placeholder="0-999" value="0-999">
                         </div>
+                    </div>
+
+                    <div style="font-weight:600;font-size:0.6rem;color:#2e5e2e;margin-top:6px;">⚡ Быстрые фильтры:</div>
+                    <div class="quick-chips">
+                        <span class="chip active" data-range="0-999" onclick="quickFilter(this)">Все</span>
+                        <span class="chip" data-range="100-999" onclick="quickFilter(this)">🔴 100+</span>
+                        <span class="chip dead" data-range="365-999" onclick="quickFilter(this)">💀 365+</span>
+                        <span class="chip" data-range="0-15" onclick="quickFilter(this)">🟢 0-15</span>
                     </div>
 
                     <div class="filter-actions">
@@ -343,32 +673,55 @@
             <div class="right-panel">
                 <div class="right-header">
                     <h3>📊 Токсичный сток</h3>
-                    <div class="action-buttons">
-                        <button class="btn btn-success btn-sm" onclick="exportTsAll()">📤 Выгрузить ТС</button>
-                        <button class="btn btn-primary btn-sm" onclick="exportTsTop10()">📤 ТОП-10</button>
+                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:1;justify-content:flex-end;">
+                        <div class="search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="articleSearch" class="search-input"
+                                   placeholder="Артикул, название или штрихкод..."
+                                   oninput="applySearchDebounced()">
+                            <span class="search-clear" onclick="clearSearch()" title="Очистить">✕</span>
+                        </div>
+                        <span id="searchInfo" style="font-size:0.6rem;color:#666;min-width:90px;"></span>
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm" onclick="exportTsAll()">📤 Выгрузить ТС</button>
+                            <button class="btn btn-primary btn-sm" onclick="exportTsTop10()">📤 ТОП-10</button>
+                        </div>
                     </div>
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-card danger" onclick="exportTsAll()">
+                    <div class="stat-card danger" onclick="exportTsAll()" title="Всего позиций с ТС=1 среди текущих фильтров. Клик — выгрузить в Excel.">
                         <div class="value" id="tsTotal">0</div>
                         <div class="label">📦 Всего ТС</div>
-                        <div class="hint">Клик для выгрузки</div>
+                        <div class="hint">Клик → выгрузка</div>
                     </div>
-                    <div class="stat-card warning" onclick="exportCrossTransfer()">
+                    <div class="stat-card money" onclick="exportCrossTransfer()" title="Сумма всех кросс-трансферов × продажная цена. Это деньги, замороженные в неверно распределённом стоке. Клик — детальная выгрузка.">
+                        <div class="value" id="tsMoney">0 ₽</div>
+                        <div class="label">💰 Потенциал выручки</div>
+                        <div class="hint">Сумма трансферов</div>
+                    </div>
+                    <div class="stat-card warning" onclick="exportCrossTransfer()" title="Количество рекомендаций по перераспределению товара между магазинами. Клик — выгрузка.">
                         <div class="value" id="tsTransfer">0</div>
                         <div class="label">🔄 Рекомендаций</div>
-                        <div class="hint">Клик для выгрузки</div>
+                        <div class="hint">Клик → выгрузка</div>
                     </div>
-                    <div class="stat-card purple" onclick="exportTsByStore('all')">
+                    <div class="stat-card purple" onclick="exportTsByStore('all')" title="Количество магазинов, у которых есть хотя бы одна ТС-позиция. Клик — выгрузка сводки.">
                         <div class="value" id="tsStores">0</div>
                         <div class="label">🏪 Магазинов с ТС</div>
-                        <div class="hint">Клик для выгрузки</div>
+                        <div class="hint">Клик → выгрузка</div>
                     </div>
-                    <div class="stat-card success">
+                    <div class="stat-card success" title="Артикул, который встречается как ТС в максимальном числе магазинов.">
                         <div class="value" id="tsTopArticle">-</div>
                         <div class="label">🏆 Самый токсичный</div>
                     </div>
+                </div>
+
+                <div id="sparklineBlock" class="sparkline-block" style="display:none;">
+                    <div class="sp-header">
+                        <span>📊 Динамика ТС по магазинам (топ-10)</span>
+                        <span style="font-size:0.5rem;color:#999;">кол-во ТС-позиций</span>
+                    </div>
+                    <div id="sparklineRows"></div>
                 </div>
 
                 <div style="margin-bottom:10px;">
@@ -380,6 +733,7 @@
                         <table id="tsTopTable">
                             <thead>
                                 <tr>
+                                    <th style="width:24px;"><input type="checkbox" class="row-cb" onclick="toggleSelectAll('top', this.checked)" title="Выбрать все"></th>
                                     <th>#</th>
                                     <th>Артикул</th>
                                     <th>Наименование</th>
@@ -392,7 +746,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tsTopBody">
-                                <tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>
+                                <tr><td colspan="10" style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -401,12 +755,17 @@
                 <div style="margin-bottom:10px;">
                     <div class="flex-between">
                         <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Рекомендации по трансферу (ТС → УТО / ПУТО)</span>
-                        <button class="btn btn-success btn-sm" onclick="exportTransferCandidates()">📤 Выгрузить</button>
+                        <div style="display:flex;gap:4px;">
+                            <button class="btn btn-copy btn-sm" onclick="copyTransferText()">📋 Копировать</button>
+                            <button class="btn btn-sheets btn-sm" onclick="copyTransferForSheets()">📗 В Google Sheets</button>
+                            <button class="btn btn-success btn-sm" onclick="exportTransferCandidates()">📤 Выгрузить</button>
+                        </div>
                     </div>
                     <div class="table-wrapper" style="max-height:240px;">
                         <table id="tsTransferTable">
                             <thead>
                                 <tr>
+                                    <th style="width:24px;"><input type="checkbox" class="row-cb" onclick="toggleSelectAll('transfer', this.checked)" title="Выбрать все"></th>
                                     <th>#</th>
                                     <th>Артикул</th>
                                     <th>Наименование</th>
@@ -418,7 +777,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tsTransferBody">
-                                <tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
+                                <tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -427,12 +786,17 @@
                 <div style="margin-bottom:10px;">
                     <div class="flex-between">
                         <span style="font-weight:600; font-size:0.7rem; color:#2e5e2e;">🔄 Трансфер между магазинами (ТС в одном, нет в другом)</span>
-                        <button class="btn btn-success btn-sm" onclick="exportCrossTransfer()">📤 Выгрузить</button>
+                        <div style="display:flex;gap:4px;">
+                            <button class="btn btn-copy btn-sm" onclick="copyCrossTransferText()">📋 Копировать</button>
+                            <button class="btn btn-sheets btn-sm" onclick="copyCrossTransferForSheets()">📗 В Google Sheets</button>
+                            <button class="btn btn-success btn-sm" onclick="exportCrossTransfer()">📤 Выгрузить</button>
+                        </div>
                     </div>
                     <div class="table-wrapper" style="max-height:280px;">
                         <table id="tsCrossTransferTable">
                             <thead>
                                 <tr>
+                                    <th style="width:24px;"><input type="checkbox" class="row-cb" onclick="toggleSelectAll('cross', this.checked)" title="Выбрать все"></th>
                                     <th>#</th>
                                     <th>Артикул</th>
                                     <th>Наименование</th>
@@ -444,7 +808,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tsCrossTransferBody">
-                                <tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
+                                <tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -468,10 +832,27 @@
             </div>
         </div>
 
-        <footer>ТС Аналитика — Управление токсичным стоком</footer>
+        <footer>ТС Аналитика v6.0 — Управление токсичным стоком</footer>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
+
+    <div class="cart-fab" id="cartFab" onclick="toggleCartPanel()" title="Открыть корзину на отправку">
+        🛒 Корзина <span class="cart-count" id="cartCount">0</span>
+    </div>
+    <div class="cart-panel" id="cartPanel">
+        <div class="cart-panel-header">
+            <span>🛒 Корзина на отправку (<span id="cartPanelCount">0</span>)</span>
+            <span class="cart-close" onclick="toggleCartPanel()">✕</span>
+        </div>
+        <div class="cart-panel-body" id="cartBody"></div>
+        <div class="cart-panel-footer">
+            <button class="btn btn-copy" onclick="cartCopyText()">📋 Текст</button>
+            <button class="btn btn-sheets" onclick="cartCopySheets()">📗 Sheets</button>
+            <button class="btn btn-success" onclick="cartExportExcel()">📤 Excel</button>
+            <button class="btn btn-danger" onclick="cartClear()">🗑️</button>
+        </div>
+    </div>
 
     <script>
         // ============================================================
@@ -485,7 +866,13 @@
         let utoData = [];
 
         let tsSelectedStores = new Set();
+        let selectedSubdepts = new Set();
+        let allSubdepts = [];
         let isDark = false;
+
+        // Для перезагрузки файлов
+        let lastFileHandles = null;   // FileSystemFileHandle[] (если поддерживается)
+        let lastRawFiles = null;      // File[] (fallback)
 
         const reservyMap = new Map();
         const utoMap = new Map();
@@ -514,6 +901,9 @@
         const DEFAULT_START_STOCK_TOP1 = 10;
         const DEFAULT_START_STOCK_TOP2 = 5;
         const DEFAULT_START_STOCK_OTHER = 3;
+        const HISTORY_KEY = 'ts_history_v1';
+        const MAX_HISTORY = 30;
+        const FILTERS_KEY = 'ts_filters_v1';
 
         function showToast(msg, type = 'info', duration = 3000) {
             const container = document.getElementById('toastContainer');
@@ -543,6 +933,7 @@
                 el.style.background = isDark ? '#1e2e1e' : 'white';
                 el.style.borderColor = isDark ? '#2d4a2d' : '#c8e6c9';
             });
+            try { localStorage.setItem('ts_dark', isDark ? '1' : '0'); } catch (e) {}
             showToast(isDark ? '🌙 Тёмная тема' : '☀️ Светлая тема', 'info');
         }
 
@@ -611,6 +1002,12 @@
                 if (item[k] !== undefined && item[k] !== null && item[k] !== '') return item[k];
             }
             return '';
+        }
+        function formatMoney(v) {
+            const n = toNumber(v);
+            if (n >= 1000000) return (n / 1000000).toFixed(2) + ' млн';
+            if (n >= 1000) return (n / 1000).toFixed(1) + ' тыс';
+            return Math.round(n) + '';
         }
 
         function buildMaps() {
@@ -715,7 +1112,6 @@
                 vPutishDn = 999;
             }
 
-            // --- РАСЧЁТ ПУТО (Потенциальное УТО) ---
             let puto = 0;
             if (zapasDn < 21 && zapasDn > 0 && (vPutishSht === 0 || vPutishDn === 0)) {
                 puto = 1;
@@ -731,6 +1127,7 @@
             const pereboiDays = utoItem ? toNumber(utoItem['Кол-во дней в перебое за 30 дней']) || 0 : 0;
 
             const supplierCode = String(gammaItem['Номер поставщика'] || gammaItem['№ Поставщика'] || '').trim();
+            const supplierName = String(gammaItem['Имя поставщика'] || gammaItem['Поставщик'] || '').trim();
 
             let percentZapasa = 0;
             if (vmesimost > 0 && zapasSht > 0) {
@@ -783,7 +1180,7 @@
                 'ТИП': String(gammaItem['Тип'] || '').trim(),
                 'Дни выхода заказа поставщика': '',
                 'Номер поставщика': supplierCode,
-                'Поставщик': gammaItem['Имя поставщика'] || '',
+                'Поставщик': supplierName,
                 'Запас больше вместимости': zapasBolsheVmes,
                 'Дата AVS': '',
                 'Штрихкод': String(gammaItem['Штрихкод'] || gammaItem['Штрих-код'] || '').trim(),
@@ -802,14 +1199,18 @@
             fullData = results;
             filteredData = [...results];
             updateFilters();
+            buildSubdeptMultiselect();
             applyFilters();
             buildTsStoreFilter();
             buildTsData();
+            saveHistorySnapshot();
             showToast(`✅ Расчёт завершён! Найдено ${fullData.length} товаров`, 'success');
         }
 
         function updateFilters() {
-            const stores = new Set(), subdepts = new Set();
+            const stores = new Set();
+            allSubdepts = [];
+            const subdepts = new Set();
             for (const row of fullData) {
                 if (row['№ магазина']) stores.add(String(row['№ магазина']));
                 if (row['Подотдел']) subdepts.add(String(row['Подотдел']));
@@ -819,16 +1220,11 @@
             Array.from(stores).sort((a, b) => parseInt(a) - parseInt(b)).forEach(s => {
                 storeSel.innerHTML += `<option value="${s}">${s}</option>`;
             });
-            const subSel = document.getElementById('subdepartmentFilter');
-            subSel.innerHTML = '<option value="all">Все подотделы</option>';
-            Array.from(subdepts).sort().forEach(s => {
-                subSel.innerHTML += `<option value="${s}">${s}</option>`;
-            });
+            allSubdepts = Array.from(subdepts).sort();
         }
 
         function applyFilters() {
             const store = document.getElementById('storeFilter').value;
-            const subdept = document.getElementById('subdepartmentFilter').value;
             const top = document.getElementById('topFilter').value;
             const range = document.getElementById('stockRange').value.trim();
             let minD = 0, maxD = 999;
@@ -844,7 +1240,9 @@
 
             let data = [...fullData];
             if (store !== 'all') data = data.filter(r => String(r['№ магазина'] || '') === store);
-            if (subdept !== 'all') data = data.filter(r => String(r['Подотдел'] || '') === subdept);
+            if (selectedSubdepts.size > 0) {
+                data = data.filter(r => selectedSubdepts.has(String(r['Подотдел'] || '')));
+            }
             if (top !== 'all') {
                 data = data.filter(r => {
                     const t = String(r['ТОП'] ?? '').replace(/\.00$/, '').replace(/\.0+$/, '');
@@ -857,15 +1255,167 @@
             });
             filteredData = data;
             buildTsData();
+            saveFiltersToStorage();
         }
 
         function resetFilters() {
             document.getElementById('storeFilter').value = 'all';
-            document.getElementById('subdepartmentFilter').value = 'all';
             document.getElementById('topFilter').value = 'all';
             document.getElementById('stockRange').value = '0-999';
+            selectedSubdepts.clear();
+            renderSubdeptTags();
+            renderSubdeptOptions();
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('.chip[data-range="0-999"]')?.classList.add('active');
             applyFilters();
             showToast('🔄 Фильтры сброшены', 'info');
+        }
+
+        function quickFilter(el) {
+            const range = el.dataset.range;
+            document.getElementById('stockRange').value = range;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            applyFilters();
+            showToast(`⚡ Фильтр: ${el.textContent.trim()}`, 'info');
+        }
+
+        function saveFiltersToStorage() {
+            try {
+                const state = {
+                    store: document.getElementById('storeFilter')?.value || 'all',
+                    top: document.getElementById('topFilter')?.value || 'all',
+                    range: document.getElementById('stockRange')?.value || '0-999',
+                    subdepts: Array.from(selectedSubdepts)
+                };
+                localStorage.setItem(FILTERS_KEY, JSON.stringify(state));
+            } catch (e) {}
+        }
+
+        function loadFiltersFromStorage() {
+            try {
+                const raw = localStorage.getItem(FILTERS_KEY);
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                if (state.subdepts && Array.isArray(state.subdepts)) {
+                    selectedSubdepts = new Set(state.subdepts);
+                }
+                if (state.range) document.getElementById('stockRange').value = state.range;
+                if (state.top) document.getElementById('topFilter').value = state.top;
+                // store применим после updateFilters()
+            } catch (e) {}
+        }
+
+        // ============================================================
+        // ==================== МУЛЬТИ-ПОДОТДЕЛЫ ====================
+        // ============================================================
+        function toggleMultiselect(e) {
+            if (e && e.target.closest('.multiselect-dropdown')) return;
+            const ms = document.getElementById('subdeptMultiselect');
+            ms.classList.toggle('open');
+        }
+
+        // Закрытие по клику вне
+        document.addEventListener('click', (e) => {
+            const ms = document.getElementById('subdeptMultiselect');
+            if (ms && !ms.contains(e.target)) ms.classList.remove('open');
+        });
+
+        function buildSubdeptMultiselect() {
+            renderSubdeptTags();
+            renderSubdeptOptions();
+        }
+
+        function renderSubdeptTags() {
+            const container = document.getElementById('subdeptTags');
+            if (!container) return;
+            if (!selectedSubdepts.size) {
+                container.innerHTML = '<span class="multiselect-placeholder">Все подотделы</span>';
+                return;
+            }
+            const arr = Array.from(selectedSubdepts);
+            let html = arr.slice(0, 3).map(sd =>
+                `<span class="multiselect-tag" title="${escapeHtml(sd)}">${escapeHtml(sd)}<span class="tag-remove" onclick="event.stopPropagation(); removeSubdept('${escapeHtml(sd)}')">✕</span></span>`
+            ).join('');
+            if (arr.length > 3) {
+                html += `<span class="multiselect-tag" title="${arr.slice(3).join(', ')}">+${arr.length - 3}</span>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderSubdeptOptions(filterText = '') {
+            const container = document.getElementById('subdeptOptions');
+            if (!container) return;
+            const allSelected = selectedSubdepts.size === 0;
+            let html = `
+                <label class="multiselect-option all-option">
+                    <input type="checkbox" ${allSelected ? 'checked' : ''} onchange="toggleAllSubdepts(this.checked)">
+                    <span>Все подотделы</span>
+                </label>
+            `;
+            const q = String(filterText || '').toLowerCase().trim();
+            const filtered = q ? allSubdepts.filter(sd => sd.toLowerCase().includes(q)) : allSubdepts;
+            for (const sd of filtered) {
+                const checked = selectedSubdepts.has(sd) ? 'checked' : '';
+                html += `
+                    <label class="multiselect-option">
+                        <input type="checkbox" ${checked} value="${escapeHtml(sd)}" onchange="toggleSubdept('${escapeHtml(sd)}', this.checked)">
+                        <span>${escapeHtml(sd)}</span>
+                    </label>
+                `;
+            }
+            if (!filtered.length && q) {
+                html += '<div style="text-align:center;padding:8px;color:#999;font-size:0.55rem;">Ничего не найдено</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleSubdept(sd, checked) {
+            if (checked) selectedSubdepts.add(sd);
+            else selectedSubdepts.delete(sd);
+            renderSubdeptTags();
+            // Обновить галочку "Все"
+            const allOption = document.querySelector('#subdeptOptions .all-option input');
+            if (allOption) allOption.checked = selectedSubdepts.size === 0;
+            applyFilters();
+        }
+
+        function removeSubdept(sd) {
+            selectedSubdepts.delete(sd);
+            renderSubdeptTags();
+            renderSubdeptOptions(document.querySelector('.multiselect-search')?.value || '');
+            applyFilters();
+        }
+
+        function toggleAllSubdepts(checked) {
+            if (checked) {
+                selectedSubdepts.clear();
+            }
+            renderSubdeptTags();
+            renderSubdeptOptions(document.querySelector('.multiselect-search')?.value || '');
+            applyFilters();
+        }
+
+        function selectAllSubdepts(e) {
+            if (e) e.stopPropagation();
+            selectedSubdepts.clear();
+            renderSubdeptTags();
+            renderSubdeptOptions(document.querySelector('.multiselect-search')?.value || '');
+            applyFilters();
+            showToast('✅ Все подотделы выбраны', 'info', 1500);
+        }
+
+        function clearAllSubdepts(e) {
+            if (e) e.stopPropagation();
+            selectedSubdepts.clear();
+            renderSubdeptTags();
+            renderSubdeptOptions(document.querySelector('.multiselect-search')?.value || '');
+            applyFilters();
+            showToast('🗑️ Фильтр подотделов очищен', 'info', 1500);
+        }
+
+        function filterSubdeptOptions(text) {
+            renderSubdeptOptions(text);
         }
 
         function openMagPortal(article) {
@@ -883,6 +1433,466 @@
                 resultDiv.classList.toggle('collapsed');
                 if (icon) icon.classList.toggle('rotated');
             }
+        }
+
+        // ============================================================
+        // ==================== ПОИСК ====================
+        // ============================================================
+        let searchTerm = '';
+        let searchTokens = [];
+        let searchTimer = null;
+
+        function normalizeSearch(s) {
+            return String(s || '').toLowerCase().trim();
+        }
+
+        function parseSearchInput(raw) {
+            return String(raw || '')
+                .split(/[,\s;]+/)
+                .map(t => normalizeSearch(t))
+                .filter(t => t.length >= 2);
+        }
+
+        function applySearchDebounced() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => applySearch(), 250);
+        }
+
+        function applySearch() {
+            const input = document.getElementById('articleSearch');
+            if (!input) return;
+            const wrapper = input.closest('.search-wrapper');
+            const info = document.getElementById('searchInfo');
+            searchTerm = input.value;
+            searchTokens = parseSearchInput(searchTerm);
+
+            wrapper.classList.toggle('has-text', searchTerm.length > 0);
+
+            if (!searchTokens.length) {
+                wrapper.classList.remove('match', 'no-match');
+                info.textContent = '';
+                renderTsTable();
+                return;
+            }
+
+            const matches = countSearchMatches();
+            if (matches > 0) {
+                wrapper.classList.add('match');
+                wrapper.classList.remove('no-match');
+                info.textContent = `Найдено: ${matches}`;
+            } else {
+                wrapper.classList.add('no-match');
+                wrapper.classList.remove('match');
+                info.textContent = '❌ Ничего';
+            }
+
+            renderTsTable();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('articleSearch');
+            if (input) input.value = '';
+            applySearch();
+        }
+
+        function matchesSearch(art, name, barcode) {
+            if (!searchTokens.length) return true;
+            const haystack = [art, name, barcode].map(normalizeSearch).join(' | ');
+            return searchTokens.every(tok => haystack.includes(tok));
+        }
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function highlightText(text) {
+            if (!searchTokens.length || !text) return escapeHtml(text);
+            let result = escapeHtml(String(text));
+            for (const tok of searchTokens) {
+                const safe = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const re = new RegExp(`(${safe})`, 'gi');
+                result = result.replace(re, '<mark class="hl">$1</mark>');
+            }
+            return result;
+        }
+
+        function countSearchMatches() {
+            if (!tsData) return 0;
+            const set = new Set();
+            const check = (art, name) => {
+                if (matchesSearch(art, name, '')) set.add(art);
+            };
+            for (const item of (tsData.topArticles || [])) check(item.article, item.name);
+            for (const item of (tsData.transferCandidates || [])) check(item.article, item.name);
+            for (const item of (tsData.crossTransfer || [])) check(item.article, item.name);
+            for (const art of Object.keys(tsData.byArticleAllStores || {})) {
+                check(art, tsData.byArticleAllStores[art].name);
+            }
+            return set.size;
+        }
+
+        // ============================================================
+        // ==================== КОРЗИНА ====================
+        // ============================================================
+        const CART_KEY = 'ts_cart_v1';
+        let cart = [];
+
+        function loadCart() {
+            try {
+                const raw = localStorage.getItem(CART_KEY);
+                cart = raw ? JSON.parse(raw) : [];
+                if (!Array.isArray(cart)) cart = [];
+            } catch (e) { cart = []; }
+        }
+        function saveCart() {
+            try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {}
+        }
+        function cartKey(item) {
+            return `${item.article}|${item.from || ''}|${item.to || ''}`;
+        }
+        function isInCart(article, from, to) {
+            return cart.some(c => c.article === article && (c.from || '') === (from || '') && (c.to || '') === (to || ''));
+        }
+        function addToCart(payload) {
+            const key = cartKey(payload);
+            if (cart.some(c => cartKey(c) === key)) return false;
+            cart.push(payload);
+            saveCart();
+            return true;
+        }
+        function toggleCartItem(payload) {
+            const key = cartKey(payload);
+            const idx = cart.findIndex(c => cartKey(c) === key);
+            if (idx >= 0) cart.splice(idx, 1);
+            else cart.push(payload);
+            saveCart();
+            renderCart();
+            renderTsTable();
+        }
+        function removeCartItem(article, from, to) {
+            cart = cart.filter(c => !(c.article === article && (c.from || '') === (from || '') && (c.to || '') === (to || '')));
+            saveCart();
+            renderCart();
+            renderTsTable();
+        }
+        function cartClear() {
+            if (!cart.length) return;
+            if (!confirm(`Очистить корзину (${cart.length} позиций)?`)) return;
+            cart = [];
+            saveCart();
+            renderCart();
+            renderTsTable();
+            showToast('🗑️ Корзина очищена', 'info');
+        }
+        function toggleCartPanel() {
+            const panel = document.getElementById('cartPanel');
+            const fab = document.getElementById('cartFab');
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                if (cart.length) fab.classList.add('show');
+            } else {
+                if (!cart.length) { showToast('Корзина пуста — отметьте позиции галочками ☑', 'warning'); return; }
+                panel.classList.add('show');
+                fab.classList.remove('show');
+            }
+        }
+        function renderCart() {
+            const fab = document.getElementById('cartFab');
+            const cnt = document.getElementById('cartCount');
+            const panelCnt = document.getElementById('cartPanelCount');
+            const body = document.getElementById('cartBody');
+            if (!fab) return;
+            cnt.textContent = cart.length;
+            panelCnt.textContent = cart.length;
+            const panel = document.getElementById('cartPanel');
+            const isOpen = panel && panel.classList.contains('show');
+            fab.classList.toggle('show', cart.length > 0 && !isOpen);
+            if (!cart.length) {
+                body.innerHTML = '<div style="text-align:center;padding:20px;color:#999;font-size:0.6rem;">Корзина пуста.<br>Отметьте позиции галочками ☑ в таблицах.</div>';
+                if (panel) panel.classList.remove('show');
+                return;
+            }
+            body.innerHTML = cart.map((c, i) => `
+                <div class="cart-item">
+                    <div class="ci-main">
+                        <div class="ci-art">${escapeHtml(c.article)}${c.qty ? ` <span class="ci-qty">${c.qty} шт</span>` : ''}</div>
+                        <div class="ci-name">${escapeHtml(c.name || '')}</div>
+                        <div style="font-size:0.5rem;color:#888;">${escapeHtml(c.from || '')} → ${escapeHtml(c.to || '')}${c.supplier ? ' · ' + escapeHtml(c.supplier) : ''}</div>
+                    </div>
+                    <span class="ci-del" onclick="removeCartItem('${escapeHtml(c.article)}','${escapeHtml(c.from || '')}','${escapeHtml(c.to || '')}')">✕</span>
+                </div>
+            `).join('');
+        }
+
+        function cartCopyText() {
+            if (!cart.length) return;
+            let text = `🛒 КОРЗИНА НА ОТПРАВКУ (${cart.length}):\n\n`;
+            cart.forEach((c, i) => {
+                text += `${i + 1}. Арт.${c.article} — ${c.name || ''}\n`;
+                if (c.qty) text += `   ${c.qty} шт: ${c.from || '?'} → ${c.to || '?'}\n`;
+                if (c.supplier) text += `   Поставщик: ${c.supplier}\n`;
+                text += '\n';
+            });
+            copyToClipboard(text);
+            showToast(`📋 Скопировано ${cart.length} позиций`, 'success');
+        }
+
+        function cartCopySheets() {
+            if (!cart.length) return;
+            const header = ['Артикул', 'Наименование', 'Поставщик', 'Цена', 'Магазин принимающий', 'Потребность'].join('\t');
+            const rows = cart.map(c => [
+                c.article,
+                c.name || '',
+                c.supplier || '',
+                c.price || 0,
+                c.to || '',
+                c.qty || ''
+            ].join('\t'));
+            copyToClipboard(header + '\n' + rows.join('\n'));
+            showToast(`📗 Скопировано ${cart.length} строк для Google Sheets`, 'success');
+        }
+
+        function cartExportExcel() {
+            if (!cart.length) return;
+            const cols = ['Артикул', 'Наименование', 'Поставщик', 'Цена', 'Откуда', 'Куда', 'Кол-во'];
+            const wsData = [cols];
+            for (const c of cart) {
+                wsData.push([c.article, c.name || '', c.supplier || '', c.price || 0, c.from || '', c.to || '', c.qty || '']);
+            }
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Корзина');
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Корзина_${today}.xlsx`);
+            showToast(`✅ Выгружено ${cart.length} позиций`, 'success');
+        }
+
+        function toggleSelectAll(table, checked) {
+            if (table === 'top') {
+                const arts = (tsData.topArticles || []);
+                if (checked) {
+                    arts.forEach(it => {
+                        const from = it.stores.join(',');
+                        addToCart({
+                            article: it.article, name: it.name,
+                            from, to: '—',
+                            qty: it.total || 0,
+                            supplier: '', price: it.salePrice || 0
+                        });
+                    });
+                } else {
+                    arts.forEach(it => {
+                        const from = it.stores.join(',');
+                        cart = cart.filter(c => !(c.article === it.article && c.from === from));
+                    });
+                }
+            } else if (table === 'transfer') {
+                const items = (tsData.transferCandidates || []);
+                if (checked) {
+                    items.forEach(it => {
+                        const from = it.tsStores.join(',');
+                        const to = [...(it.utoStores || []), ...(it.putoStores || [])].join(',');
+                        addToCart({
+                            article: it.article, name: it.name,
+                            from, to, qty: '',
+                            supplier: it.supplier || '',
+                            price: it.salePrice || 0
+                        });
+                    });
+                } else {
+                    items.forEach(it => {
+                        const from = it.tsStores.join(',');
+                        const to = [...(it.utoStores || []), ...(it.putoStores || [])].join(',');
+                        cart = cart.filter(c => !(c.article === it.article && c.from === from && c.to === to));
+                    });
+                }
+            } else if (table === 'cross') {
+                const items = (tsData.crossTransfer || []);
+                if (checked) {
+                    items.forEach(it => {
+                        addToCart({
+                            article: it.article, name: it.name,
+                            from: it.tsStore, to: it.noTsStore,
+                            qty: it.qty,
+                            supplier: it.supplier || '',
+                            price: (it.value && it.qty) ? Math.round(it.value / it.qty) : 0
+                        });
+                    });
+                } else {
+                    items.forEach(it => {
+                        cart = cart.filter(c => !(c.article === it.article && c.from === it.tsStore && c.to === it.noTsStore));
+                    });
+                }
+            }
+            saveCart();
+            renderCart();
+            renderTsTable();
+            showToast(checked ? '☑ Все добавлены в корзину' : '☐ Выделение снято', 'info', 1500);
+        }
+
+        function toggleRowCheckbox(article, from, to, name, qty, supplier, price) {
+            const payload = { article, name, from, to, qty, supplier, price };
+            toggleCartItem(payload);
+        }
+
+        // ============================================================
+        // ==================== КОПИРОВАНИЕ ====================
+        // ============================================================
+        function copyTransferText() {
+            const items = tsData.transferCandidates || [];
+            if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
+            let text = '📦 РЕКОМЕНДАЦИИ ПО ТРАНСФЕРУ ТС → УТО/ПУТО:\n\n';
+            items.forEach((it, i) => {
+                text += `${i + 1}. Арт.${it.article} — ${it.name}\n`;
+                text += `   ТС: ${it.tsStores.join(', ')}\n`;
+                if (it.utoStores.length) text += `   УТО: ${it.utoStores.join(', ')}\n`;
+                if (it.putoStores && it.putoStores.length) text += `   ПУТО: ${it.putoStores.join(', ')}\n`;
+                text += `   Продажи (шт/нед): ${it.avgSales}\n\n`;
+            });
+            copyToClipboard(text);
+            showToast(`📋 Скопировано ${items.length} рекомендаций`, 'success');
+        }
+
+        function copyCrossTransferText() {
+            const items = tsData.crossTransfer || [];
+            if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
+            let text = '📦 КРОСС-ТРАНСФЕР ТС:\n\n';
+            items.forEach((it, i) => {
+                text += `${i + 1}. Арт.${it.article} (${it.name}) — ${it.qty} шт: м.${it.tsStore} → м.${it.noTsStore}\n`;
+            });
+            text += `\n💰 Потенциальная выручка: ${formatMoney(items.reduce((s, it) => s + it.value, 0))} ₽`;
+            copyToClipboard(text);
+            showToast(`📋 Скопировано ${items.length} рекомендаций`, 'success');
+        }
+
+        function copyTransferForSheets() {
+            const items = tsData.transferCandidates || [];
+            if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
+            const header = ['Артикул', 'Наименование', 'Поставщик', 'Цена', 'Магазин принимающий', 'Потребность'].join('\t');
+            const rows = [];
+            for (const it of items) {
+                const firstTsStore = it.tsStores[0];
+                const dTs = it.storeDetails[firstTsStore] || {};
+                const supplier = it.supplier || dTs.supplier || '';
+                const price = dTs.salePrice || it.salePrice || 0;
+                const targetStores = [...new Set([...(it.utoStores || []), ...(it.putoStores || [])])];
+                for (const targetStore of targetStores) {
+                    const dRecv = it.storeDetails[targetStore] || {};
+                    const salesWeek = dRecv.otgruzhenoSred || it.avgSales || 0;
+                    const needQty = Math.max(3, Math.ceil(TARGET_DAYS * salesWeek / 7) - (dRecv.zapasSht || 0));
+                    rows.push([
+                        it.article, it.name || '', supplier, price, targetStore,
+                        needQty > 0 ? needQty : ''
+                    ].join('\t'));
+                }
+            }
+            if (!rows.length) { showToast('Нет магазинов для трансфера', 'warning'); return; }
+            copyToClipboard(header + '\n' + rows.join('\n'));
+            showToast(`📗 Скопировано ${rows.length} строк для Google Sheets`, 'success');
+        }
+
+        function copyCrossTransferForSheets() {
+            const items = tsData.crossTransfer || [];
+            if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
+            const header = ['Артикул', 'Наименование', 'Поставщик', 'Цена', 'Магазин принимающий', 'Потребность'].join('\t');
+            const rows = items.map(it => {
+                const details = tsData.byArticleAllStores[it.article]?.storeDetails || {};
+                const supplier = details[it.tsStore]?.supplier || it.supplier || '';
+                const price = details[it.noTsStore]?.salePrice || details[it.tsStore]?.salePrice || 0;
+                return [it.article, it.name || '', supplier, price, it.noTsStore, it.qty].join('\t');
+            });
+            copyToClipboard(header + '\n' + rows.join('\n'));
+            showToast(`📗 Скопировано ${rows.length} строк для Google Sheets`, 'success');
+        }
+
+        // ============================================================
+        // ==================== ИСТОРИЯ ====================
+        // ============================================================
+        function loadHistory() {
+            try {
+                const raw = localStorage.getItem(HISTORY_KEY);
+                if (!raw) return [];
+                const arr = JSON.parse(raw);
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) { return []; }
+        }
+        function saveHistory(arr) {
+            try { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(-MAX_HISTORY))); } catch (e) {}
+        }
+        function saveHistorySnapshot() {
+            if (!tsData.items) return;
+            const history = loadHistory();
+            const snapshot = {
+                date: new Date().toISOString(),
+                totalTs: tsData.items.length,
+                stores: tsData.stores.length,
+                articles: Object.keys(tsData.byArticleAllStores || {}).length,
+                crossTransfer: (tsData.crossTransfer || []).length,
+                money: (tsData.crossTransfer || []).reduce((s, it) => s + (it.value || 0), 0)
+            };
+            const last = history[history.length - 1];
+            if (last && last.totalTs === snapshot.totalTs && last.stores === snapshot.stores
+                && (Date.now() - new Date(last.date).getTime()) < 60000) {
+                return;
+            }
+            history.push(snapshot);
+            saveHistory(history);
+        }
+
+        function showHistory() {
+            const modal = document.getElementById('historyModal');
+            const list = document.getElementById('historyList');
+            const history = loadHistory();
+            if (!history.length) {
+                list.innerHTML = '<div style="text-align:center;padding:16px;color:#999;">История пуста. Выполните расчёт.</div>';
+            } else {
+                let html = '';
+                const reversed = [...history].reverse();
+                reversed.forEach((h, i) => {
+                    const idx = history.length - 1 - i;
+                    const d = new Date(h.date);
+                    const dateStr = d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    const prev = idx > 0 ? history[idx - 1] : null;
+                    let delta = '';
+                    if (prev) {
+                        const diff = h.totalTs - prev.totalTs;
+                        if (diff > 0) delta = `<span class="h-delta up">▲ +${diff}</span>`;
+                        else if (diff < 0) delta = `<span class="h-delta down">▼ ${diff}</span>`;
+                        else delta = `<span style="color:#999;">= 0</span>`;
+                    }
+                    html += `<div class="history-item">
+                        <div>
+                            <div class="h-date">${dateStr}</div>
+                            <div class="h-stat">ТС: <b>${h.totalTs}</b> · магазинов: ${h.stores} · арт: ${h.articles} · рекомендаций: ${h.crossTransfer}</div>
+                            <div class="h-stat" style="color:#0f9d58;">💰 ${formatMoney(h.money)} ₽</div>
+                        </div>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            ${delta}
+                            <span class="h-del" onclick="deleteHistoryItem(${idx})" title="Удалить">✕</span>
+                        </div>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            }
+            modal.classList.add('show');
+        }
+        function closeHistory() { document.getElementById('historyModal').classList.remove('show'); }
+        function deleteHistoryItem(idx) {
+            const history = loadHistory();
+            history.splice(idx, 1);
+            saveHistory(history);
+            showHistory();
+        }
+        function clearHistory() {
+            if (!confirm('Очистить всю историю расчётов?')) return;
+            localStorage.removeItem(HISTORY_KEY);
+            showHistory();
+            showToast('🗑️ История очищена', 'info');
         }
 
         // ============================================================
@@ -944,7 +1954,8 @@
         function applyTsFilter() { buildTsData(); showToast('✅ Фильтр магазинов применён', 'info'); }
         function resetTsFilter() {
             tsSelectedStores.clear();
-            document.getElementById('tsStoreAll').checked = true;
+            const allCb = document.getElementById('tsStoreAll');
+            if (allCb) allCb.checked = true;
             document.querySelectorAll('.ts-store-cb').forEach(cb => cb.checked = false);
             buildTsData();
             showToast('🗑️ Фильтр магазинов сброшен', 'info');
@@ -995,13 +2006,14 @@
                 const isTs = toNumber(row['ТС'], 0) === 1;
                 const status = row['Статус'] || '';
                 const subdept = row['Подотдел'] || '';
+                const supplier = row['Поставщик'] || '';
 
                 if (!byArticleAllStores[art]) {
                     byArticleAllStores[art] = {
                         name: name, stores: new Set(), total: 0, hasUto: false,
                         utoStores: new Set(), putoStores: new Set(), tsStores: new Set(), storeDetails: {},
                         min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0,
-                        status: '', subdept: ''
+                        status: '', subdept: '', supplier: ''
                     };
                 }
                 const aAll = byArticleAllStores[art];
@@ -1019,11 +2031,12 @@
                 if (salePrice > 0) aAll.salePrice = salePrice;
                 if (status && !aAll.status) aAll.status = status;
                 if (subdept && !aAll.subdept) aAll.subdept = subdept;
+                if (supplier && !aAll.supplier) aAll.supplier = supplier;
                 aAll.avgSales += otgruzhenoSred;
                 aAll.storeDetails[store] = {
                     days, transit, zapasSht, utoRub, utoSht, hasUto, puto, hasPuto, top,
                     min441, min500, min401, naibMin, salePrice, otgruzhenoSred,
-                    isTs, status, subdept
+                    isTs, status, subdept, supplier
                 };
             }
 
@@ -1067,6 +2080,7 @@
                 const otgruzhenoSred = toNumber(row['Отгружено в сред. За 7 дн'], 0);
                 const status = row['Статус'] || '';
                 const subdept = row['Подотдел'] || '';
+                const supplier = row['Поставщик'] || '';
 
                 if (!byStore[store]) byStore[store] = { items: [], total: 0, articles: new Set() };
                 byStore[store].items.push(row);
@@ -1077,7 +2091,8 @@
                     byArticle[art] = {
                         name: name, stores: new Set(), total: 0, hasUto: false,
                         utoStores: new Set(), putoStores: new Set(), tsStores: new Set(), storeDetails: {},
-                        min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0
+                        min441: 0, min500: 0, min401: 0, naibMin: '', salePrice: 0, avgSales: 0,
+                        supplier: ''
                     };
                 }
                 const aData = byArticle[art];
@@ -1091,11 +2106,12 @@
                 if (min401 > 0) aData.min401 = min401;
                 if (naibMin) aData.naibMin = naibMin;
                 if (salePrice > 0) aData.salePrice = salePrice;
+                if (supplier && !aData.supplier) aData.supplier = supplier;
                 aData.avgSales += otgruzhenoSred;
                 aData.storeDetails[store] = {
                     days, transit, zapasSht, utoRub, utoSht, hasUto, puto, hasPuto, top,
                     min441, min500, min401, naibMin, salePrice, otgruzhenoSred,
-                    status, subdept
+                    status, subdept, supplier
                 };
             }
             for (const [art, data] of Object.entries(byArticle)) {
@@ -1121,14 +2137,15 @@
                     utoStores: Array.from(data.utoStores),
                     putoStores: Array.from(data.putoStores || []),
                     total: data.total, hasUto: data.hasUto,
-                    avgSales: data.avgSales, storeDetails: data.storeDetails
+                    avgSales: data.avgSales, storeDetails: data.storeDetails,
+                    supplier: data.supplier || '',
+                    salePrice: data.salePrice || 0
                 }))
                 .filter(item => item.tsStores.length > 0 && (item.utoStores.length > 0 || item.putoStores.length > 0))
                 .sort((a, b) => (b.utoStores.length + b.putoStores.length) - (a.utoStores.length + a.putoStores.length)
                               || b.tsStores.length - a.tsStores.length)
                 .slice(0, 15);
 
-            // ========== КРОСС-ТРАНСФЕР ==========
             const crossTransfer = [];
             for (const art of Object.keys(byArticleAllStores)) {
                 const dataAll = byArticleAllStores[art];
@@ -1150,52 +2167,69 @@
                     return (hasTop || hasSales || isEmpty) && lowStock;
                 });
 
+                const donorBalances = {};
                 for (const donor of donors) {
                     const dDonor = details[donor];
                     const avgSalesDonor = dDonor.otgruzhenoSred > 0 ? dDonor.otgruzhenoSred : 0;
                     const keepForDonor = avgSalesDonor > 0
                         ? Math.ceil(TARGET_DAYS * avgSalesDonor / 7)
                         : Math.ceil(dDonor.zapasSht * 0.5);
-                    const donorExcess = Math.max(0, dDonor.zapasSht - keepForDonor);
-                    if (donorExcess < MIN_TRANSFER) continue;
+                    donorBalances[donor] = Math.max(0, dDonor.zapasSht - keepForDonor);
+                }
 
-                    for (const receiver of receivers) {
-                        const dRecv = details[receiver];
-                        const avgSalesRecv = dRecv.otgruzhenoSred > 0 ? dRecv.otgruzhenoSred : 0;
-                        let receiverNeed;
-                        if (avgSalesRecv > 0) {
-                            receiverNeed = Math.max(0, Math.ceil(TARGET_DAYS * avgSalesRecv / 7) - dRecv.zapasSht);
-                        } else {
-                            const startStock = dRecv.top === '1' ? DEFAULT_START_STOCK_TOP1 :
-                                              (dRecv.top === '2' ? DEFAULT_START_STOCK_TOP2 : DEFAULT_START_STOCK_OTHER);
-                            receiverNeed = Math.max(0, startStock - dRecv.zapasSht);
-                        }
-                        if (receiverNeed < MIN_TRANSFER) continue;
+                receivers.sort((a, b) => {
+                    const dA = details[a], dB = details[b];
+                    const pA = dA.top === '1' ? 3 : dA.top === '2' ? 2 : 1;
+                    const pB = dB.top === '1' ? 3 : dB.top === '2' ? 2 : 1;
+                    if (pA !== pB) return pB - pA;
+                    return (dB.otgruzhenoSred || 0) - (dA.otgruzhenoSred || 0);
+                });
 
-                        const qty = Math.min(donorExcess, receiverNeed);
-                        if (qty < MIN_TRANSFER) continue;
-
-                        const pricePerUnit = dRecv.salePrice || dDonor.salePrice || 0;
-                        const value = qty * pricePerUnit;
-
-                        crossTransfer.push({
-                            article: art,
-                            name: dataAll.name,
-                            tsStore: donor,
-                            noTsStore: receiver,
-                            tsSales: dDonor.otgruzhenoSred || 0,
-                            noTsSales: dRecv.otgruzhenoSred || 0,
-                            tsDays: dDonor.days || 0,
-                            noTsDays: dRecv.days || 0,
-                            tsZapas: dDonor.zapasSht || 0,
-                            noTsZapas: dRecv.zapasSht || 0,
-                            qty: qty,
-                            tsTop: dDonor.top || '-',
-                            noTsTop: dRecv.top || '-',
-                            value: value,
-                            avgSales: dataAll.avgSales
-                        });
+                for (const receiver of receivers) {
+                    const dRecv = details[receiver];
+                    const avgSalesRecv = dRecv.otgruzhenoSred > 0 ? dRecv.otgruzhenoSred : 0;
+                    let receiverNeed;
+                    if (avgSalesRecv > 0) {
+                        receiverNeed = Math.max(0, Math.ceil(TARGET_DAYS * avgSalesRecv / 7) - dRecv.zapasSht);
+                    } else {
+                        const startStock = dRecv.top === '1' ? DEFAULT_START_STOCK_TOP1 :
+                                          (dRecv.top === '2' ? DEFAULT_START_STOCK_TOP2 : DEFAULT_START_STOCK_OTHER);
+                        receiverNeed = Math.max(0, startStock - dRecv.zapasSht);
                     }
+                    if (receiverNeed < MIN_TRANSFER) continue;
+
+                    let bestDonor = null, bestAvailable = 0;
+                    for (const donor of donors) {
+                        if (donor === receiver) continue;
+                        const avail = donorBalances[donor] || 0;
+                        if (avail > bestAvailable) {
+                            bestAvailable = avail;
+                            bestDonor = donor;
+                        }
+                    }
+                    if (!bestDonor) continue;
+
+                    const qty = Math.min(bestAvailable, receiverNeed);
+                    if (qty < MIN_TRANSFER) continue;
+
+                    donorBalances[bestDonor] -= qty;
+
+                    const dDonor = details[bestDonor];
+                    const pricePerUnit = dRecv.salePrice || dDonor.salePrice || 0;
+                    const value = qty * pricePerUnit;
+
+                    crossTransfer.push({
+                        article: art, name: dataAll.name,
+                        supplier: dDonor.supplier || dataAll.supplier || '',
+                        tsStore: bestDonor, noTsStore: receiver,
+                        tsSales: dDonor.otgruzhenoSred || 0,
+                        noTsSales: dRecv.otgruzhenoSred || 0,
+                        tsDays: dDonor.days || 0, noTsDays: dRecv.days || 0,
+                        tsZapas: dDonor.zapasSht || 0, noTsZapas: dRecv.zapasSht || 0,
+                        qty: qty,
+                        tsTop: dDonor.top || '-', noTsTop: dRecv.top || '-',
+                        value: value, avgSales: dataAll.avgSales
+                    });
                 }
             }
 
@@ -1227,12 +2261,15 @@
             renderTsTransfer();
             renderTsCrossTransfer();
             renderTsPivot();
+            renderSparkline();
         }
 
         function renderTsStats() {
             document.getElementById('tsTotal').textContent = tsData.items.length;
             document.getElementById('tsStores').textContent = tsData.stores.length;
             document.getElementById('tsTransfer').textContent = (tsData.crossTransfer || []).length;
+            const money = (tsData.crossTransfer || []).reduce((s, it) => s + (it.value || 0), 0);
+            document.getElementById('tsMoney').textContent = formatMoney(money) + ' ₽';
             if (tsData.topArticles.length) {
                 const top = tsData.topArticles[0];
                 document.getElementById('tsTopArticle').textContent = `${top.article} (${top.storeCount})`;
@@ -1241,14 +2278,42 @@
             }
         }
 
+        function renderSparkline() {
+            const block = document.getElementById('sparklineBlock');
+            const container = document.getElementById('sparklineRows');
+            const storesData = Object.entries(tsData.byStore || {})
+                .map(([store, d]) => ({ store, count: d.total }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+            if (!storesData.length) {
+                block.style.display = 'none';
+                return;
+            }
+            block.style.display = 'block';
+            const maxCount = storesData[0].count;
+            let html = '';
+            storesData.forEach(d => {
+                const pct = Math.max(3, Math.round((d.count / maxCount) * 100));
+                html += `<div class="spark-row">
+                    <span class="sp-store">м.${d.store}</span>
+                    <div class="sp-bar-wrap"><div class="sp-bar" style="width:${pct}%"></div></div>
+                    <span class="sp-count">${d.count}</span>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
         function renderTsTop() {
             const tbody = document.getElementById('tsTopBody');
             tbody.innerHTML = '';
-            if (!tsData.topArticles.length) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">Нет токсичного стока</td></tr>';
+            let items = (tsData.topArticles || []).filter(it =>
+                matchesSearch(it.article, it.name, '')
+            );
+            if (!items.length) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:16px;color:#999;">${searchTokens.length ? '🔍 Ничего не найдено' : 'Нет токсичного стока'}</td></tr>`;
                 return;
             }
-            for (const item of tsData.topArticles) {
+            for (const item of items) {
                 const tr = document.createElement('tr');
                 const storesStr = item.stores.join(', ');
                 let minInfo = '';
@@ -1261,10 +2326,15 @@
                     if (mins.length) minInfo += (minInfo ? ' | ' : '') + mins.join(', ');
                 }
                 const avgDays = item.avgDays || 0;
+                const from = item.stores.join(',');
+                const inCart = isInCart(item.article, from, '—');
+                if (inCart) tr.classList.add('row-selected');
                 tr.innerHTML = `
-                    <td>${tsData.topArticles.indexOf(item) + 1}</td>
-                    <td><span class="article-link" onclick="openMagPortal('${item.article}')">${item.article}</span></td>
-                    <td>${(item.name || '').substring(0, 22)}</td>
+                    <td><input type="checkbox" class="row-cb" ${inCart ? 'checked' : ''}
+                        onclick="toggleRowCheckbox('${escapeHtml(item.article)}','${escapeHtml(from)}','—','${escapeHtml(item.name || '')}',${item.total || 0},'','${item.salePrice || 0}')"></td>
+                    <td>${items.indexOf(item) + 1}</td>
+                    <td><span class="article-link" onclick="openMagPortal('${escapeHtml(item.article)}')">${highlightText(item.article)}</span></td>
+                    <td>${highlightText((item.name || '').substring(0, 22))}</td>
                     <td><span class="badge badge-warning">${item.storeCount}</span></td>
                     <td><span class="badge badge-ts">${item.total}</span></td>
                     <td>${avgDays > 0 ? avgDays : '-'}</td>
@@ -1273,7 +2343,7 @@
                         <div>${storesStr}</div>
                         ${minInfo ? `<div style="color:#666;">${minInfo}</div>` : ''}
                     </td>
-                    <td><button class="export-btn small" onclick="exportTsArticle('${item.article}')">📤</button></td>
+                    <td><button class="export-btn small" onclick="exportTsArticle('${escapeHtml(item.article)}')">📤</button></td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -1282,9 +2352,11 @@
         function renderTsTransfer() {
             const tbody = document.getElementById('tsTransferBody');
             tbody.innerHTML = '';
-            const candidates = tsData.transferCandidates || [];
+            let candidates = (tsData.transferCandidates || []).filter(it =>
+                matchesSearch(it.article, it.name, '')
+            );
             if (!candidates.length) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">${searchTokens.length ? '🔍 Ничего не найдено' : 'Нет рекомендаций'}</td></tr>`;
                 return;
             }
             for (const item of candidates) {
@@ -1341,10 +2413,17 @@
                     ? `<span class="badge badge-puto">${item.putoStores.join(', ')}</span>`
                     : '<span style="color:#999;">—</span>';
 
+                const from = item.tsStores.join(',');
+                const to = [...(item.utoStores || []), ...(item.putoStores || [])].join(',');
+                const inCart = isInCart(item.article, from, to);
+                if (inCart) tr.classList.add('row-selected');
+
                 tr.innerHTML = `
+                    <td><input type="checkbox" class="row-cb" ${inCart ? 'checked' : ''}
+                        onclick="toggleRowCheckbox('${escapeHtml(item.article)}','${escapeHtml(from)}','${escapeHtml(to)}','${escapeHtml(item.name || '')}','','${escapeHtml(item.supplier || '')}','${item.salePrice || 0}')"></td>
                     <td>${candidates.indexOf(item) + 1}</td>
-                    <td><span class="article-link" onclick="openMagPortal('${item.article}')">${item.article}</span></td>
-                    <td style="font-size:0.5rem;">${(item.name || '').substring(0, 30)}</td>
+                    <td><span class="article-link" onclick="openMagPortal('${escapeHtml(item.article)}')">${highlightText(item.article)}</span></td>
+                    <td style="font-size:0.5rem;">${highlightText((item.name || '').substring(0, 30))}</td>
                     <td><span class="badge badge-ts">${item.tsStores.join(', ')}</span></td>
                     <td><span class="badge badge-uto">${item.utoStores.length ? item.utoStores.join(', ') : '—'}</span></td>
                     <td>${putoStoresDisplay}</td>
@@ -1358,19 +2437,27 @@
         function renderTsCrossTransfer() {
             const tbody = document.getElementById('tsCrossTransferBody');
             tbody.innerHTML = '';
-            const items = tsData.crossTransfer || [];
+            let items = (tsData.crossTransfer || []).filter(it =>
+                matchesSearch(it.article, it.name, '')
+            );
             if (!items.length) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:16px;color:#999;">Нет рекомендаций</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:16px;color:#999;">${searchTokens.length ? '🔍 Ничего не найдено' : 'Нет рекомендаций'}</td></tr>`;
                 return;
             }
             for (const item of items) {
                 const tr = document.createElement('tr');
                 const rec = `📦 Передать <b>${item.qty} шт</b> из <b>${item.tsStore}</b> (ТОП ${item.tsTop}, ${item.tsZapas} шт, ${item.tsDays} дн) → <b>${item.noTsStore}</b> (ТОП ${item.noTsTop}, ${item.noTsZapas} шт, ${item.noTsDays} дн)`;
 
+                const price = (item.value && item.qty) ? Math.round(item.value / item.qty) : 0;
+                const inCart = isInCart(item.article, item.tsStore, item.noTsStore);
+                if (inCart) tr.classList.add('row-selected');
+
                 tr.innerHTML = `
+                    <td><input type="checkbox" class="row-cb" ${inCart ? 'checked' : ''}
+                        onclick="toggleRowCheckbox('${escapeHtml(item.article)}','${escapeHtml(item.tsStore)}','${escapeHtml(item.noTsStore)}','${escapeHtml(item.name || '')}',${item.qty},'${escapeHtml(item.supplier || '')}',${price})"></td>
                     <td>${items.indexOf(item) + 1}</td>
-                    <td><span class="article-link" onclick="openMagPortal('${item.article}')">${item.article}</span></td>
-                    <td style="font-size:0.5rem;">${(item.name || '').substring(0, 30)}</td>
+                    <td><span class="article-link" onclick="openMagPortal('${escapeHtml(item.article)}')">${highlightText(item.article)}</span></td>
+                    <td style="font-size:0.5rem;">${highlightText((item.name || '').substring(0, 30))}</td>
                     <td><span class="badge badge-ts">${item.tsStore}</span></td>
                     <td><span class="badge badge-success">${item.noTsStore}</span></td>
                     <td><b style="color:#c62828;">${item.qty}</b></td>
@@ -1402,14 +2489,20 @@
             const colgroup = document.getElementById('tsPivotColgroup');
 
             const stores = tsData.stores.sort((a, b) => parseInt(a) - parseInt(b));
-            const articles = Object.keys(tsData.byArticleAllStores || {}).sort();
+            let articles = Object.keys(tsData.byArticleAllStores || {}).sort();
+            if (searchTokens.length) {
+                articles = articles.filter(a => {
+                    const d = tsData.byArticleAllStores[a];
+                    return matchesSearch(a, d.name, '');
+                });
+            }
 
             thead.innerHTML = '';
             tbody.innerHTML = '';
             colgroup.innerHTML = '';
 
             if (!stores.length || !articles.length) {
-                tbody.innerHTML = '<tr><td style="text-align:center;padding:16px;color:#999;">Нет данных</td></tr>';
+                tbody.innerHTML = `<tr><td style="text-align:center;padding:16px;color:#999;">${searchTokens.length ? '🔍 Ничего не найдено' : 'Нет данных'}</td></tr>`;
                 return;
             }
 
@@ -1491,12 +2584,12 @@
 
                 const tdArt = document.createElement('td');
                 tdArt.className = 'cell-art';
-                tdArt.innerHTML = `<span class="article-link" onclick="openMagPortal('${art}')">${art}</span>`;
+                tdArt.innerHTML = `<span class="article-link" onclick="openMagPortal('${escapeHtml(art)}')">${highlightText(art)}</span>`;
                 tr.appendChild(tdArt);
 
                 const tdName = document.createElement('td');
                 tdName.className = 'cell-name';
-                tdName.textContent = data.name || '';
+                tdName.innerHTML = highlightText(data.name || '');
                 tdName.title = data.name || '';
                 tr.appendChild(tdName);
 
@@ -1595,7 +2688,7 @@
 
         function exportTsAll() {
             if (!tsData.items.length) { showToast('Нет ТС-позиций', 'warning'); return; }
-            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Статус', 'Подотдел', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'Продажная цена магазина'];
+            const cols = ['№ магазина', 'Артикул', 'Наименование', 'Статус', 'Подотдел', 'Поставщик', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of tsData.items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1635,7 +2728,7 @@
         function exportTsArticle(article) {
             const items = tsData.items.filter(r => String(r['Артикул'] || '') === article);
             if (!items.length) { showToast('Артикул не найден', 'warning'); return; }
-            const cols = ['№ магазина', 'Наименование', 'Статус', 'Подотдел', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'];
+            const cols = ['№ магазина', 'Наименование', 'Статус', 'Подотдел', 'Поставщик', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'ТС', 'min 441 ПМ', 'min 500 Проект', 'min 401 NEW', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1664,7 +2757,7 @@
             }
             const items = tsData.byStore[type]?.items || [];
             if (!items.length) { showToast(`Нет данных для магазина ${type}`, 'warning'); return; }
-            const cols = ['Артикул', 'Наименование', 'Статус', 'Подотдел', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'Продажная цена магазина'];
+            const cols = ['Артикул', 'Наименование', 'Статус', 'Подотдел', 'Поставщик', 'Запас, дн.', 'В пути, дн.', 'ТОП', 'УТО, руб.', 'ПУТО', 'Продажная цена магазина'];
             const wsData = [cols];
             for (const row of items) wsData.push(cols.map(c => row[c] ?? ''));
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1679,7 +2772,7 @@
             const items = tsData.transferCandidates || [];
             if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
             const wsData = [[
-                '#', 'Артикул', 'Наименование',
+                '#', 'Артикул', 'Наименование', 'Поставщик',
                 'ТС магазины', 'УТО магазины', 'ПУТО магазины',
                 'Средние продажи', 'Рекомендация'
             ]];
@@ -1710,7 +2803,7 @@
                     recParts.push(`ПУТО: из ${worstTsStore} → ${bestPutoStore} (${putoDays} дн)`);
                 }
                 wsData.push([
-                    items.indexOf(item) + 1, item.article, item.name || '',
+                    items.indexOf(item) + 1, item.article, item.name || '', item.supplier || '',
                     item.tsStores.join(', '),
                     item.utoStores.join(', ') || '—',
                     (item.putoStores || []).join(', ') || '—',
@@ -1723,14 +2816,14 @@
             XLSX.utils.book_append_sheet(wb, ws, 'Трансфер_ТС');
             const today = new Date().toISOString().split('T')[0];
             XLSX.writeFile(wb, `Трансфер_рекомендации_${today}.xlsx`);
-            showToast(`✅ Выгружено ${items.length} рекомендаций (включая ПУТО)`, 'success');
+            showToast(`✅ Выгружено ${items.length} рекомендаций`, 'success');
         }
 
         function exportCrossTransfer() {
             const items = tsData.crossTransfer || [];
             if (!items.length) { showToast('Нет рекомендаций', 'warning'); return; }
             const wsData = [[
-                '#', 'Артикул', 'Наименование',
+                '#', 'Артикул', 'Наименование', 'Поставщик',
                 'Откуда (ТС)', 'ТОП откуда', 'Запас(шт) откуда', 'Запас(дн) откуда', 'Продажи/нед откуда',
                 'Куда', 'ТОП куда', 'Запас(шт) куда', 'Запас(дн) куда', 'Продажи/нед куда',
                 'Кол-во для трансфера', 'Стоимость (₽)'
@@ -1738,20 +2831,10 @@
             for (const item of items) {
                 wsData.push([
                     items.indexOf(item) + 1,
-                    item.article,
-                    item.name || '',
-                    item.tsStore,
-                    item.tsTop,
-                    item.tsZapas,
-                    item.tsDays,
-                    item.tsSales,
-                    item.noTsStore,
-                    item.noTsTop,
-                    item.noTsZapas,
-                    item.noTsDays,
-                    item.noTsSales,
-                    item.qty,
-                    item.value > 0 ? Math.round(item.value) : 0
+                    item.article, item.name || '', item.supplier || '',
+                    item.tsStore, item.tsTop, item.tsZapas, item.tsDays, item.tsSales,
+                    item.noTsStore, item.noTsTop, item.noTsZapas, item.noTsDays, item.noTsSales,
+                    item.qty, item.value > 0 ? Math.round(item.value) : 0
                 ]);
             }
             const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1781,8 +2864,8 @@
 
             ws.getColumn(1).width = 12;
             ws.getColumn(2).width = 28;
-            ws.getColumn(3).width = 14; // Статус
-            ws.getColumn(4).width = 16; // Подотдел
+            ws.getColumn(3).width = 14;
+            ws.getColumn(4).width = 16;
             let colIdx = 5;
             stores.forEach(() => {
                 ws.getColumn(colIdx++).width = 8;
@@ -2020,11 +3103,13 @@
             input.onchange = async (e) => {
                 const files = Array.from(e.target.files);
                 if (!files.length) return;
+                lastRawFiles = files;
                 const first = files[0];
                 const path = first.webkitRelativePath.split('/');
                 const folder = path.length > 1 ? path[0] : 'Папка';
                 document.getElementById('folderPath').textContent = `📁 ${folder} (${files.length} файлов)`;
                 await autoLoadFiles(files);
+                showReloadHint(true);
             };
             input.click();
         }
@@ -2037,10 +3122,37 @@
             input.onchange = async (e) => {
                 const files = Array.from(e.target.files);
                 if (!files.length) return;
+                lastRawFiles = files;
                 document.getElementById('folderPath').textContent = `📁 Загружено ${files.length} файлов`;
                 await autoLoadFiles(files);
+                showReloadHint(true);
             };
             input.click();
+        }
+
+        async function reloadLastFiles() {
+            if (!lastRawFiles || !lastRawFiles.length) {
+                showToast('⚠️ Нет загруженных файлов. Выберите папку заново.', 'warning');
+                return;
+            }
+            showToast('🔄 Перечитываю файлы...', 'info', 1500);
+            await autoLoadFiles(lastRawFiles);
+            if (gammaData.length) {
+                // Автоматически пересчитываем, если уже был расчёт
+                if (fullData.length) {
+                    await computeSummary();
+                    showToast(`✅ Данные обновлены и пересчитаны`, 'success');
+                } else {
+                    showToast(`✅ Данные обновлены. Нажмите "ВЫЧИСЛИТЬ"`, 'success');
+                }
+            }
+        }
+
+        function showReloadHint(show) {
+            const btn = document.getElementById('reloadBtn');
+            const hint = document.getElementById('reloadHint');
+            if (btn) btn.style.display = show ? 'block' : 'none';
+            if (hint) hint.classList.toggle('show', show);
         }
 
         function loadExcelFileFromFile(file, reportName, targetArray) {
@@ -2155,7 +3267,7 @@
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
-                    showToast(`📋 Скопировано: ${text}`, 'success', 1500);
+                    showToast('📋 Скопировано в буфер обмена', 'success', 1500);
                 }).catch(() => fallbackCopy(text));
             } else {
                 fallbackCopy(text);
@@ -2171,9 +3283,9 @@
             textArea.select();
             try {
                 document.execCommand('copy');
-                showToast(`📋 Скопировано: ${text}`, 'success', 1500);
+                showToast('📋 Скопировано в буфер обмена', 'success', 1500);
             } catch (err) {
-                showToast(`❌ Не удалось скопировать: ${text}`, 'error');
+                showToast('❌ Не удалось скопировать', 'error');
             }
             document.body.removeChild(textArea);
         }
@@ -2185,6 +3297,7 @@
                     const arr = JSON.parse(saved);
                     if (Array.isArray(arr)) tsSelectedStores = new Set(arr);
                 }
+                if (localStorage.getItem('ts_dark') === '1') toggleTheme();
             } catch (e) {}
             const origApply = applyTsFilter;
             applyTsFilter = function() {
@@ -2196,15 +3309,23 @@
                 origReset();
                 try { localStorage.setItem('ts_stores', JSON.stringify([])); } catch (e) {}
             };
-            console.log('📊 ТС Аналитика v3.5 (с ПУТО + Статус/Подотдел в сводной)');
+            // Загрузка фильтров
+            loadFiltersFromStorage();
+            document.querySelector('.chip[data-range="0-999"]')?.classList.add('active');
+            loadCart();
+            renderCart();
+            renderSubdeptTags();
+            console.log('📊 ТС Аналитика v6.0 — мульти-подотделы + обновление');
         });
 
         window.openMagPortal = openMagPortal;
         window.selectFolder = selectFolder;
         window.loadSingleReport = loadSingleReport;
+        window.reloadLastFiles = reloadLastFiles;
         window.computeSummary = computeSummary;
         window.applyFilters = applyFilters;
         window.resetFilters = resetFilters;
+        window.quickFilter = quickFilter;
         window.exportTsAll = exportTsAll;
         window.exportTsTop10 = exportTsTop10;
         window.exportTsArticle = exportTsArticle;
@@ -2219,6 +3340,32 @@
         window.toggleTheme = toggleTheme;
         window.toggleAutoLoadResult = toggleAutoLoadResult;
         window.copyToClipboard = copyToClipboard;
+        window.copyTransferText = copyTransferText;
+        window.copyCrossTransferText = copyCrossTransferText;
+        window.copyTransferForSheets = copyTransferForSheets;
+        window.copyCrossTransferForSheets = copyCrossTransferForSheets;
+        window.showHistory = showHistory;
+        window.closeHistory = closeHistory;
+        window.clearHistory = clearHistory;
+        window.deleteHistoryItem = deleteHistoryItem;
+        window.applySearchDebounced = applySearchDebounced;
+        window.clearSearch = clearSearch;
+        window.toggleCartPanel = toggleCartPanel;
+        window.cartCopyText = cartCopyText;
+        window.cartCopySheets = cartCopySheets;
+        window.cartExportExcel = cartExportExcel;
+        window.cartClear = cartClear;
+        window.removeCartItem = removeCartItem;
+        window.toggleSelectAll = toggleSelectAll;
+        window.toggleRowCheckbox = toggleRowCheckbox;
+        // Мульти-подотделы
+        window.toggleMultiselect = toggleMultiselect;
+        window.toggleSubdept = toggleSubdept;
+        window.removeSubdept = removeSubdept;
+        window.toggleAllSubdepts = toggleAllSubdepts;
+        window.selectAllSubdepts = selectAllSubdepts;
+        window.clearAllSubdepts = clearAllSubdepts;
+        window.filterSubdeptOptions = filterSubdeptOptions;
     </script>
 
 </body>
