@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>STOCKWISE — Умный анализ резервов</title>
+    <title>STOCKWISE 2.10 — авто-МИНЫ и автозагрузка</title>
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){
             m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -16,8 +16,22 @@
     </script>
     <noscript><div><img src="https://mc.yandex.ru/watch/111267729" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <noscript><div><img src="https://mc.yandex.ru/watch/110478648" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+     <script>
+    // Диагностика: если JS где-то упал — покажем ошибку прямо на странице (красная плашка сверху)
+    window.addEventListener('error', function(ev) {
+        var bar = document.getElementById('jsErrorBar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'jsErrorBar';
+            bar.style.cssText = 'background:#B71C1C;color:#fff;padding:10px 16px;font:13px/1.4 monospace;position:sticky;top:0;z-index:99999;white-space:pre-wrap';
+            (document.body || document.documentElement).prepend(bar);
+        }
+        bar.textContent = '⚠ ОШИБКА СКРИПТА: ' + (ev.message || ev.error) + ' (строка ' + (ev.lineno || '?') + ')';
+    });
+    </script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         /* ===== CSS Переменные для тем ===== */
         :root {
@@ -1101,7 +1115,13 @@
         .copyable:hover .copy-hint {
             opacity: 1;
         }
-        
+        /* Счётчик свежести отчётов */
+        .freshness { font-size: 0.5rem; font-weight: 600; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+        .fresh-ok   { background: #C8E6C9; color: #1B5E20; }
+        .fresh-warn { background: #FFF3C4; color: #7A5C00; }
+        .fresh-old  { background: #FFCDD2; color: #8E0000; }
+        .detected-by { font-size: 0.5rem; color: var(--text-muted); opacity: 0.8; }
+
         footer { margin-top: 20px; text-align: center; font-size: 0.6rem; border-top: 2px solid var(--border-color); padding-top: 12px; color: var(--text-muted); }
         .info-note { font-size: 0.55rem; color: var(--text-muted); margin-top: 4px; }
         .right-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -1295,7 +1315,7 @@
 <body>
 <div class="app-container" id="appContainer">
     <div class="header">
-        <h1>📊 STOCKWISE <small>Умный анализ запасов</small></h1>
+        <h1>📊 STOCKWISE <small>Умный анализ запасов</small> <span style="font-size:0.55em;background:#1B5E20;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle">v2.10 · авто-МИНЫ</span></h1>
         <div class="header-controls">
             <button id="helpToggleBtn" class="help-toggle-btn">❓ Инструкция</button>
             <button id="themeToggleBtn" class="theme-toggle-btn">🌙 Тёмная</button>
@@ -1327,7 +1347,8 @@
                     <ul>
                         <li>Нажмите <strong>"Загрузить все отчеты из папки"</strong> — система сама найдет и загрузит все нужные файлы</li>
                         <li>Или загружайте отчеты по одному через меню <strong>"Загрузить Excel-отчеты"</strong></li>
-                        <li>Для правильной автозагрузки называйте файлы как в примере: <strong>Гамма.xlsx</strong>, <strong>Резервы.xlsx</strong> и т.д.</li>
+                        <li>🆕 Отчёты распознаются <strong>по содержимому (колонкам)</strong> — имена файлов больше не критичны. Для «Недопоставок» и «ЭКСПО» пока работает распознавание по имени (Недопоставки.xlsx, ЭКСПО.xlsx).</li>
+                        <li>Возле каждого загруженного отчёта — счётчик свежести 🕒 (дата файла и возраст: сегодня / вчера / N дн. назад).</li>
                     </ul>
                 </div>
                 
@@ -1578,12 +1599,42 @@
                 <div id="quickFilterStatus" class="quick-filter-status">🔍 Показаны все товары</div>
                 
                 <div class="info-note" style="color:#1a5e1a;">Выберите подотдел для полного списка</div>
+                <div style="margin-top:10px; padding:9px 10px; background:rgba(255,140,0,0.08); border-radius:10px; border:1px solid rgba(255,140,0,0.2);">
+                    <div style="font-weight:700; font-size:0.6rem; color:var(--text-secondary); margin-bottom:5px;">🎯 Настройки рекомендаций MIN</div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+                        <label style="font-size:0.55rem; flex:1;">MIN 441: % полки</label>
+                        <input type="number" id="minFillPercent" min="10" max="100" value="90" style="width:52px; padding:2px 5px; border-radius:12px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-primary); font-size:0.55rem; text-align:center;">
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+                        <label style="font-size:0.55rem; flex:1;">MIN 500: дней</label>
+                        <input type="number" id="minStockDays" min="3" max="60" value="14" style="width:52px; padding:2px 5px; border-radius:12px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-primary); font-size:0.55rem; text-align:center;">
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+                        <label style="font-size:0.55rem; flex:1;">MIN 500 для 20/80 и BEST: дней</label>
+                        <input type="number" id="minPriDays" min="3" max="120" value="22" style="width:52px; padding:2px 5px; border-radius:12px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-primary); font-size:0.55rem; text-align:center;">
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                        <label style="font-size:0.55rem; flex:1;">Сезонность</label>
+                        <input type="number" id="minSeasonal" min="0.7" max="1.5" step="0.1" value="1.0" style="width:52px; padding:2px 5px; border-radius:12px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-primary); font-size:0.55rem; text-align:center;">
+                    </div>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:0.55rem; cursor:pointer; margin-bottom:5px;">
+                        <input type="checkbox" id="minUsePeak">
+                        Учитывать пиковые продажи
+                    </label>
+                    <button id="recalcMinBtn" style="background:#FF8C00; color:#1e1e1e; border:none; border-radius:20px; padding:4px 12px; font-size:0.55rem; font-weight:700; cursor:pointer; width:100%;">🔄 Пересчитать рекомендации</button>
+                </div>
                 <div style="margin-top:4px;">
                     <label style="font-size:0.55rem;">📋 Столбцы:</label>
                     <div id="columnToggleContainer" class="column-toggle-group"></div>
                 </div>
                 
-                <button id="exportChangesBtn" class="export-changes-btn">⬇️ ВЫГРУЗИТЬ MIN Custom (ВСЕ МАГАЗИНЫ)</button>
+                                <button id="exportMinRecsBtn" class="export-changes-btn" style="background:#FF8C00; color:#1e1e1e; margin-bottom:6px;">
+                    📤 ВЫГРУЗИТЬ РЕКОМЕНДАЦИИ MIN
+                </button>
+                
+            
+
+            <button id="exportChangesBtn" class="export-changes-btn">⬇️ ВЫГРУЗИТЬ MIN Custom (ВСЕ МАГАЗИНЫ)</button>
                 <button id="resetChangesBtn" class="btn-reset-changes">🗑️ СБРОСИТЬ ВСЕ ИЗМЕНЕНИЯ</button>
                 <div class="info-note" style="color:#1a5e1a;">Экспортирует все изменения по всем магазинам | Сброс очищает все правки</div>
             </div>
@@ -1628,6 +1679,7 @@
                 <button class="tab-btn active" data-tab="table">📋 Таблица</button>
                 <button class="tab-btn" data-tab="analytics">📊 Аналитика</button>
                 <button class="tab-btn" data-tab="alerts">🚨 Аномалии</button>
+                <button class="tab-btn" data-tab="mincalc">🎯 МИНЫ</button>
             </div>
 
             <div id="tab-table" class="tab-content active">
@@ -1927,6 +1979,65 @@
                     </div>
                 </div>
             </div>
+
+            <div id="tab-mincalc" class="tab-content">
+                <div class="right-header">
+                    <h3>🎯 Автоматический расчёт рекомендаций MIN</h3>
+                    <div class="action-buttons">
+                        <button id="computeMinBtn" class="btn-compute">🧮 РАССЧИТАТЬ</button>
+                        <button id="applyAllMinBtn" class="btn-compute">✅ ПРИМЕНИТЬ ВСЕ</button>
+                        <button id="exportMinTemplateBtn" class="btn-excel-export">⬇️ ШАБЛОН MIN</button>
+                    </div>
+                </div>
+
+                                <div class="filters-area" style="min-height:auto; padding:10px 14px; margin:8px 0;">
+                    <div style="font-weight:700; font-size:0.75rem; color:var(--text-secondary); margin-bottom:6px;">🎯 Настройки рекомендаций MIN</div>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-size:0.65rem;">MIN 500: дней
+                            <input type="number" id="minD500" value="24" min="0" max="365" style="width:58px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem; color:#827717;">20/80 и BEST: дней
+                            <input type="number" id="minD500Pri" value="22" min="0" max="365" style="width:58px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;">MIN 441: % полки
+                            <input type="number" id="minP441" value="90" min="0" max="100" style="width:58px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;">Сезонность
+                            <input type="number" id="minSeason" value="1" min="0.1" max="5" step="0.1" style="width:58px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label class="filter-checkbox" style="margin:0;">
+                            <input type="checkbox" id="minPeak" checked> Пики
+                        </label>
+                    </div>
+                    <div class="info-note" style="margin-top:6px;">
+                        Логика: MIN 441 = вместимость × % полки. MIN 500 = продажи в день × дней (× сезонность × пики). Для статусов 20/80 и Бест — свой срок «20/80 и BEST».
+                        Если продаж нет — рекомендация «снять MIN». Тип 441 выбирается, когда хватает полки, иначе 500.
+                    </div>
+                </div>
+
+                <div id="minCalcSummary" class="stats-badge" style="display:none;"></div>
+
+                <div class="analytics-section">
+                    <h4>🎯 Рекомендации по MIN
+                        <div class="section-actions">
+                            <button class="btn-export-all" onclick="exportMinTemplate()">📤 Выгрузить шаблон</button>
+                        </div>
+                    </h4>
+                    <div class="top-table-wrapper" style="max-height:420px;">
+                        <table class="top-table" id="minRecTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Магазин</th><th>Артикул</th><th>Наименование</th>
+                                    <th>MIN 441 тек → рек</th><th>MIN 500 тек → рек</th>
+                                    <th>Тип</th><th>Кол-во</th><th>Действие</th><th>Логика</th><th>✅</th>
+                                </tr>
+                            </thead>
+                            <tbody id="minRecBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="info-note" style="margin-top:4px;">Кнопка «✅» записывает рекомендацию как правку — она попадёт в «ВЫГРУЗИТЬ MIN Custom». «⬇️ ШАБЛОН MIN» — готовый файл в формате коллег.</div>
+                </div>
+            </div>
         </div>
     </div>
     <footer>STOCKWISE — умный анализ резервов и товарных запасов. Автозагрузка работает в Chrome/Edge/Opera.</footer>
@@ -2154,6 +2265,33 @@ let historyStack = [];
 let historyIndex = -1;
 const MAX_HISTORY = 50;
 let criticalAlertShown = false;
+// ==================== 🆕 v3.0: НАСТРОЙКИ РАСЧЕТА РЕКОМЕНДУЕМЫХ MIN ====================
+const MIN_SETTINGS = {
+    fillPercent: 90,           // % наполнения полки для MIN 441
+    stockDays: 14,             // дней запаса для MIN 500
+    priDays: 22,               // дней запаса для статусов 20/80 и BEST
+    usePeakSales: false,       // учитывать пиковые продажи
+    peakWeeksCount: 4,         // за сколько недель брать пик
+    seasonalCoeff: 1.0,        // коэффициент сезонности (0.7 - 1.3)
+    minThreshold: 0.8,         // если текущий MIN < 80% от рекомендованного → "Повысить"
+    maxThreshold: 1.5          // если текущий MIN > 150% от рекомендованного → "Понизить"
+};
+
+// Загружаем сохранённые настройки
+function loadMinSettings() {
+    try {
+        const saved = localStorage.getItem('stockwise_min_settings');
+        if (saved) {
+            Object.assign(MIN_SETTINGS, JSON.parse(saved));
+        }
+    } catch (e) {}
+}
+function saveMinSettings() {
+    try {
+        localStorage.setItem('stockwise_min_settings', JSON.stringify(MIN_SETTINGS));
+    } catch (e) {}
+}
+loadMinSettings();
 
 // ⚡ ОПТИМИЗАЦИЯ: флаг устаревания аналитики
 let analyticsStale = true;
@@ -2323,6 +2461,11 @@ const BASE_COLUMNS = [
     "% разницы РРЦ и ПЦ","max дн.","Авто min","min ЦО Проект","min ЦО ПАК-Подиум","min ЦО коорд","min 401 NEW","min 441 ПМ","min 500 Проект","min 902 B2B",
     "max шт.","Брак","ЭКСПО","През. минимум","ТЖ/ПАК","Подиум магазина","Улич. Торг", "Доп. презентация","Наибольший резерв MIN","Наибольший резерв MIN (число)",
     "Вид минимума","Кол-во проектов",
+    "Рекомендуемый MIN",       // 🆕
+    "MIN 441 (реком.)",        // 🆕
+    "MIN 500 (реком.)",        // 🆕
+    "Статус MIN",              // 🆕
+    "Действие",                // 🆕
     "Вместимость","Наполненность полки",
     "Отгружено в сред. За 7 дн","Теор сток ГАММА","Запас, шт.","Запас, дн.","В пути, шт.","В пути, дн.","Срок поставки в магазин","Размер упаковки",
     "УТО, руб.","ПУТО","УТО, шт.","Кол-во случаев перебоя за 30 дн","Кол-во дней в перебое","20/80","ТС","МС","Корекции","Недопоставки",
@@ -2452,13 +2595,69 @@ const reportFilePatterns = {
     "Резервы": ["резервы", "резерв"],
     "УТО": ["УТО", "uto", "UTO"],
     "БЭСТ": ["бэст", "бест", "best", "Best Seller"],
-    "Автоминимумы": ["автоминимум", "avto"],
+    "Автоминимумы": ["автоминимум", "avto", "активные-мины", "активные мины"],
     "Максы": ["максы", "max", "MAX", "активные MAX"],
     "ЭКСПО": ["экспо", "expo", "EXPO"],
     "Детали поставки": ["Детали поставки", "поставки", "postav"],
     "Коррекции": ["коррекции", "korrek"],
     "Недопоставки": ["недопоставки", "nedopostav"]
 };
+
+// ==================== Определение отчёта по СОДЕРЖИМОМУ (колонкам), а не по имени ====================
+// Маркеры подобраны по реальным выгрузкам PBIRS: уникальные колонки каждого отчёта.
+// Проверка сверху вниз: специфичные — раньше общих.
+function normHeader(h) {
+    let s = String(h ?? '').replace(/\u00a0/g, ' ').trim();
+    const m = s.match(/^"[^"]+"\[([^\]]+)\]$/); // "Отчёт"[Колонка] → Колонка
+    if (m) s = m[1];
+    return s.replace(/\s+/g, ' ').trim();
+}
+
+function findHeaderRow(matrix, minMatches) {
+    minMatches = minMatches || 3;
+    const limit = Math.min(matrix.length, 40);
+    let best = { idx: 2, score: -1 };
+    for (let i = 0; i < limit; i++) {
+        let score = 0;
+        for (const cell of (matrix[i] || [])) {
+            const h = normHeader(cell);
+            if (h && h.length > 1 && /[А-Яа-яA-Za-z]/.test(h)) score++;
+        }
+        if (score > best.score) best = { idx: i, score };
+    }
+    return best.idx;
+}
+
+function detectRoleByColumns(headers) {
+    const hs = new Set(headers.map(normHeader));
+    const rawNorm = headers.map(normHeader).join(' ').toLowerCase();
+    const rawOrig = headers.join(' ').toLowerCase(); // сырые имена — для маркеров вида "таблица"[колонка]
+    if (hs.has('Кол-во автоминимума')) return 'Автоминимумы';
+    if (hs.has('Уровень макса') && hs.has('Тип макса')) return 'Максы';
+    if (hs.has('Резерв') && hs.has('Кол-во резерва')) return 'Резервы';
+    if (hs.has('Кол-во дней в перебое') && hs.has('Порог дост-ти')) return 'УТО';
+    if (hs.has('Запас в днях по прогнозам') && hs.has('Best Seller')) return 'БЭСТ';
+    if (hs.has('№ магазина') && (hs.has('CPQ PRO') || hs.has('TOP ЦО') || hs.has('Вместимость полки'))) return 'Гамма';
+    if (rawOrig.indexOf('fifo') !== -1 || hs.has('Сумма Скорректированное количество заказ-предложение')) return 'Коррекции';
+    if (hs.has('Лог. потоки') && hs.has('Срок поставки в магазин')) return 'Детали поставки';
+    if (hs.has('Схема поставки оптимальна?')) return 'Детали поставки';
+    return null;
+}
+
+// Счётчик свежести: дата файла каждого отчёта
+const reportFileDates = {};
+
+function freshnessText(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
+    const days = Math.floor((Date.now() - ts) / 86400000);
+    const when = `${dd}.${mm} ${hh}:${mi}`;
+    const age = days === 0 ? 'сегодня' : days === 1 ? 'вчера' : `${days} дн. назад`;
+    const cls = days === 0 ? 'fresh-ok' : days <= 3 ? 'fresh-warn' : 'fresh-old';
+    return ` <span class="freshness ${cls}" title="Файл отчёта от ${when}">🕒 ${when} (${age})</span>`;
+}
 
 const excelHeaderColors = {
     "№ магазина": "FFB347", "Артикул": "FFB347", "Наименование": "FFB347",
@@ -2483,9 +2682,13 @@ const excelHeaderColors = {
     "Подотдел": "FFB347", "ТИП": "FFB347", "Дни выхода заказа поставщика": "FFFFFF",
     "Номер поставщика": "FFFFFF", "Поставщик": "FFFFFF", "Запас больше вместимости": "FFFFFF",
     "Дата AVS": "FFB347", "Штрихкод": "FFB347",
-    "Серия": "FFB347", "Бренд": "FFB347", "Коллекция": "FFB347", "Стиль": "FFB347"
+    "Серия": "FFB347", "Бренд": "FFB347", "Коллекция": "FFB347", "Стиль": "FFB347",
+    "Рекомендуемый MIN": "FFD54F",
+    "MIN 441 (реком.)": "FFE082",
+    "MIN 500 (реком.)": "FFE082",
+    "Статус MIN": "C8E6C9",
+    "Действие": "B3E5FC"
 };
-
 function toNumber(value, defaultValue = 0) { 
     if (value === undefined || value === null || value === "") return defaultValue;
     if (typeof value === 'number') return isNaN(value) ? defaultValue : value;
@@ -3093,7 +3296,7 @@ function calculateRow(gammaItem) {
     const pc  = toNumber(gammaItem["Сумма Продажная цена магазина"]) || 0;
     let percentSale = 0;
     if (rpc > 0 && pc > 0) {
-        percentSale = round(((rpc - pc) / rpc) * 100, 1);
+        percentSale = round(((pc - rpc) / rpc) * 100, 1);
     }
     
     const seriya = String(gammaItem["Серия"] || "").trim();
@@ -3320,6 +3523,22 @@ function calculateRow(gammaItem) {
         }
         return num;
     }
+        // ==================== 🆕 v3.0: РАСЧЕТ РЕКОМЕНДУЕМЫХ MIN ====================
+    const recommendedMinData = calculateRecommendedMin({
+        store,
+        artikul,
+        vmesimost,
+        otgruzhenoSred,
+        srokPostavki,
+        activeMin441: getActiveMinByTypes(store, artikul, ["Мин Магазин ПМ шт"]),
+        activeMin500: getActiveMinByTypes(store, artikul, ["Мин Магазин Амбиция проекта шт"]),
+        activeMin401: getActiveMinByTypes(store, artikul, ["Мин Новый товар шт"]),
+        novinka,
+        zapasDn,
+        is2080: toNumber(gammaItem["20/80"], 0) > 0,
+        isBest: (bestGamma && bestGamma !== "") || (bestNext && bestNext !== "")
+    });
+    // ==================== КОНЕЦ БЛОКА ====================
     
     return {
         "№ магазина": store,
@@ -3353,8 +3572,15 @@ function calculateRow(gammaItem) {
         "Доп. презентация": cleanValue(dopPrezentaciya, "Доп. презентация"),
         "Наибольший резерв MIN": naibolshiyRezervMin,
         "Наибольший резерв MIN (число)": naibolshiyRezervMinNumber,
-        "Вид минимума": activeMinType,
+                "Вид минимума": activeMinType,
         "Кол-во проектов": activeMinCount > 0 ? activeMinCount : "",
+        // 🆕 v3.0: рекомендации
+        "Рекомендуемый MIN": recommendedMinData.recommended,
+        "MIN 441 (реком.)": recommendedMinData.min441,
+        "MIN 500 (реком.)": recommendedMinData.min500,
+        "Статус MIN": recommendedMinData.status,
+        "Действие": recommendedMinData.recommended > 0 ? "apply_min" : "",
+        "_recomDetails": recommendedMinData, // служебное поле, скрыто
         "Вместимость": cleanValue(vmesimost, "Вместимость"),
         "Наполненность полки": percentZapasa,
         "Отгружено в сред. За 7 дн": cleanValue(otgruzhenoSred, "Отгружено в сред. За 7 дн"),
@@ -3389,7 +3615,214 @@ function calculateRow(gammaItem) {
         "Стиль": stil
     };
 }
+// ==================== 🆕 v3.0: ЯДРО РАСЧЕТА РЕКОМЕНДУЕМЫХ MIN ====================
+function calculateRecommendedMin(params) {
+    const {
+        store, artikul, vmesimost, otgruzhenoSred,
+        srokPostavki, activeMin441, activeMin500, activeMin401,
+        novinka, zapasDn
+    } = params;
+    
+    // 1. Парсим срок поставки в днях
+    let srokDays = 14; // по умолчанию
+    const srokRaw = String(srokPostavki || '').trim();
+    if (srokRaw) {
+        const match = srokRaw.match(/(\d+)/);
+        if (match) srokDays = parseInt(match[1], 10);
+    }
+    
+    // Приоритетные статусы (20/80, BEST): свой срок запаса
+    const priority = params.isBest || params.is2080 || false;
+    const priorityDays = priority ? (MIN_SETTINGS.priDays || MIN_SETTINGS.stockDays) : MIN_SETTINGS.stockDays;
 
+    // 2. Получаем "эффективные" продажи (с учётом пиков или нет)
+    let effectiveSales = otgruzhenoSred;
+    if (MIN_SETTINGS.usePeakSales && cachedData.fullData.length) {
+        // Ищем пиковые продажи по этому товару в других магазинах
+        const peakSales = findPeakSales(artikul);
+        if (peakSales > effectiveSales) effectiveSales = peakSales;
+    }
+    
+    // 3. MIN 441 — заполнение полки
+    const min441 = Math.round(vmesimost * (MIN_SETTINGS.fillPercent / 100));
+    
+    // 4. MIN 500 — запас на дни поставки
+    const min500 = Math.round(effectiveSales * priorityDays * MIN_SETTINGS.seasonalCoeff);
+    
+    // 5. Рекомендуемый = МАКС из двух
+    let recommended = Math.max(min441, min500);
+    
+    // 6. Спец-обработка для новинок без продаж
+    const isNew = novinka && novinka !== '' && novinka !== '0';
+    if (isNew && otgruzhenoSred === 0 && vmesimost > 0) {
+        recommended = Math.round(vmesimost * 0.5); // 50% полки для новинок
+    }
+    
+    // 7. Округляем и ограничиваем
+    if (recommended < 0) recommended = 0;
+    if (vmesimost > 0 && recommended > vmesimost) {
+        // MIN не может быть больше полки (для 441), но для 500 может
+        // Ограничиваем только если min441 доминировал
+        if (min441 >= min500) recommended = vmesimost;
+    }
+    
+    // 8. Текущий MIN (максимум из активных)
+    const current441 = activeMin441?.count || 0;
+    const current500 = activeMin500?.count || 0;
+    const currentMin = Math.max(current441, current500);
+    
+    // 9. Определяем статус
+    let status = '⚪ Нет данных';
+    let statusCode = 'none';
+    
+    if (recommended === 0) {
+        status = '⚪ Не требуется';
+        statusCode = 'none';
+    } else if (currentMin === 0) {
+        status = '🟢 Установить';
+        statusCode = 'set';
+    } else if (currentMin < recommended * MIN_SETTINGS.minThreshold) {
+        status = '🟡 Повысить';
+        statusCode = 'raise';
+    } else if (currentMin > recommended * MIN_SETTINGS.maxThreshold) {
+        status = '🔴 Понизить';
+        statusCode = 'lower';
+    } else {
+        status = '✅ Норма';
+        statusCode = 'ok';
+    }
+    
+    // 10. Формируем причину
+    let reason = '';
+    if (min500 > min441) {
+        reason = `MIN 500 = ${effectiveSales.toFixed(1)} шт/дн × ${priorityDays} дн${priority ? ' (20/80/Бест)' : ''}`;
+    } else if (min441 > 0) {
+        reason = `MIN 441 = ${vmesimost} шт × ${MIN_SETTINGS.fillPercent}%`;
+    }
+    
+    return {
+        recommended,
+        min441,
+        min500,
+        currentMin,
+        status,
+        statusCode,
+        reason,
+        srokDays,
+        effectiveSales,
+        isNew
+    };
+}
+
+// ==================== 🆕 v2.10: UI НАСТРОЕК РЕКОМЕНДАЦИЙ MIN (таблица) ====================
+function initMinSettingsUI() {
+    const fillInput = document.getElementById('minFillPercent');
+    const daysInput = document.getElementById('minStockDays');
+    const priInput = document.getElementById('minPriDays');
+    const seasInput = document.getElementById('minSeasonal');
+    const peakCb = document.getElementById('minUsePeak');
+    const recalcBtn = document.getElementById('recalcMinBtn');
+    if (!fillInput || fillInput.dataset.handlerAttached === '1') return;
+    fillInput.dataset.handlerAttached = '1';
+
+    fillInput.value = MIN_SETTINGS.fillPercent;
+    daysInput.value = MIN_SETTINGS.stockDays;
+    if (priInput) priInput.value = MIN_SETTINGS.priDays;
+    seasInput.value = MIN_SETTINGS.seasonalCoeff;
+    peakCb.checked = MIN_SETTINGS.usePeakSales;
+
+    fillInput.addEventListener('change', () => {
+        MIN_SETTINGS.fillPercent = Math.max(10, Math.min(100, parseInt(fillInput.value) || 90));
+        saveMinSettings();
+    });
+    daysInput.addEventListener('change', () => {
+        MIN_SETTINGS.stockDays = Math.max(3, Math.min(60, parseInt(daysInput.value) || 14));
+        saveMinSettings();
+    });
+    if (priInput) priInput.addEventListener('change', () => {
+        MIN_SETTINGS.priDays = Math.max(3, Math.min(120, parseInt(priInput.value) || 22));
+        saveMinSettings();
+    });
+    seasInput.addEventListener('change', () => {
+        MIN_SETTINGS.seasonalCoeff = Math.max(0.7, Math.min(1.5, parseFloat(seasInput.value) || 1.0));
+        saveMinSettings();
+    });
+    peakCb.addEventListener('change', () => {
+        MIN_SETTINGS.usePeakSales = peakCb.checked;
+        saveMinSettings();
+    });
+    recalcBtn.addEventListener('click', recalcRecommendations);
+}
+
+function recalcRecommendations() {
+    if (!cachedData.fullData.length) {
+        showToast('⚠️ Нет данных. Сначала выполните расчёт.', 'warning');
+        return;
+    }
+    showToast('🔄 Пересчёт рекомендаций...', 'info', 2000);
+    const loadingDiv = document.getElementById('loadingIndicator');
+    loadingDiv.style.display = 'block';
+    document.getElementById('loadingText').innerText = 'Пересчёт рекомендуемых MIN...';
+
+    setTimeout(() => {
+        for (const row of cachedData.fullData) {
+            const rec = calculateRecommendedMin({
+                store: row["№ магазина"],
+                artikul: row["Артикул"],
+                vmesimost: toNumber(row["Вместимость"], 0),
+                otgruzhenoSred: toNumber(row["Отгружено в сред. За 7 дн"], 0),
+                srokPostavki: "",
+                activeMin441: getActiveMinByTypes(row["№ магазина"], row["Артикул"], ["Мин Магазин ПМ шт"]),
+                activeMin500: getActiveMinByTypes(row["№ магазина"], row["Артикул"], ["Мин Магазин Амбиция проекта шт"]),
+                activeMin401: getActiveMinByTypes(row["№ магазина"], row["Артикул"], ["Мин Новый товар шт"]),
+                novinka: String(row["Новинка"] || "").trim(),
+                zapasDn: toNumber(row["Запас, дн."], 0),
+                is2080: toNumber(row["20/80"], 0) > 0,
+                isBest: (row["BEST гамма"] && row["BEST гамма"] !== "") || (row["BEST NEXT"] && row["BEST NEXT"] !== "")
+            });
+            row["Рекомендуемый MIN"] = rec.recommended;
+            row["MIN 441 (реком.)"] = rec.min441;
+            row["MIN 500 (реком.)"] = rec.min500;
+            row["Статус MIN"] = rec.status;
+            row["Действие"] = rec.recommended > 0 ? "apply_min" : "";
+            row["_recomDetails"] = rec;
+        }
+        invalidatePeakSalesCache();
+        filteredCalculatedResult = [...cachedData.fullData];
+        applyFilters();
+        loadingDiv.style.display = 'none';
+        showToast('✅ Рекомендации в таблице пересчитаны', 'success');
+    }, 50);
+}
+window.recalcRecommendations = recalcRecommendations;
+
+// 🆕 v3.0: Кеш пиковых продаж (пересобирается один раз после расчёта)
+let peakSalesCache = null;
+
+function buildPeakSalesCache() {
+    peakSalesCache = new Map();
+    for (const row of cachedData.fullData) {
+        const art = String(row["Артикул"] || "");
+        if (!art) continue;
+        const sales = toNumber(row["Отгружено в сред. За 7 дн"], 0);
+        const prev = peakSalesCache.get(art) || 0;
+        if (sales > prev) peakSalesCache.set(art, sales);
+    }
+    console.log(`📊 Кеш пиковых продаж: ${peakSalesCache.size} артикулов`);
+}
+
+function findPeakSales(artikul) {
+    // Если кеш не построен — строим
+    if (!peakSalesCache) {
+        buildPeakSalesCache();
+    }
+    return peakSalesCache.get(String(artikul)) || 0;
+}
+
+// Сброс кеша при новом расчёте
+function invalidatePeakSalesCache() {
+    peakSalesCache = null;
+}
 // ==================== БЫСТРЫЕ ФИЛЬТРЫ ====================
 function applyQuickFilter(filter) {
     if (activeQuickFilter === filter && cachedData.filteredData.length) {
@@ -3943,7 +4376,7 @@ function renderFullTableWithFilter(emptyType = null) {
             th.title = 'Процент заполнения полки (запас / вместимость)';
         }
         if (col === "% разницы РРЦ и ПЦ") {
-            th.title = 'Процент разницы между РПЦ и ПЦ: (РПЦ - ПЦ) / РПЦ × 100. Отрицательный = наценка (зелёный), положительный = скидка (красный)';
+            th.title = 'Процент разницы: (ПЦ - РРЦ) / РРЦ × 100. Минус = ПЦ ниже РРЦ (скидка, красный), плюс = ПЦ выше РРЦ (наценка, зелёный)';
         }
         theadRow.appendChild(th);
     });
@@ -4029,6 +4462,7 @@ function renderFullTableWithFilter(emptyType = null) {
     for (const row of dataToShow) {
         const tr = document.createElement("tr");
         const rowKey = `${row["№ магазина"]}|${row["Артикул"]}`;
+        tr.dataset.rowKey = rowKey;  // 🆕 для быстрого поиска
         const editedData = editedRows.get(rowKey);
         const isEdited = editedData && (editedData.видМинимума || editedData.колВоПроектов);
         
@@ -4161,7 +4595,80 @@ input.title = "Введите количество проектов. -1 = отм
                 
                 td.appendChild(input);
                 td.classList.add('editable');
+                          // ==================== 🆕 v3.0: Рендер колонок рекомендаций ====================
+            } else if (col === "Рекомендуемый MIN") {
+                const rec = row["Рекомендуемый MIN"];
+                const details = row["_recomDetails"] || {};
+                if (rec && rec > 0) {
+                    td.innerHTML = `
+                        <strong style="color:#FF8C00; font-size:0.75rem;">${rec}</strong>
+                        <span style="font-size:0.5rem; color:var(--text-muted); display:block;"
+                              title="${details.reason || ''}">${details.reason || ''}</span>
+                    `;
+                    td.title = details.reason || '';
+                } else {
+                    td.textContent = '—';
+                    td.style.color = 'var(--text-muted)';
+                }
                 
+            } else if (col === "MIN 441 (реком.)") {
+                const val = row["MIN 441 (реком.)"];
+                td.textContent = val > 0 ? val : '—';
+                if (val > 0) td.style.background = 'rgba(255,224,130,0.3)';
+                
+            } else if (col === "MIN 500 (реком.)") {
+                const val = row["MIN 500 (реком.)"];
+                td.textContent = val > 0 ? val : '—';
+                if (val > 0) td.style.background = 'rgba(255,224,130,0.3)';
+                
+            } else if (col === "Статус MIN") {
+                const status = row["Статус MIN"] || '—';
+                const details = row["_recomDetails"] || {};
+                td.textContent = status;
+                td.style.fontWeight = '600';
+                td.style.fontSize = '0.6rem';
+                td.style.whiteSpace = 'nowrap';
+                // Цвет по коду
+                const code = details.statusCode || 'none';
+                const colorMap = {
+                    'set':   { bg: '#C8E6C9', fg: '#1B5E20' },
+                    'raise': { bg: '#FFF9C4', fg: '#827717' },
+                    'lower': { bg: '#FFCDD2', fg: '#B71C1C' },
+                    'ok':    { bg: '#E8F5E9', fg: '#2E7D32' },
+                    'none':  { bg: 'transparent', fg: 'var(--text-muted)' }
+                };
+                const c = colorMap[code] || colorMap['none'];
+                td.style.background = c.bg;
+                td.style.color = c.fg;
+                td.title = details.reason || '';
+                
+            } else if (col === "Действие") {
+                const rec = row["Рекомендуемый MIN"];
+                const details = row["_recomDetails"] || {};
+                if (rec && rec > 0 && details.statusCode !== 'ok') {
+                    const btn = document.createElement('button');
+                    btn.textContent = '✅ Применить';
+                    btn.style.cssText = `
+                        background: #2c5f2d; color: white; border: none;
+                        border-radius: 12px; padding: 2px 10px;
+                        font-size: 0.55rem; cursor: pointer; font-weight: 600;
+                        white-space: nowrap;
+                    `;
+                    btn.title = `Применить MIN = ${rec} (${details.reason || ''})`;
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        applyRecommendedMin(rowKey, rec, details);
+                    });
+                    td.appendChild(btn);
+                } else if (details.statusCode === 'ok') {
+                    td.textContent = '✅';
+                    td.style.color = '#2e7d32';
+                    td.style.textAlign = 'center';
+                } else {
+                    td.textContent = '—';
+                    td.style.color = 'var(--text-muted)';
+                    td.style.textAlign = 'center';
+                }  
             } else if (col === "Артикул") {
                 const article = row["Артикул"] || '';
                 const rowKey = `${row["№ магазина"]}|${article}`;
@@ -4205,8 +4712,8 @@ input.title = "Введите количество проектов. -1 = отм
                 td.textContent = value;
                 if (value) {
                     const p = toNumber(value);
-                    if (p > 0) td.classList.add('percent-sale-discount');
-                    else if (p < 0) td.classList.add('percent-sale-markup');
+                    if (p > 0) td.classList.add('percent-sale-markup');
+                    else if (p < 0) td.classList.add('percent-sale-discount');
                 }
                 
             } else if (col === "Штрихкод") {
@@ -4363,7 +4870,37 @@ function updateRowEditedState(tr, rowKey) {
     // Счётчик "Изменено: N"
     updateEditedCount();
 }
-
+// ==================== 🆕 v3.0: ПРИМЕНЕНИЕ РЕКОМЕНДОВАННОГО MIN ====================
+function applyRecommendedMin(rowKey, recMin, details) {
+    if (!editedRows.has(rowKey)) {
+        editedRows.set(rowKey, {
+            видМинимума: "",
+            колВоПроектов: "",
+            comment: "",
+            isAnomaly: false
+        });
+    }
+    
+    const edited = editedRows.get(rowKey);
+    const oldValue = edited.колВоПроектов || "";
+    
+    // Определяем тип MIN: если min500 > min441 — 500, иначе 441
+    const minType = (details.min500 >= details.min441) ? '500' : '441';
+    edited.видМинимума = minType;
+    edited.колВоПроектов = String(recMin);
+    edited.comment = `рекомендация системы: ${details.reason || ''}`;
+    edited.isAnomaly = false;
+    
+    pushHistory(rowKey, 'колВоПроектов', oldValue, String(recMin));
+    
+    // Обновляем UI точечно
+    const tr = document.querySelector(`tr[data-row-key="${rowKey}"]`);
+    if (tr) updateRowEditedState(tr, rowKey);
+    else renderFullTableWithFilter();
+    
+    saveState();
+    showToast(`✅ Применён MIN ${minType} = ${recMin} для ${rowKey.split('|')[1]}`, 'success');
+}
 // 🆕 v2.7: обновление statsInfo без пересборки таблицы
 function updateEditedCount() {
     const statsDiv = document.getElementById('statsInfo');
@@ -4997,16 +5534,18 @@ async function loadExcelFileFromFile(file, reportName, targetArray) {
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
                 if (!rawData || rawData.length < 4) throw new Error("Файл пуст");
-                const headers = rawData[2] ? rawData[2].map(h => String(h || "").trim()) : [];
-                
+                // строка заголовков ищется автоматически (BI любит шапку из нескольких строк)
+                const hIdx = findHeaderRow(rawData);
+                const headers = rawData[hIdx] ? rawData[hIdx].map(h => String(h || "").trim()) : [];
+
                 const possibleArtColumns = ["Артикул", "Мастер артикул", "SKU", "Код", "Article", "ЛМ-код"];
                 let artColName = "Артикул";
                 for (const col of possibleArtColumns) {
                     if (headers.includes(col)) { artColName = col; break; }
                 }
-                
+
                 const jsonData = [];
-                for (let i = 3; i < rawData.length; i++) {
+                for (let i = hIdx + 1; i < rawData.length; i++) {
                     const row = rawData[i];
                     if (!row || row.length === 0) continue;
                     const obj = {};
@@ -5080,23 +5619,46 @@ async function autoLoadFromFolder(files) {
     const xlsxFiles = Array.from(files).filter(f => f.name.match(/\.(xlsx|xls)$/i) && !f.name.startsWith('~$'));
     let foundReports = {};
     let loadedCount = 0;
-    
-    for (let reportName of reportsNames) {
-        const patterns = reportFilePatterns[reportName];
-        let foundFile = null;
-        for (let file of xlsxFiles) {
-            const fileName = file.name.toLowerCase();
-            for (let pattern of patterns) {
-                if (fileName.includes(pattern.toLowerCase())) {
-                    foundFile = file;
-                    break;
-                }
+
+    // ЭТАП 1: определяем роль каждого файла по СОДЕРЖИМОМУ (заголовкам колонок)
+    const roleAssign = {}; // file -> role
+    const roleByContent = {};
+    for (let reportName of reportsNames) roleByContent[reportName] = null;
+    for (const file of xlsxFiles) {
+        try {
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { type: 'array', bookSheets: false, sheetRows: 40 });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", blankrows: false });
+            if (!matrix.length) continue;
+            const hIdx = findHeaderRow(matrix);
+            const headers = (matrix[hIdx] || []).map(normHeader).filter(Boolean);
+            const role = detectRoleByColumns(headers);
+            if (role && !roleByContent[role]) {
+                roleByContent[role] = file;
+                roleAssign[file.name] = role;
             }
-            if (foundFile) break;
+        } catch (e) { /* битый файл — пропускаем, определится по имени */ }
+    }
+
+    for (let reportName of reportsNames) {
+        // приоритет: определение по колонкам; фолбэк — по имени файла
+        let foundFile = roleByContent[reportName];
+        let detectedBy = foundFile ? "по колонкам" : null;
+        if (!foundFile) {
+            const patterns = reportFilePatterns[reportName];
+            for (let file of xlsxFiles) {
+                if (roleAssign[file.name]) continue; // уже занят под другую роль по содержимому
+                const fileName = file.name.toLowerCase();
+                for (let pattern of patterns) {
+                    if (fileName.includes(pattern.toLowerCase())) { foundFile = file; detectedBy = "по имени"; break; }
+                }
+                if (foundFile) break;
+            }
         }
-        
+
         if (foundFile) {
-            foundReports[reportName] = { file: foundFile.name, status: "загружается" };
+            foundReports[reportName] = { file: foundFile.name, status: "загружается", by: detectedBy };
             progressDiv.innerHTML = `📁 Загружаем: ${reportName}...`;
             let targetArray;
             switch(reportName) {
@@ -5113,12 +5675,13 @@ async function autoLoadFromFolder(files) {
                 default: continue;
             }
             const success = await loadExcelFileFromFile(foundFile, reportName, targetArray);
-            if (success) { 
-                foundReports[reportName].status = "✅ загружен"; 
-                loadedCount++; 
+            if (success) {
+                foundReports[reportName].status = "✅ загружен";
+                loadedCount++;
+                reportFileDates[reportName] = foundFile.lastModified || 0;
                 const statusSpan = document.getElementById(`status-${reportName.replace(/\s/g, '')}`);
                 if (statusSpan) {
-                    statusSpan.innerHTML = ` ✅ (${foundFile.name})`;
+                    statusSpan.innerHTML = ` ✅ (${foundFile.name})` + freshnessText(foundFile.lastModified);
                 }
             }
             else { 
@@ -5133,11 +5696,13 @@ async function autoLoadFromFolder(files) {
     for (let [name, info] of Object.entries(foundReports)) {
         const statusIcon = info.status.includes('✅') ? '✅' : info.status.includes('❌') ? '❌' : '⏳';
         const fileName = info.file !== "❌ не найден" && info.file !== "❌ ошибка" ? info.file : info.file;
-        const copyableName = fileName !== "❌ не найден" && fileName !== "❌ ошибка" ? 
+        const byInfo = info.by ? ` <span class="detected-by">(${info.by})</span>` : '';
+        const freshInfo = reportFileDates[name] ? freshnessText(reportFileDates[name]) : '';
+        const copyableName = fileName !== "❌ не найден" && fileName !== "❌ ошибка" ?
             `<span class="copyable" onclick="copyToClipboard('${fileName}')" title="Кликните чтобы скопировать название файла">
                 ${fileName} <span class="copy-hint">📋</span>
             </span>` : fileName;
-        resultDiv.innerHTML += `<div>${statusIcon} <strong>${name}</strong>: ${copyableName}</div>`;
+        resultDiv.innerHTML += `<div>${statusIcon} <strong>${name}</strong>: ${copyableName}${byInfo}${freshInfo}</div>`;
     }
     resultDiv.innerHTML += `<br><strong>✅ Загружено ${loadedCount} из ${reportsNames.length} отчётов</strong>`;
     
@@ -5311,9 +5876,9 @@ function updateTopAndGammaFilters() {
 
 function updateStatusDisplay(reportName, success) {
     const statusSpan = document.getElementById(`status-${reportName.replace(/\s/g, '')}`);
-    if (statusSpan) { 
+    if (statusSpan) {
         if (success) {
-            statusSpan.innerHTML = ' ✅';
+            statusSpan.innerHTML = ' ✅' + freshnessText(reportFileDates[reportName]);
         } else {
             statusSpan.innerHTML = ' ❌';
         }
@@ -5322,180 +5887,196 @@ function updateStatusDisplay(reportName, success) {
     document.getElementById('uploadSummary').innerHTML = `📁 Загружено: ${loadedCount} / 10 отчетов`;
 }
 
-// ==================== ЭКСПОРТ ИЗМЕНЕНИЙ (с цветной раскраской) ====================
+// ==================== ЭКСПОРТ ИЗМЕНЕНИЙ (по оригинальному шаблону min-in-qty.xlsx) ====================
+
+// Base64 пустого шаблона min-in-qty.xlsx
+const TEMPLATE_BASE64 = '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';
+
 async function exportChanges() {
     if (editedRows.size === 0) {
         showToast('Нет изменений для экспорта', 'warning');
         return;
     }
-    
+
     const loadingDiv = document.getElementById('loadingIndicator');
     loadingDiv.style.display = 'block';
-    document.getElementById('loadingText').innerText = 'Формируем MIN Custom (все магазины)...';
-    
+    document.getElementById('loadingText').innerText = 'Формируем MIN Custom по оригинальному шаблону...';
+
     try {
+        // ===== 1. ПРОВЕРКА JSZip =====
+        if (typeof JSZip === 'undefined') {
+            throw new Error('JSZip не подключён (нет интернета или CDN недоступен). Обновите страницу.');
+        }
+
+        // ===== 2. ЗАГРУЖАЕМ ОРИГИНАЛЬНЫЙ ШАБЛОН =====
+        const zip = await JSZip.loadAsync(TEMPLATE_BASE64, { base64: true, checkCRC32: true });
+
+        // ===== 3. ЧИТАЕМ XML РАБОЧЕГО ЛИСТА =====
+        const worksheetFile = zip.file('xl/worksheets/sheet1.xml');
+        if (!worksheetFile) throw new Error('В шаблоне отсутствует xl/worksheets/sheet1.xml');
+
+        const parser = new DOMParser();
+        const NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+        const worksheetXml = await worksheetFile.async('string');
+        const worksheetDoc = parser.parseFromString(worksheetXml, 'application/xml');
+
+        if (worksheetDoc.querySelector('parsererror')) {
+            throw new Error('Не удалось прочитать структуру шаблона');
+        }
+
+        const sheetData = worksheetDoc.getElementsByTagNameNS(NS, 'sheetData')[0];
+        if (!sheetData) throw new Error('В шаблоне отсутствует sheetData');
+
+        // ===== 4. СОБИРАЕМ ДАННЫЕ =====
+        // Снятие MIN: проект = -1, кол-во проектов = -1
         const exportData = [];
-        const stores = new Set();
-        
         for (const [key, data] of editedRows) {
             const [store, art] = key.split('|');
-            stores.add(store);
-            
-            let minType = data.видМинимума || "";
+            const minType = data.видМинимума || "";
             let quantity = data.колВоПроектов || "";
-            let comment = data.comment || "";
-            
+
             if (!minType && !quantity) continue;
-            if (quantity === "" || quantity === null || quantity === undefined) quantity = "0";
-            
-            if (!comment) {
-                comment = data.isAnomaly ? "аномалия" : "ручная корректировка";
-            }
-            
-            const finalType = minType || "0";
+
+            const qtyNum = parseInt(quantity, 10) || 0;
+            const isRemoval = qtyNum <= 0;
+
+            const finalType = minType || "500";
             const today = new Date();
             const startDate = formatDateDDMMYYYY(today);
             const endDate = getEndDate(finalType);
-            
+
             exportData.push({
-                "Магазин": store,
-                "Артикул": art,
-                "Тип": finalType,
-                "Количество": quantity,
-                "Дата начала": startDate,
-                "Дата окончания": endDate,
-                "Комментарии": comment
+                store: String(store),
+                art: String(art),
+                type: String(finalType),
+                proj: isRemoval ? -1 : 1,
+                qty: isRemoval ? -1 : qtyNum,
+                startDate: startDate,
+                endDate: endDate
             });
         }
-        
+
         if (exportData.length === 0) {
             showToast('Нет данных для экспорта', 'warning');
             loadingDiv.style.display = 'none';
             return;
         }
-        
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('MIN_Custom_Все_магазины');
-        
-        const headers = ["Магазин", "Артикул", "Тип", "Количество", "Дата начала", "Дата окончания", "Комментарии"];
-        const headerRow = worksheet.addRow(headers);
-        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.alignment = { horizontal: "center", vertical: "middle" };
-        headerRow.eachCell(cell => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C5F2D' } };
-            cell.border = {
-                top: { style: 'thin', color: { argb: 'FF1F4520' } },
-                left: { style: 'thin', color: { argb: 'FF1F4520' } },
-                bottom: { style: 'medium', color: { argb: 'FF1F4520' } },
-                right: { style: 'thin', color: { argb: 'FF1F4520' } }
-            };
-        });
-        
+
         exportData.sort((a, b) => {
-            if (a["Магазин"] !== b["Магазин"]) {
-                return parseInt(a["Магазин"]) - parseInt(b["Магазин"]);
-            }
-            return a["Артикул"].localeCompare(b["Артикул"]);
+            const sa = parseInt(a.store, 10) || 0;
+            const sb = parseInt(b.store, 10) || 0;
+            if (sa !== sb) return sa - sb;
+            return a.art.localeCompare(b.art);
         });
-        
-        // 🎨 ПУНКТ 8: цветовая раскраска exportChanges
-        const typeColors = {
-            '401': { fill: 'FFE3F2FD', font: 'FF0D47A1' },
-            '441': { fill: 'FFFFE0B2', font: 'FFE65100' },
-            '500': { fill: 'FFC8E6C9', font: 'FF1B5E20' },
-            '902': { fill: 'FFE1BEE7', font: 'FF4A148C' },
-            '0':   { fill: 'FFECEFF1', font: 'FF607D8B' }
-        };
-        
-        for (const row of exportData) {
-            const dataRow = worksheet.addRow([
-                row["Магазин"],
-                row["Артикул"],
-                row["Тип"],
-                row["Количество"],
-                row["Дата начала"],
-                row["Дата окончания"],
-                row["Комментарии"]
-            ]);
-            
-            // Общая рамка
-            dataRow.eachCell({ includeEmpty: true }, (cell) => {
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-                    left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-                    bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-                    right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
-                };
-                cell.alignment = { horizontal: 'center', vertical: 'middle' };
-            });
-            
-            // Тип — цвет по типу MIN
-            const typeCell = dataRow.getCell(3);
-            const typeVal = String(row["Тип"]);
-            const c = typeColors[typeVal] || typeColors['0'];
-            typeCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: c.fill } };
-            typeCell.font = { color: { argb: c.font }, bold: true };
-            
-            // Количество — жёлтый если > 0
-            const qtyCell = dataRow.getCell(4);
-            if (toNumber(row["Количество"]) > 0) {
-                qtyCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF59D' } };
-                qtyCell.font = { bold: true };
+
+        // ===== 5. СТИЛИ ШАБЛОНА (уже есть в файле) =====
+        // s=13 — жёлтая ячейка с границами (шаблон использует её для строк данных)
+        // s=9  — дата numFmtId 14 → краткий формат ДД.ММ.ГГГГ + границы
+        const styleNum = '13';
+        const styleDate = '9';
+
+        // ===== 6. УДАЛЯЕМ ВСЕ СТРОКИ ДАННЫХ (с 3-й — в шаблоне она пустая) =====
+        const existingRows = Array.from(sheetData.getElementsByTagNameNS(NS, 'row'));
+        existingRows.forEach(row => {
+            const rowNum = parseInt(row.getAttribute('r'), 10);
+            if (rowNum >= 3) {
+                sheetData.removeChild(row);
             }
-            
-            // Комментарий — красный если "аномалия", синий если "ручная"
-            const commentCell = dataRow.getCell(7);
-            const comment = String(row["Комментарии"]);
-            if (comment.includes('аномалия')) {
-                commentCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } };
-                commentCell.font = { color: { argb: 'FFB71C1C' }, bold: true };
-            } else if (comment.includes('ручная')) {
-                commentCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } };
-                commentCell.font = { color: { argb: 'FF0D47A1' } };
+        });
+
+        // ===== 7. ЗАПИСЫВАЕМ НОВЫЕ СТРОКИ (с 3-й) =====
+        exportData.forEach((record, index) => {
+            const rowNumber = index + 3;
+            const row = worksheetDoc.createElementNS(NS, 'row');
+            row.setAttribute('r', String(rowNumber));
+            sheetData.appendChild(row);
+
+            // A..M — все ячейки с границами
+            const vals = {
+                A: Number(record.type),
+                B: parseInt(record.store, 10) || record.store,
+                C: Number(record.art),
+                D: record.proj,
+                E: record.qty
+            };
+            for (const col of ['A','B','C','D','E','F','G','H','I','J','K']) {
+                const v = vals[col] !== undefined ? vals[col] : null;
+                row.appendChild(createCell(worksheetDoc, col, rowNumber, v, styleNum, NS));
             }
+            row.appendChild(createDateCell(worksheetDoc, 'L', rowNumber, record.startDate, styleDate, NS));
+            row.appendChild(createDateCell(worksheetDoc, 'M', rowNumber, record.endDate, styleDate, NS));
+        });
+
+        // ===== 8. ОБНОВЛЯЕМ DIMENSION =====
+        const dimension = worksheetDoc.getElementsByTagNameNS(NS, 'dimension')[0];
+        if (dimension) {
+            dimension.setAttribute('ref', 'A1:M' + Math.max(10, exportData.length + 2));
         }
-        
-        worksheet.getColumn(1).width = 15;
-        worksheet.getColumn(2).width = 18;
-        worksheet.getColumn(3).width = 15;
-        worksheet.getColumn(4).width = 15;
-        worksheet.getColumn(5).width = 22;
-        worksheet.getColumn(6).width = 22;
-        worksheet.getColumn(7).width = 30;
-        
-        const infoSheet = workbook.addWorksheet('Информация');
-        infoSheet.addRow(['Сводка по изменениям']);
-        infoSheet.addRow(['Дата выгрузки:', new Date().toLocaleString()]);
-        infoSheet.addRow(['Всего изменений:', exportData.length]);
-        infoSheet.addRow(['Количество магазинов:', stores.size]);
-        infoSheet.addRow(['Магазины:', Array.from(stores).sort().join(', ')]);
-        infoSheet.getColumn(1).width = 25;
-        infoSheet.getColumn(2).width = 50;
-        
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+        // ===== 9. СОХРАНЯЕМ XML ОБРАТНО =====
+        const serializer = new XMLSerializer();
+        zip.file('xl/worksheets/sheet1.xml', serializer.serializeToString(worksheetDoc));
+
+        // ===== 10. ГЕНЕРИРУЕМ ФАЙЛ =====
+        const blob = await zip.generateAsync({
+            type: 'blob',
+            compression: 'DEFLATE',
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+
+        // ===== 11. СКАЧИВАЕМ =====
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.href = url;
-        
-        const today = new Date();
-        const dateStr = today.toISOString().split('T')[0];
-        const storesList = Array.from(stores).sort().join('_');
-        const fileName = `almaz_min_custom_${storesList}_${dateStr}.xlsx`;
-        link.download = fileName;
+        const dateStr = new Date().toISOString().split('T')[0];
+        link.download = 'min-in-qty_edited_' + dateStr + '.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        
+
+        const removed = exportData.filter(r => r.proj === -1).length;
         loadingDiv.style.display = 'none';
-        showToast(`✅ Выгружено ${exportData.length} изменений для ${stores.size} магазинов`, 'success');
-        
+        showToast('✅ Выгружено ' + exportData.length + ' строк по шаблону (снятий: ' + removed + ' → проект -1, кол-во -1)', 'success');
+
     } catch (error) {
-        console.error(error);
+        console.error('[exportChanges]', error);
         loadingDiv.style.display = 'none';
-        showToast(`Ошибка: ${error.message}`, 'error');
+        showToast('Ошибка: ' + error.message, 'error');
     }
+}
+
+// Вспомогательные функции для записи в шаблон
+function createNumericCell(doc, col, rowNum, value, ns) {
+    const c = doc.createElementNS(ns, 'c');
+    c.setAttribute('r', col + rowNum);
+    const v = doc.createElementNS(ns, 'v');
+    v.textContent = String(value);
+    c.appendChild(v);
+    return c;
+}
+
+// Ячейка с числом/пустая + стиль (границы/формат)
+function createCell(doc, col, rowNum, value, styleIdx, ns) {
+    const c = doc.createElementNS(ns, 'c');
+    c.setAttribute('r', col + rowNum);
+    c.setAttribute('s', String(styleIdx));
+    if (value !== null && value !== undefined) {
+        const v = doc.createElementNS(ns, 'v');
+        v.textContent = String(value);
+        c.appendChild(v);
+    }
+    return c;
+}
+
+// Дата: серийный номер Excel + стиль с форматом ДД.ММ.ГГГГ (numFmtId 14)
+function createDateCell(doc, col, rowNum, dateStr, styleIdx, ns) {
+    if (!dateStr) return createCell(doc, col, rowNum, null, styleIdx, ns);
+    const parts = String(dateStr).split('.');
+    if (parts.length !== 3) return createCell(doc, col, rowNum, null, styleIdx, ns);
+    const date = new Date(Date.UTC(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])));
+    const serial = Math.floor(date.getTime() / 86400000) + 25569;
+    return createCell(doc, col, rowNum, serial, styleIdx, ns);
 }
 
 // ==================== СБРОС ВСЕХ ИЗМЕНЕНИЙ ====================
@@ -5537,6 +6118,8 @@ function toggleMode() {
         visibleColumns.add("Наполненность полки");
         invalidateVisibleColsCache();
         generateColumnToggles();
+    // 🆕 v3.0: инициализация настроек MIN
+    
         showToast('🌐 Включен онлайн-режим', 'info');
     } else {
         btn.textContent = '🔄 Онлайн-редактор';
@@ -5712,9 +6295,12 @@ async function computeSummaryAsync() {
     
     if (currentCalculation.cancelled) { loadingDiv.style.display = 'none'; return; }
     
-    cachedData.fullData = results;
+        cachedData.fullData = results;
     cachedData.filteredData = [...results];
     cachedData.lastFilters = null;
+    
+    // 🆕 v3.0: сбрасываем кеш пиковых продаж, чтобы пересобрать его с новыми данными
+    invalidatePeakSalesCache();
     
     loadingDiv.style.display = 'none';
     
@@ -5962,8 +6548,8 @@ async function exportAllData() {
                 // ===== % разницы РРЦ и ПЦ =====
                 if (col === "% разницы РРЦ и ПЦ" && val) {
                     const p = toNumber(val);
-                    if (p > 0) { fillArgb = 'FFFFCDD2'; fontColor = 'FFB71C1C'; isBold = true; } // скидка
-                    else if (p < 0) { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; isBold = true; } // наценка
+                    if (p > 0) { fillArgb = 'FFC8E6C9'; fontColor = 'FF1B5E20'; isBold = true; } // ПЦ выше РРЦ (наценка)
+                    else if (p < 0) { fillArgb = 'FFFFCDD2'; fontColor = 'FFB71C1C'; isBold = true; } // ПЦ ниже РРЦ (скидка)
                 }
                 
                 // ===== Запас больше вместимости =====
@@ -6266,7 +6852,17 @@ function scanAlerts() {
                 let overstockReasons = [];
                 let deficitReasons = [];
                 let errorReasons = [];
-
+                // 🆕 v3.0: Проверка MIN по рекомендации
+                const recDetails = row["_recomDetails"] || {};
+                if (recDetails.statusCode === 'raise') {
+                    deficitReasons.push(`MIN занижен: ${recDetails.currentMin} < ${recDetails.recommended} (реком.)`);
+                }
+                if (recDetails.statusCode === 'lower') {
+                    overstockReasons.push(`MIN завышен: ${recDetails.currentMin} > ${recDetails.recommended} (реком.)`);
+                }
+                if (recDetails.statusCode === 'set') {
+                    deficitReasons.push(`MIN не установлен, рекомендовано ${recDetails.recommended}`);
+                }
                 if (days > 90 && days < 999) {
                     if (mc === 1) overstockReasons.push('Мёртвый сток (МС=1)');
                     if (ts === 1) overstockReasons.push('Токсичный сток (ТС=1)');
@@ -7150,28 +7746,281 @@ function initAlertCardHandlers() {
     });
 }
 
+// ==================== v2.10: РАСЧЁТ РЕКОМЕНДАЦИЙ MIN ====================
+const MIN_CALC_DEFAULTS = { p441: 90, d500: 24, d500Pri: 22, season: 1, peak: true, peakK: 1.2 };
+let minCalcSettings = Object.assign({}, MIN_CALC_DEFAULTS);
+let minCalcResults = [];
+
+function restoreMinSettings() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('stockwise_mincalc'));
+        if (saved) minCalcSettings = Object.assign({}, MIN_CALC_DEFAULTS, saved);
+    } catch (e) {}
+    const map = { minP441: 'p441', minD500: 'd500', minD500Pri: 'd500Pri', minSeason: 'season', minPeakK: 'peakK' };
+    for (const id in map) {
+        const el = document.getElementById(id);
+        if (el) el.value = minCalcSettings[map[id]];
+    }
+    const pk = document.getElementById('minPeak');
+    if (pk) pk.checked = !!minCalcSettings.peak;
+}
+
+function readMinSettings() {
+    const num = (id, dflt) => {
+        const el = document.getElementById(id);
+        return el ? toNumber(el.value, dflt) : (minCalcSettings[idToKey[id]] !== undefined ? minCalcSettings[idToKey[id]] : dflt);
+    };
+    const idToKey = { minP441: 'p441', minD500: 'd500', minD500Pri: 'd500Pri', minSeason: 'season', minPeakK: 'peakK' };
+    minCalcSettings = {
+        p441: num('minP441', 90) !== 0 ? num('minP441', 90) : 0,
+        d500: num('minD500', 14),
+        d500Pri: num('minD500Pri', 21),
+        season: num('minSeason', 1),
+        peak: (document.getElementById('minPeak') || {}).checked !== false,
+        peakK: num('minPeakK', 1.2)
+    };
+    try { localStorage.setItem('stockwise_mincalc', JSON.stringify(minCalcSettings)); } catch (e) {}
+    return minCalcSettings;
+}
+
+function computeMinRecommendations() {
+    if (!cachedData.fullData.length) {
+        showToast('Нет данных. Сначала нажмите «🧮 ВЫЧИСЛИТЬ» на вкладке Таблица.', 'warning');
+        return;
+    }
+    const st = readMinSettings();
+    const data = filteredCalculatedResult.length ? filteredCalculatedResult : cachedData.fullData;
+    minCalcResults = [];
+
+    for (const row of data) {
+        const store = row["№ магазина"] || '';
+        const article = row["Артикул"] || '';
+        const name = row["Наименование"] || '';
+        const vmes = toNumber(row["Вместимость"], 0);
+        const sred7 = toNumber(row["Отгружено в сред. За 7 дн"], 0);
+        const dayAvg = sred7 / 7;
+
+        const isBest = (row["BEST гамма"] && row["BEST гамма"] !== "") || (row["BEST NEXT"] && row["BEST NEXT"] !== "");
+        const is2080 = toNumber(row["20/80"], 0) > 0;
+
+        const rec441 = vmes > 0 ? Math.floor(vmes * st.p441 / 100) : 0;
+
+        const priority = isBest || is2080;
+        let days = (priority ? st.d500Pri : st.d500) * (st.season || 1);
+        const rec500 = Math.ceil(dayAvg * days * (st.peak ? st.peakK : 1));
+
+        let type = "500";
+        let qty = 0;
+        let why = "";
+        if (dayAvg <= 0) {
+            type = "500"; qty = 0;
+            why = "нет продаж — снять MIN";
+        } else if (rec441 > 0 && rec500 <= rec441) {
+            type = "441"; qty = rec441;
+            why = "под вместимость " + st.p441 + "% (" + vmes + " шт)";
+        } else {
+            type = "500"; qty = rec500;
+            why = dayAvg.toFixed(1) + " шт/дн × " + Math.round(days) + " дн" + (priority ? " (приоритет 20/80/Бест)" : "") + (st.peak ? " × пик " + st.peakK : "");
+        }
+
+        const cur441 = toNumber(row["min 441 ПМ"], 0);
+        const cur500 = toNumber(row["min 500 Проект"], 0);
+        const cur = (type === "441") ? cur441 : cur500;
+        let action;
+        if (qty === 0) action = "Снять MIN";
+        else if (cur === qty) action = "Без изменений";
+        else if (cur === 0) action = "Поставить MIN";
+        else if (qty > cur) action = "Поднять " + cur + "→" + qty;
+        else action = "Снизить " + cur + "→" + qty;
+
+        minCalcResults.push({ store: store, article: article, name: name, cur441: cur441, rec441: rec441, cur500: cur500, rec500: rec500, type: type, qty: qty, action: action, why: why, isBest: isBest, is2080: is2080 });
+    }
+
+    renderMinTable();
+    const changed = minCalcResults.filter(function (r) { return r.action !== "Без изменений"; }).length;
+    const sum = document.getElementById('minCalcSummary');
+    sum.style.display = 'block';
+    sum.innerHTML = '🎯 Позиций: ' + minCalcResults.length + ' | Требуют изменения: <strong>' + changed + '</strong> | Поставить/поднять: ' + minCalcResults.filter(function (r) { return r.action.indexOf('Поставить') === 0 || r.action.indexOf('Поднять') === 0; }).length + ' | Снять/снизить: ' + minCalcResults.filter(function (r) { return r.action.indexOf('Снять') === 0 || r.action.indexOf('Снизить') === 0; }).length;
+    showToast('✅ Рекомендации MIN рассчитаны', 'success');
+}
+
+function renderMinTable() {
+    const tbody = document.getElementById('minRecBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!minCalcResults.length) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">Нажмите «🧮 РАССЧИТАТЬ» после вычисления сводной таблицы</td></tr>';
+        return;
+    }
+    const sorted = minCalcResults.filter(function (r) { return r.action !== "Без изменений"; });
+    sorted.forEach(function (r) {
+        const idx = minCalcResults.indexOf(r);
+        const tr = document.createElement('tr');
+        const badge = r.qty === 0
+            ? '<span class="badge-no-transit">снять</span>'
+            : (r.type === "441" ? '<span class="badge-transit">441</span>' : '<span class="badge-uto">500</span>');
+        const tags = (r.isBest ? '⭐' : '') + (r.is2080 ? ' 🏷️' : '');
+        const tdAction = r.action.indexOf('Снять') === 0 || r.action.indexOf('Снизить') === 0 ? '#e53935' : '#2c5f2d';
+        tr.innerHTML =
+            '<td class="rank">' + (idx + 1) + '</td>' +
+            '<td>' + r.store + '</td>' +
+            '<td><strong onclick="openProductInMagPortal(\'' + r.article + '\')" style="cursor:pointer;color:#FF8C00;">' + r.article + '</strong></td>' +
+            '<td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (r.name || '') + '">' + (r.name || '').substring(0, 22) + '</td>' +
+            '<td>' + r.cur441 + ' → ' + (r.type === "441" ? r.qty : r.rec441) + '</td>' +
+            '<td>' + r.cur500 + ' → ' + (r.type === "500" ? r.qty : r.rec500) + '</td>' +
+            '<td>' + badge + ' ' + tags + '</td>' +
+            '<td style="font-weight:700;">' + r.qty + '</td>' +
+            '<td><span style="color:' + tdAction + ';font-size:0.55rem;font-weight:600;">' + r.action + '</span></td>' +
+            '<td style="font-size:0.5rem;color:var(--text-muted);">' + r.why + '</td>' +
+            '<td><button class="export-btn" onclick="applySingleMinRec(' + idx + ')">✅</button></td>';
+        tbody.appendChild(tr);
+    });
+    if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">✅ Все позиции без изменений</td></tr>';
+    }
+}
+
+function applySingleMinRec(idx) {
+    const r = minCalcResults[idx];
+    if (!r) return;
+    const key = r.store + '|' + r.article;
+    if (!editedRows.has(key)) {
+        editedRows.set(key, { видМинимума: "", колВоПроектов: "", comment: "", isAnomaly: false });
+    }
+    const edited = editedRows.get(key);
+    edited.видМинимума = r.qty === 0 ? "" : r.type;
+    edited.колВоПроектов = String(r.qty);
+    edited.comment = "авто-рекомендация MIN";
+    edited.isAnomaly = false;
+    saveState();
+    showToast('✅ ' + r.article + ': ' + (r.qty === 0 ? 'MIN снят' : r.type + ' = ' + r.qty), 'success', 1500);
+}
+
+function applyAllMinRecommendations() {
+    if (!minCalcResults.length) {
+        showToast('Сначала нажмите «🧮 РАССЧИТАТЬ»', 'warning');
+        return;
+    }
+    let applied = 0;
+    minCalcResults.forEach(function (r, idx) {
+        if (r.action === "Без изменений") return;
+        applySingleMinRec(idx);
+        applied++;
+    });
+    renderFullTableWithFilter();
+    showToast('✅ Применено ' + applied + ' рекомендаций MIN', 'success');
+}
+
+// 📋 Готовый шаблон MIN в формате коллег: Бест / 20/80 / 80/20 парные поля + даты
+function exportMinTemplate() {
+    if (!minCalcResults.length) {
+        showToast('Сначала нажмите «🧮 РАССЧИТАТЬ» на вкладке МИНЫ', 'warning');
+        return;
+    }
+    const source = minCalcResults.filter(function (r) { return r.action !== "Без изменений"; });
+    if (!source.length) {
+        showToast('✅ Изменений не требуется — шаблон не формируется', 'info');
+        return;
+    }
+
+    const today = new Date();
+    const dateFrom = formatDateDDMMYYYY(today);
+    const dateTo = getEndDate("500"); // +140 дней — логика дат из старого кода
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Шаблон MIN');
+
+    const headerRow = ws.addRow([
+        "Магазин", "Артикул",
+        "Артикульный уровень: проект", "Артикульный уровень: кол-во проектов",
+        "Бест: проект", "Бест: кол-во проектов",
+        "20/80: проект", "20/80: кол-во проектов",
+        "80/20: проект", "80/20: кол-во проектов",
+        "Действует с", "Действует по"
+    ]);
+    headerRow.font = { bold: true, size: 9 };
+    headerRow.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    headerRow.height = 40;
+    headerRow.eachCell(function (cell) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+        cell.border = {
+            top: { style: 'thin', color: { argb: 'FF999999' } },
+            left: { style: 'thin', color: { argb: 'FF999999' } },
+            bottom: { style: 'thin', color: { argb: 'FF999999' } },
+            right: { style: 'thin', color: { argb: 'FF999999' } }
+        };
+    });
+
+    source.forEach(function (r) {
+        // Пары (0-based индексы в массиве значений): 2/3 — артикульный уровень, 4/5 — Бест, 6/7 — 20/80, 8/9 — 80/20
+        const rowVals = ["", "", "", "", "", "", "", "", "", "", dateFrom, dateTo];
+        rowVals[0] = r.store;
+        rowVals[1] = r.article;
+        if (r.qty > 0) {
+            const pair = r.isBest ? [4, 5] : (r.is2080 ? [6, 7] : [2, 3]);
+            rowVals[pair[0]] = r.type;
+            rowVals[pair[1]] = r.qty;
+        }
+        const dr = ws.addRow(rowVals);
+        dr.eachCell({ includeEmpty: true }, function (cell) {
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+            };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.font = { size: 9 };
+        });
+        dr.getCell(1).font = { bold: true, size: 9 };
+    });
+
+    ws.getColumn(1).width = 10;
+    ws.getColumn(2).width = 14;
+    for (let c = 3; c <= 10; c++) ws.getColumn(c).width = 14;
+    ws.getColumn(11).width = 13;
+    ws.getColumn(12).width = 13;
+
+    wb.xlsx.writeBuffer().then(function (buffer) {
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Шаблон_MIN_' + today.toISOString().split('T')[0] + '.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        showToast('✅ Шаблон MIN выгружен: ' + source.length + ' строк (действует по ' + dateTo + ')', 'success');
+    }).catch(function (err) {
+        console.error(err);
+        showToast('Ошибка: ' + err.message, 'error');
+    });
+}
+window.exportMinTemplate = exportMinTemplate;
+window.applySingleMinRec = applySingleMinRec;
+
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 document.addEventListener('DOMContentLoaded', function() {
-        // ⚡ ПУНКТ 5: инициализируем кэш DOM
+    // ⚡ ПУНКТ 5: инициализируем кэш DOM
     initDomCache();
-    
+
     // 🆕 v2.6: восстанавливаем мультивыбор подотделов
     if (appState.selectedSubdepartments && appState.selectedSubdepartments.length) {
         appState.selectedSubdepartments.forEach(s => selectedSubdepartments.add(s));
     }
-    
+
     if (!appState.alertsEnabled) {
         alertsEnabled = false;
         document.getElementById('alertToggleBtn').textContent = '🔔 Включить';
         document.getElementById('alertToggleBtn').style.background = 'rgba(255,255,255,0.3)';
     }
-    
+
     document.getElementById('helpToggleBtn').addEventListener('click', () => toggleHelpModal(true));
     document.getElementById('helpModalClose').addEventListener('click', () => toggleHelpModal(false));
     document.getElementById('helpModal').addEventListener('click', function(e) {
         if (e.target === this) toggleHelpModal(false);
     });
-    
+
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') toggleHelpModal(false);
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -7220,33 +8069,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
+
+    // 🆕 Вкладки: Таблица / Аналитика / Аномалии
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             switchTab(this.dataset.tab);
         });
     });
-    
+
     document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
     document.getElementById('alertToggleBtn').addEventListener('click', toggleAlerts);
-    
+
     const leftPanel = document.getElementById('leftPanel');
-    document.getElementById('collapsePanelBtn').addEventListener('click', () => { 
-        leftPanel.classList.add('collapsed'); 
+    document.getElementById('collapsePanelBtn').addEventListener('click', () => {
+        leftPanel.classList.add('collapsed');
         saveState();
     });
-    document.getElementById('expandPanelBtnGlobal').addEventListener('click', () => { 
-        leftPanel.classList.remove('collapsed'); 
+    document.getElementById('expandPanelBtnGlobal').addEventListener('click', () => {
+        leftPanel.classList.remove('collapsed');
         saveState();
     });
-    
-    document.getElementById('autoLoadFolderBtn').addEventListener('click', () => selectFolder());
-    document.getElementById('autoLoadResultHeader').addEventListener('click', () => toggleAutoLoadResult());
-    
+
+    // Сворачивание/разворачивание панели результатов автозагрузки
+    const alHeader = document.getElementById('autoLoadResultHeader');
+    if (alHeader) {
+        alHeader.addEventListener('click', () => toggleAutoLoadResult());
+    }
+
+    // 🆕 Переключение онлайн-режима и экспорт изменений
     document.getElementById('toggleModeBtn').addEventListener('click', () => toggleMode());
     document.getElementById('exportChangesBtn').addEventListener('click', () => exportChanges());
+
     document.getElementById('resetChangesBtn').addEventListener('click', () => resetAllChanges());
-    
     document.getElementById('filterAllBtn').addEventListener('click', () => applyQuickFilter('all'));
     document.getElementById('filterUtoBtn').addEventListener('click', () => applyQuickFilter('uto'));
     document.getElementById('filterBestBtn').addEventListener('click', () => applyQuickFilter('best'));
@@ -7389,6 +8243,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById('scanAlertsBtn').addEventListener('click', scanAlerts);
+    // 🆕 v2.10: вкладка «МИНЫ»
+    restoreMinSettings();
+    document.getElementById('computeMinBtn').addEventListener('click', computeMinRecommendations);
+    document.getElementById('applyAllMinBtn').addEventListener('click', applyAllMinRecommendations);
+    document.getElementById('exportMinTemplateBtn').addEventListener('click', exportMinTemplate);
+    // настройки живут в левой панели (lp-инпуты), их слушатели ниже
+
+
+    // 🆕 v2.10: настройки рекомендаций в таблице (левая панель)
+    initMinSettingsUI();
+
+    // 🆕 v2.10: настройки рекомендаций на вкладке МИНЫ
+    ['minP441','minD500','minD500Pri','minSeason'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', readMinSettings);
+    });
+    const minPeakChk = document.getElementById('minPeak');
+    if (minPeakChk) minPeakChk.addEventListener('change', readMinSettings);
     document.getElementById('exportAllAlertsBtn').addEventListener('click', exportAllAlerts);
     document.getElementById('suggestFixesBtn').addEventListener('click', suggestFixes);
     document.querySelectorAll('.error-filter').forEach(cb => {
@@ -7410,7 +8282,18 @@ document.addEventListener('DOMContentLoaded', function() {
     window.copyToClipboard = copyToClipboard;
     window.applyQuickFilter = applyQuickFilter;
     window.clearArticleFilter = clearArticleFilter;
-    
+            
+    // 🆕 v2.9: подключение кнопки автозагрузки из папки (обработчик потерялся в прошлых версиях)
+    const folderBtn = document.getElementById('autoLoadFolderBtn');
+    if (folderBtn) {
+        folderBtn.addEventListener('click', function() {
+            try { selectFolder(); }
+            catch (err) { showToast('Ошибка открытия папки: ' + err.message, 'error'); console.error(err); }
+        });
+    } else {
+        console.warn('⚠ Кнопка autoLoadFolderBtn не найдена в разметке');
+    }
+
     if (appState.leftPanelCollapsed) {
         leftPanel.classList.add('collapsed');
     }
@@ -7427,7 +8310,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('transitMaxInput').value = appState.transitMax;
         updateRangeLabels();
     }
-    
+   
     updateRangeLabels();
     buildCascade();
     renderFullTableWithFilter();
