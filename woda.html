@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Расчет коммунальных услуг</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --bg: #ecf0f1;
+            --card: #ffffff;
+            --text: #333;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            align-self: flex-start;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 500; }
+        #currentDateDisplay { font-size: 0.8rem; opacity: 0.8; }
+
+        .tabs {
+            display: flex;
+            background: var(--secondary);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 10px;
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.3s;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 15px;
+            animation: fadeIn 0.4s;
+        }
+
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .form-group { margin-bottom: 12px; }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+
+        input[type="number"], input[type="date"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 30px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .hint {
+            font-size: 0.7rem;
+            color: #95a5a6;
+            margin-top: 3px;
+            font-weight: 400;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            color: var(--primary);
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 4px;
+            margin-top: 18px;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: 0.2s;
+            margin-top: 15px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active { transform: scale(0.98); }
+        .btn:hover { background: #2980b9; }
+
+        .btn-danger {
+            background: var(--danger);
+            padding: 6px 12px;
+            width: auto;
+            font-size: 0.75rem;
+            margin: 0;
+        }
+        .btn-danger:hover { background: #c0392b; }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid var(--success);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result-box h2 {
+            margin: 0 0 8px 0;
+            color: var(--secondary);
+            font-size: 1rem;
+        }
+
+        .total-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .history-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-info { flex: 1; min-width: 150px; }
+        .history-info h4 { margin: 0 0 4px 0; color: var(--primary); font-size: 0.85rem; }
+        .history-info p { margin: 0; font-size: 0.75rem; color: #7f8c8d; }
+        .history-total { font-size: 1.1rem; font-weight: 700; color: var(--success); }
+        .history-actions { display: flex; gap: 8px; align-items: center; }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            padding: 4px 0;
+            border-bottom: 1px dashed #eee;
+            gap: 10px;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #555; }
+        .detail-value { font-weight: 600; text-align: right; white-space: nowrap; }
+
+        .alert {
+            background: #fdebd0;
+            color: #d35400;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.78rem;
+            margin-bottom: 12px;
+            border-left: 4px solid #e67e22;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 5px; }
+            .container { border-radius: 8px; }
+            header { padding: 12px 15px; }
+            header h1 { font-size: 1rem; }
+            #currentDateDisplay { font-size: 0.7rem; }
+            .tab-btn { padding: 10px 6px; font-size: 0.75rem; min-width: 70px; }
+            .tab-content { padding: 12px; }
+            .grid-2 { grid-template-columns: 1fr; gap: 8px; }
+            label { font-size: 0.75rem; }
+            input[type="number"], select { padding: 9px 10px; font-size: 0.9rem; }
+            .section-title { font-size: 0.85rem; margin-top: 14px; }
+            .total-amount { font-size: 1.7rem; }
+            .history-item { flex-direction: column; align-items: stretch; }
+            .history-total { font-size: 1rem; text-align: right; }
+            .history-actions { justify-content: flex-end; }
+            .detail-row { font-size: 0.75rem; }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .grid-2 { gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🏠 Коммунальный расчет</h1>
+        <span id="currentDateDisplay"></span>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('calc', this)">Расчет</button>
+        <button class="tab-btn" onclick="switchTab('settings', this)">Тарифы</button>
+        <button class="tab-btn" onclick="switchTab('history', this)">История</button>
+    </div>
+
+    <!-- ВКЛАДКА РАСЧЕТА -->
+    <div id="calc" class="tab-content active">
+        <div class="alert">
+            ⚠️ <strong>Внимание:</strong> Показания вводятся целиком (как на табло). Разница делится на 1000 и <strong>округляется до десятых</strong> (например, 1222 → 1.2 куб.м).<br>
+            Итоговая сумма округляется до 5 рублей в большую сторону (93 → 95).
+        </div>
+
+        <div class="form-group">
+            <label>Месяц расчета</label>
+            <select id="calcMonth">
+                <option value="1">Январь (коэф. 0.92)</option>
+                <option value="2">Февраль (коэф. 0.88)</option>
+                <option value="3">Март (коэф. 0.80)</option>
+                <option value="4">Апрель (коэф. 0.74)</option>
+                <option value="5">Май (коэф. 0.70)</option>
+                <option value="9">Сентябрь (коэф. 0.70)</option>
+                <option value="10">Октябрь (коэф. 0.75)</option>
+                <option value="11">Ноябрь (коэф. 0.80)</option>
+                <option value="12">Декабрь (коэф. 0.88)</option>
+            </select>
+        </div>
+
+        <div class="section-title">Холодная вода (ХВ)</div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Старые показания ХВ</label>
+                <input type="number" id="oldHW" placeholder="Например: 81118" inputmode="numeric">
+                <div class="hint">Полное число с табло</div>
+            </div>
+            <div class="form-group">
+                <label>Новые показания ХВ</label>
+                <input type="number" id="newHW" placeholder="Например: 82340" inputmode="numeric">
+                <div class="hint">Полное число с табло</div>
+            </div>
+        </div>
+
+        <div class="section-title">Горячая вода (ГВ)</div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Старые показания ГВ</label>
+                <input type="number" id="oldGW" placeholder="Например: 91405" inputmode="numeric">
+                <div class="hint">Полное число с табло</div>
+            </div>
+            <div class="form-group">
+                <label>Новые показания ГВ</label>
+                <input type="number" id="newGW" placeholder="Например: 93287" inputmode="numeric">
+                <div class="hint">Полное число с табло</div>
+            </div>
+        </div>
+
+        <div class="section-title">Электроэнергия (Свет)</div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Старые показания Свет</label>
+                <input type="number" id="oldLight" placeholder="Например: 73283" inputmode="numeric">
+                <div class="hint">Полное число с табло</div>
+            </div>
+            <div class="form-group">
+                <label>Новые показания Свет</label>
+                <input type="number" id="newLight" placeholder="Например: 73403" inputmode="numeric">
+                <div class="hint">Полное число с табло</div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="calculate()">Рассчитать и сохранить</button>
+
+        <div id="resultBox" class="result-box" style="display: none;">
+            <h2>Итоговая сумма к оплате</h2>
+            <div class="total-amount" id="totalAmount">0 ₽</div>
+            <div id="calculationDetails" style="text-align: left; margin-top: 12px; font-size: 0.85rem; color: #555;"></div>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА НАСТРОЕК -->
+    <div id="settings" class="tab-content">
+        <h3 style="margin-top:0; font-size:1rem;">Настройка тарифов (руб.)</h3>
+        <p style="font-size: 0.8rem; color: #7f8c8d;">Изменения сохраняются в браузере.</p>
+        
+        <div class="grid-2">
+            <div class="form-group">
+                <label>ХВ (Холодная вода)</label>
+                <input type="number" id="tariffHW" value="48" step="0.01" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>ХВ отведение</label>
+                <input type="number" id="tariffHWDisposal" value="45" step="0.01" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>ГВ (Горячая вода)</label>
+                <input type="number" id="tariffGW" value="48" step="0.01" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>ГВ отведение</label>
+                <input type="number" id="tariffGWDisposal" value="50" step="0.01" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>Свет (Электроэнергия)</label>
+                <input type="number" id="tariffLight" value="1.9" step="0.01" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>ГВ подогрев (Тариф)</label>
+                <input type="number" id="tariffGWHeat" value="2350" step="0.01" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>Отопление (Тариф)</label>
+                <input type="number" id="tariffHeating" value="2375" step="0.01" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>Коэф. подогрева ГВ</label>
+                <input type="number" id="coefGWHeat" value="0.063" step="0.001" inputmode="decimal">
+            </div>
+        </div>
+        <button class="btn" onclick="saveSettings()" style="background: var(--success);">Сохранить тарифы</button>
+    </div>
+
+    <!-- ВКЛАДКА ИСТОРИИ -->
+    <div id="history" class="tab-content">
+        <h3 style="margin-top:0; font-size:1rem;">История расчетов</h3>
+        <div id="historyList">
+            <p style="color: #7f8c8d; text-align: center; font-size: 0.85rem;">Пока нет сохраненных расчетов.</p>
+        </div>
+        <button class="btn btn-danger" onclick="clearHistory()" style="margin-top: 15px; width: 100%; padding: 10px;">Очистить всю историю</button>
+    </div>
+</div>
+
+<script>
+    // --- БАЗОВЫЕ НАСТРОЙКИ ---
+    const DEFAULT_TARIFFS = {
+        hw: 48,
+        hwDisposal: 45,
+        gw: 48,
+        gwDisposal: 50,
+        light: 1.9,
+        gwHeat: 2350,
+        heating: 2375,
+        coefGWHeat: 0.063
+    };
+
+    const SEASONAL_COEFS = {
+        1: 0.92, 2: 0.88, 3: 0.80, 4: 0.74, 5: 0.70,
+        9: 0.70, 10: 0.75, 11: 0.80, 12: 0.88
+    };
+
+    // Последние 3 цифры счётчика — дробная часть
+    const COUNTER_DIVISOR = 1000;
+
+    let tariffs = JSON.parse(localStorage.getItem('utilityTariffs')) || { ...DEFAULT_TARIFFS };
+    let history = JSON.parse(localStorage.getItem('utilityHistory')) || [];
+
+    // --- ИНИЦИАЛИЗАЦИЯ ---
+    document.addEventListener('DOMContentLoaded', () => {
+        updateDateDisplay();
+        loadSettingsToForm();
+        renderHistory();
+    });
+
+    function updateDateDisplay() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDateDisplay').textContent = now.toLocaleDateString('ru-RU', options);
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (btn) btn.classList.add('active');
+    }
+
+    // Округление до 5 рублей вверх
+    function roundToFiveUp(num) {
+        if (num <= 0) return 0;
+        return Math.ceil(num / 5) * 5;
+    }
+
+    // Округление объёма до десятых (1.222 → 1.2)
+    function roundVolume(rawUnits) {
+        const cubic = rawUnits / COUNTER_DIVISOR;        // 1222 / 1000 = 1.222
+        return Math.round(cubic * 10) / 10;              // → 1.2
+    }
+
+    // --- РАСЧЕТ ---
+    function calculate() {
+        const month = parseInt(document.getElementById('calcMonth').value);
+
+        // Вводим полные показания (как на табло)
+        const oldHW = parseInt(document.getElementById('oldHW').value) || 0;
+        const newHW = parseInt(document.getElementById('newHW').value) || 0;
+        const oldGW = parseInt(document.getElementById('oldGW').value) || 0;
+        const newGW = parseInt(document.getElementById('newGW').value) || 0;
+        const oldLight = parseInt(document.getElementById('oldLight').value) || 0;
+        const newLight = parseInt(document.getElementById('newLight').value) || 0;
+
+        if (newHW < oldHW || newGW < oldGW || newLight < oldLight) {
+            alert("Ошибка: Новые показания не могут быть меньше старых!");
+            return;
+        }
+
+        // Разница в единицах счётчика → куб.м / кВт·ч с округлением до десятых
+        const volHW    = roundVolume(newHW - oldHW);    // 1222 → 1.2
+        const volGW    = roundVolume(newGW - oldGW);
+        const volLight = roundVolume(newLight - oldLight);
+
+        const seasonCoef = SEASONAL_COEFS[month] || 1;
+
+        // --- РАСЧЕТ СТОИМОСТИ ---
+        const costHW         = volHW * tariffs.hw;
+        const costHWDisposal = volHW * tariffs.hwDisposal;
+        const costGW         = volGW * tariffs.gw;
+        const costGWDisposal = volGW * tariffs.gwDisposal;
+        // Подогрев ГВ: тариф 2350 × коэф 0.063 × объём ГВ
+        const costGWHeat     = tariffs.gwHeat * tariffs.coefGWHeat * volGW;
+        const costLight      = volLight * tariffs.light;
+        const costHeating    = seasonCoef * tariffs.heating;
+
+        const totalRaw = costHW + costHWDisposal + costGW + costGWDisposal + costGWHeat + costLight + costHeating;
+        const totalRounded = roundToFiveUp(totalRaw);
+
+        // Отображение
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('totalAmount').textContent = totalRounded + ' ₽';
+
+        const detailsDiv = document.getElementById('calculationDetails');
+        detailsDiv.innerHTML = `
+            <div class="detail-row"><span class="detail-label">ХВ (${volHW.toFixed(1)} куб.м):</span> <span class="detail-value">${costHW.toFixed(2)} ₽</span></div>
+            <div class="detail-row"><span class="detail-label">ХВ отведение (${volHW.toFixed(1)} куб.м):</span> <span class="detail-value">${costHWDisposal.toFixed(2)} ₽</span></div>
+            <div class="detail-row"><span class="detail-label">ГВ (${volGW.toFixed(1)} куб.м):</span> <span class="detail-value">${costGW.toFixed(2)} ₽</span></div>
+            <div class="detail-row"><span class="detail-label">ГВ отведение (${volGW.toFixed(1)} куб.м):</span> <span class="detail-value">${costGWDisposal.toFixed(2)} ₽</span></div>
+            <div class="detail-row"><span class="detail-label">Подогрев ГВ (${tariffs.gwHeat}×${tariffs.coefGWHeat}×${volGW.toFixed(1)}):</span> <span class="detail-value">${costGWHeat.toFixed(2)} ₽</span></div>
+            <div class="detail-row"><span class="detail-label">Свет (${volLight.toFixed(1)} кВт·ч):</span> <span class="detail-value">${costLight.toFixed(2)} ₽</span></div>
+            <div class="detail-row"><span class="detail-label">Отопление (коэф. ${seasonCoef}):</span> <span class="detail-value">${costHeating.toFixed(2)} ₽</span></div>
+            <hr style="border:0; border-top:1px solid #ccc; margin: 8px 0;">
+            <div class="detail-row"><span class="detail-label">Сумма до округления:</span> <span class="detail-value">${totalRaw.toFixed(2)} ₽</span></div>
+            <div class="detail-row"><span class="detail-label">Итого (округлено до 5):</span> <span class="detail-value" style="color: var(--success);">${totalRounded} ₽</span></div>
+        `;
+
+        // Сохранение в историю
+        const record = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString('ru-RU'),
+            month: month,
+            total: totalRounded,
+            details: {
+                volHW, volGW, volLight,
+                costHW, costGW, costLight, costGWHeat, costHeating
+            }
+        };
+
+        history.unshift(record);
+        localStorage.setItem('utilityHistory', JSON.stringify(history));
+        renderHistory();
+    }
+
+    // --- НАСТРОЙКИ ---
+    function loadSettingsToForm() {
+        document.getElementById('tariffHW').value = tariffs.hw;
+        document.getElementById('tariffHWDisposal').value = tariffs.hwDisposal;
+        document.getElementById('tariffGW').value = tariffs.gw;
+        document.getElementById('tariffGWDisposal').value = tariffs.gwDisposal;
+        document.getElementById('tariffLight').value = tariffs.light;
+        document.getElementById('tariffGWHeat').value = tariffs.gwHeat;
+        document.getElementById('tariffHeating').value = tariffs.heating;
+        document.getElementById('coefGWHeat').value = tariffs.coefGWHeat;
+    }
+
+    function saveSettings() {
+        tariffs.hw = parseFloat(document.getElementById('tariffHW').value) || 0;
+        tariffs.hwDisposal = parseFloat(document.getElementById('tariffHWDisposal').value) || 0;
+        tariffs.gw = parseFloat(document.getElementById('tariffGW').value) || 0;
+        tariffs.gwDisposal = parseFloat(document.getElementById('tariffGWDisposal').value) || 0;
+        tariffs.light = parseFloat(document.getElementById('tariffLight').value) || 0;
+        tariffs.gwHeat = parseFloat(document.getElementById('tariffGWHeat').value) || 0;
+        tariffs.heating = parseFloat(document.getElementById('tariffHeating').value) || 0;
+        tariffs.coefGWHeat = parseFloat(document.getElementById('coefGWHeat').value) || 0;
+
+        localStorage.setItem('utilityTariffs', JSON.stringify(tariffs));
+        alert('Тарифы успешно сохранены!');
+    }
+
+    // --- ИСТОРИЯ ---
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        if (history.length === 0) {
+            list.innerHTML = '<p style="color: #7f8c8d; text-align: center; font-size: 0.85rem;">Пока нет сохраненных расчетов.</p>';
+            return;
+        }
+
+        list.innerHTML = history.map(record => `
+            <div class="history-item">
+                <div class="history-info">
+                    <h4>Расчет от ${record.date}</h4>
+                    <p>Месяц: ${getMonthName(record.month)} | Вода: ${(record.details.volHW + record.details.volGW).toFixed(1)} куб.м | Свет: ${record.details.volLight.toFixed(1)} кВт·ч</p>
+                </div>
+                <div class="history-actions">
+                    <div class="history-total">${record.total} ₽</div>
+                    <button class="btn btn-danger" onclick="deleteHistoryItem(${record.id})">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function deleteHistoryItem(id) {
+        if (confirm('Удалить эту запись из истории?')) {
+            history = history.filter(item => item.id !== id);
+            localStorage.setItem('utilityHistory', JSON.stringify(history));
+            renderHistory();
+        }
+    }
+
+    function clearHistory() {
+        if (confirm('Вы уверены, что хотите полностью очистить историю расчетов?')) {
+            history = [];
+            localStorage.setItem('utilityHistory', JSON.stringify(history));
+            renderHistory();
+        }
+    }
+
+    function getMonthName(monthNum) {
+        const months = ['', 'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+        return months[monthNum] || '';
+    }
+</script>
+
+</body>
+</html>
