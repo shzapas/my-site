@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>STOCKWISE 2.10 — авто-МИНЫ и автозагрузка</title>
+    <title>STOCKWISE 2.11 — единый движок MIN</title>
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){
             m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -1315,7 +1315,7 @@
 <body>
 <div class="app-container" id="appContainer">
     <div class="header">
-        <h1>📊 STOCKWISE <small>Умный анализ запасов</small> <span style="font-size:0.55em;background:#1B5E20;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle">v2.10 · авто-МИНЫ</span></h1>
+        <h1>📊 STOCKWISE <small>Умный анализ запасов</small> <span style="font-size:0.55em;background:#1B5E20;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle">v2.11 · единый движок MIN</span></h1>
         <div class="header-controls">
             <button id="helpToggleBtn" class="help-toggle-btn">❓ Инструкция</button>
             <button id="themeToggleBtn" class="theme-toggle-btn">🌙 Тёмная</button>
@@ -1599,7 +1599,7 @@
                 <div id="quickFilterStatus" class="quick-filter-status">🔍 Показаны все товары</div>
                 
                 <div class="info-note" style="color:#1a5e1a;">Выберите подотдел для полного списка</div>
-                <div style="margin-top:10px; padding:9px 10px; background:rgba(255,140,0,0.08); border-radius:10px; border:1px solid rgba(255,140,0,0.2);">
+                <div style="margin-top:10px; padding:9px 10px; background:rgba(255,140,0,0.08); border-radius:10px; border:1px solid rgba(255,140,0,0.2); display:none;">
                     <div style="font-weight:700; font-size:0.6rem; color:var(--text-secondary); margin-bottom:5px;">🎯 Настройки рекомендаций MIN</div>
                     <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
                         <label style="font-size:0.55rem; flex:1;">MIN 441: % полки</label>
@@ -1994,7 +1994,7 @@
                     <div style="font-weight:700; font-size:0.75rem; color:var(--text-secondary); margin-bottom:6px;">🎯 Настройки рекомендаций MIN</div>
                     <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
                         <label style="font-size:0.65rem;">MIN 500: дней
-                            <input type="number" id="minD500" value="24" min="0" max="365" style="width:58px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                            <input type="number" id="minD500" value="14" min="0" max="365" style="width:58px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
                         </label>
                         <label style="font-size:0.65rem; color:#827717;">20/80 и BEST: дней
                             <input type="number" id="minD500Pri" value="22" min="0" max="365" style="width:58px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
@@ -3615,102 +3615,73 @@ function calculateRow(gammaItem) {
         "Стиль": stil
     };
 }
-// ==================== 🆕 v3.0: ЯДРО РАСЧЕТА РЕКОМЕНДУЕМЫХ MIN ====================
+// ==================== 🆕 v2.11: ЕДИНЫЙ ДВИЖОК MIN ====================
+// Табличные колонки «Рекомендуемый MIN / Статус MIN» считаются ТОЙ ЖЕ формулой,
+// что и вкадка «МИНЫ» (computeMinRecommendations): настройки minCalcSettings,
+// недельные продажи / 7, пики × peakK, свои дни для 20/80 и Бест.
 function calculateRecommendedMin(params) {
     const {
-        store, artikul, vmesimost, otgruzhenoSred,
-        srokPostavki, activeMin441, activeMin500, activeMin401,
-        novinka, zapasDn
+        vmesimost, otgruzhenoSred,
+        activeMin441, activeMin500
     } = params;
-    
-    // 1. Парсим срок поставки в днях
-    let srokDays = 14; // по умолчанию
-    const srokRaw = String(srokPostavki || '').trim();
-    if (srokRaw) {
-        const match = srokRaw.match(/(\d+)/);
-        if (match) srokDays = parseInt(match[1], 10);
-    }
-    
-    // Приоритетные статусы (20/80, BEST): свой срок запаса
-    const priority = params.isBest || params.is2080 || false;
-    const priorityDays = priority ? (MIN_SETTINGS.priDays || MIN_SETTINGS.stockDays) : MIN_SETTINGS.stockDays;
 
-    // 2. Получаем "эффективные" продажи (с учётом пиков или нет)
-    let effectiveSales = otgruzhenoSred;
-    if (MIN_SETTINGS.usePeakSales && cachedData.fullData.length) {
-        // Ищем пиковые продажи по этому товару в других магазинах
-        const peakSales = findPeakSales(artikul);
-        if (peakSales > effectiveSales) effectiveSales = peakSales;
+    const st = (typeof minCalcSettings !== 'undefined' && minCalcSettings)
+        ? minCalcSettings
+        : { p441: 90, d500: 14, d500Pri: 22, season: 1, peak: true, peakK: 1.2 };
+
+    const dayAvg = toNumber(otgruzhenoSred, 0) / 7;
+    const isBest = params.isBest || false;
+    const is2080 = params.is2080 || false;
+    const priority = isBest || is2080;
+
+    const rec441 = vmesimost > 0 ? Math.floor(vmesimost * st.p441 / 100) : 0;
+    const days = (priority ? st.d500Pri : st.d500) * (st.season || 1);
+    const rec500 = dayAvg > 0 ? Math.ceil(dayAvg * days * (st.peak ? st.peakK : 1)) : 0;
+
+    let type, recommended, reason;
+    if (dayAvg <= 0) {
+        type = '500'; recommended = 0;
+        reason = 'нет продаж — снять MIN';
+    } else if (rec441 > 0 && rec500 <= rec441) {
+        type = '441'; recommended = rec441;
+        reason = 'MIN 441 = вместимость ' + vmesimost + ' шт × ' + st.p441 + '%';
+    } else {
+        type = '500'; recommended = rec500;
+        reason = dayAvg.toFixed(1) + ' шт/дн × ' + Math.round(days) + ' дн' + (priority ? ' (20/80/Бест)' : '') + (st.peak ? ' × пик ' + st.peakK : '');
     }
-    
-    // 3. MIN 441 — заполнение полки
-    const min441 = Math.round(vmesimost * (MIN_SETTINGS.fillPercent / 100));
-    
-    // 4. MIN 500 — запас на дни поставки
-    const min500 = Math.round(effectiveSales * priorityDays * MIN_SETTINGS.seasonalCoeff);
-    
-    // 5. Рекомендуемый = МАКС из двух
-    let recommended = Math.max(min441, min500);
-    
-    // 6. Спец-обработка для новинок без продаж
-    const isNew = novinka && novinka !== '' && novinka !== '0';
-    if (isNew && otgruzhenoSred === 0 && vmesimost > 0) {
-        recommended = Math.round(vmesimost * 0.5); // 50% полки для новинок
-    }
-    
-    // 7. Округляем и ограничиваем
-    if (recommended < 0) recommended = 0;
-    if (vmesimost > 0 && recommended > vmesimost) {
-        // MIN не может быть больше полки (для 441), но для 500 может
-        // Ограничиваем только если min441 доминировал
-        if (min441 >= min500) recommended = vmesimost;
-    }
-    
-    // 8. Текущий MIN (максимум из активных)
+
     const current441 = activeMin441?.count || 0;
     const current500 = activeMin500?.count || 0;
-    const currentMin = Math.max(current441, current500);
-    
-    // 9. Определяем статус
-    let status = '⚪ Нет данных';
-    let statusCode = 'none';
-    
+    const currentMin = (type === '441') ? current441 : current500;
+
+    let status, statusCode;
     if (recommended === 0) {
-        status = '⚪ Не требуется';
+        status = '⚪ Не требуется (снять MIN)';
         statusCode = 'none';
     } else if (currentMin === 0) {
         status = '🟢 Установить';
         statusCode = 'set';
-    } else if (currentMin < recommended * MIN_SETTINGS.minThreshold) {
+    } else if (recommended > currentMin) {
         status = '🟡 Повысить';
         statusCode = 'raise';
-    } else if (currentMin > recommended * MIN_SETTINGS.maxThreshold) {
+    } else if (recommended < currentMin) {
         status = '🔴 Понизить';
         statusCode = 'lower';
     } else {
         status = '✅ Норма';
         statusCode = 'ok';
     }
-    
-    // 10. Формируем причину
-    let reason = '';
-    if (min500 > min441) {
-        reason = `MIN 500 = ${effectiveSales.toFixed(1)} шт/дн × ${priorityDays} дн${priority ? ' (20/80/Бест)' : ''}`;
-    } else if (min441 > 0) {
-        reason = `MIN 441 = ${vmesimost} шт × ${MIN_SETTINGS.fillPercent}%`;
-    }
-    
+
     return {
         recommended,
-        min441,
-        min500,
+        min441: rec441,
+        min500: rec500,
         currentMin,
         status,
         statusCode,
         reason,
-        srokDays,
-        effectiveSales,
-        isNew
+        effectiveSales: dayAvg,
+        isNew: false
     };
 }
 
@@ -7747,7 +7718,7 @@ function initAlertCardHandlers() {
 }
 
 // ==================== v2.10: РАСЧЁТ РЕКОМЕНДАЦИЙ MIN ====================
-const MIN_CALC_DEFAULTS = { p441: 90, d500: 24, d500Pri: 22, season: 1, peak: true, peakK: 1.2 };
+const MIN_CALC_DEFAULTS = { p441: 90, d500: 14, d500Pri: 22, season: 1, peak: true, peakK: 1.2 };
 let minCalcSettings = Object.assign({}, MIN_CALC_DEFAULTS);
 let minCalcResults = [];
 
