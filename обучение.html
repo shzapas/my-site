@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STOCKWISE · Обучение работе с порталом</title>
+  <title>STOCKWISE 2.11 · Обучение работе с порталом</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -34,6 +34,7 @@
     
     .slide-title { font-size: 24px; font-weight: 600; color: #003057; margin-bottom: 18px; border-left: 8px solid #ffb81c; padding-left: 16px; }
     .slide-title i { margin-right: 10px; }
+    .slide-title .ver { font-size: 14px; background: #ffb81c; color: #003057; border-radius: 20px; padding: 2px 12px; vertical-align: middle; font-weight: 600; }
     
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
@@ -95,13 +96,6 @@
     .import-status.success { background: #27ae60; }
     .import-status.error { background: #e74c3c; }
     
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; }
-    .modal.active { display: flex; }
-    .modal-content { background: white; border-radius: 24px; padding: 32px; max-width: 600px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto; }
-    .modal-content h3 { color: #003057; margin-bottom: 16px; font-size: 20px; }
-    .modal-content .close-btn { float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: #4a5b6f; }
-    .modal-content .close-btn:hover { color: #003057; }
-    
     .error-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     .error-filter .tag { background: #f0f4fe; border: 1px solid #d0d9e4; border-radius: 20px; padding: 4px 14px; font-size: 13px; cursor: pointer; transition: 0.15s; }
     .error-filter .tag:hover { background: #dce6f5; border-color: #003057; }
@@ -148,6 +142,17 @@
     .contact-card .info { flex: 1; }
     .contact-card .info .label { font-size: 11px; color: #4a5b6f; text-transform: uppercase; }
     .contact-card .info .value { font-weight: 500; color: #003057; font-size: 14px; }
+
+    /* ===== 2.11 ===== */
+    .kbd { display: inline-block; background: #003057; color: white; border-radius: 8px; padding: 2px 10px; font-size: 12px; font-weight: 600; font-family: Consolas, monospace; box-shadow: 0 2px 0 #001a30; }
+    .formula-box { background: #003057; color: white; border-radius: 16px; padding: 14px 18px; margin-top: 10px; font-size: 14px; line-height: 1.7; }
+    .formula-box strong { color: #ffb81c; }
+    .status-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .status-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 4px 14px; font-size: 13px; font-weight: 600; }
+    .status-chip.green { background: #d5f5e3; color: #1e8449; }
+    .status-chip.yellow { background: #fef9e7; color: #b9770e; }
+    .status-chip.red { background: #fdedec; color: #c0392b; }
+    .status-chip.white { background: white; color: #7f8c8d; border: 1px dashed #d0d9e4; }
     
     @media (max-width: 780px) { 
       .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } 
@@ -166,7 +171,7 @@
   <div class="header">
     <div class="logo">
       <i class="fas fa-chart-line"></i>
-      <span>STOCKWISE <small>· Обучение</small></span>
+      <span>STOCKWISE <small>· Обучение · v2.11</small></span>
     </div>
     <div style="color: white; font-weight: 300; font-size: 14px; opacity: 0.9;">
       <i class="fas fa-graduation-cap"></i> Работа с порталом
@@ -187,13 +192,13 @@
   <!-- ===== КОНТЕЙНЕР СЛАЙДОВ ===== -->
   <div class="slide-container" id="slideContainer">
     
-    <!-- ===== СЛАЙД 1: ТИТУЛЬНЫЙ ===== -->
-    <div class="slide active" data-slide="0">
+    <!-- ===== 1. ТИТУЛЬНЫЙ ===== -->
+    <div class="slide active">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center;">
         <div style="background: #003057; border-radius: 60px; padding: 20px 40px; display: inline-block; margin-bottom: 24px;">
           <i class="fas fa-chart-line" style="font-size: 56px; color: #ffb81c;"></i>
         </div>
-        <h1 style="font-size: 44px; color: #003057; margin-bottom: 8px;">STOCKWISE</h1>
+        <h1 style="font-size: 44px; color: #003057; margin-bottom: 8px;">STOCKWISE 2.11</h1>
         <p style="font-size: 24px; font-weight: 300; color: #1f2a3a; margin-bottom: 8px;">Обучение работе с порталом</p>
         <div style="margin-top: 32px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
           <span class="btn btn-primary" onclick="goToSlide(1)"><i class="fas fa-play"></i> Начать</span>
@@ -223,17 +228,69 @@
         </div>
 
         <div style="margin-top: 24px; color: #4a5b6f; font-size: 14px;">
-          <i class="fas fa-info-circle"></i> Для менеджеров товарного запаса
+          <i class="fas fa-info-circle"></i> Для менеджеров товарного запаса · Полный курс по всем вкладкам портала
         </div>
       </div>
     </div>
 
-    <!-- ===== СЛАЙД 2: СТРУКТУРА ПОРТАЛА ===== -->
-    <div class="slide" data-slide="1">
+    <!-- ===== 2. ЗАЧЕМ STOCKWISE ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-lightbulb"></i>Зачем нужен STOCKWISE</div>
+      <div class="grid-2">
+        <div class="stat-card" style="border-left: 4px solid #e74c3c;">
+          <span class="label">😩 Как было раньше</span>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="padding: 4px 0;">❌ 10 выгрузок из BI в Excel вручную</li>
+              <li style="padding: 4px 0;">❌ Сводные таблицы, ВПР, копипаст</li>
+              <li style="padding: 4px 0;">❌ Часы работы, ошибки в формулах</li>
+              <li style="padding: 4px 0;">❌ Данные устаревают к обеду</li>
+            </ul>
+          </div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #27ae60;">
+          <span class="label">🚀 Как стало с STOCKWISE</span>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="padding: 4px 0;">✅ Отчёты в папку — система сама всё распознаёт</li>
+              <li style="padding: 4px 0;">✅ Одна кнопка «ВЫЧИСЛИТЬ» — сводная таблица готова</li>
+              <li style="padding: 4px 0;">✅ Система сама находит ошибки и предлагает исправления</li>
+              <li style="padding: 4px 0;">✅ 10–15 минут в день вместо часов</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-top: 14px;">
+        <div class="stat-card" style="text-align: center;">
+          <div style="font-size: 32px;">📋</div>
+          <div class="value" style="font-size: 18px;">Анализ</div>
+          <div class="sub">Запасы, дефицит, перезапас — по всем магазинам сразу</div>
+        </div>
+        <div class="stat-card" style="text-align: center;">
+          <div style="font-size: 32px;">🎯</div>
+          <div class="value" style="font-size: 18px;">Рекомендации</div>
+          <div class="sub">Автоматический расчёт MIN 441 / MIN 500 с объяснением логики</div>
+        </div>
+        <div class="stat-card" style="text-align: center;">
+          <div style="font-size: 32px;">📤</div>
+          <div class="value" style="font-size: 18px;">Выгрузка</div>
+          <div class="sub">Готовые файлы MIN Custom и ШАБЛОН MIN — без ручного Excel</div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_main">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Скриншот главного экрана портала</span>
+        <button class="upload-btn" onclick="document.getElementById('fileMain').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileMain" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_main', 'main')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_main', 'main')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== 3. СТРУКТУРА ПОРТАЛА ===== -->
+    <div class="slide">
       <div class="slide-title"><i class="fas fa-sitemap"></i>Структура портала</div>
       <div style="margin-bottom: 16px;">
         <div class="interactive-grid" id="structureGrid">
-          <div class="interactive-item" data-target="left">
+          <div class="interactive-item">
             <div class="icon">📂</div>
             <div class="title">Левая панель</div>
             <div class="desc">10 отчётов для загрузки</div>
@@ -247,7 +304,7 @@
               • Автоминимумы, Максы, ЭКСПО, Недопоставки, Коррекции, Детали поставки
             </div>
           </div>
-          <div class="interactive-item" data-target="center">
+          <div class="interactive-item">
             <div class="icon">📋</div>
             <div class="title">Центральная часть</div>
             <div class="desc">Сводная таблица с данными</div>
@@ -261,7 +318,7 @@
               • Экспорт изменений
             </div>
           </div>
-          <div class="interactive-item" data-target="right">
+          <div class="interactive-item">
             <div class="icon">📈</div>
             <div class="title">Правая панель</div>
             <div class="desc">Аналитика и статистика</div>
@@ -279,91 +336,127 @@
           </div>
         </div>
       </div>
-      <div class="screenshot-area" id="screenshot_structure">
+      <div class="screenshot-area" id="ss_structure">
         <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Скриншот структуры портала</span>
-        <button class="upload-btn" onclick="document.getElementById('fileInput_structure').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
-        <input type="file" id="fileInput_structure" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_structure', 'structure')">
-        <div class="delete-btn" onclick="deleteScreenshot('screenshot_structure', 'structure')">✕</div>
+        <button class="upload-btn" onclick="document.getElementById('fileStructure').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileStructure" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_structure', 'structure')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_structure', 'structure')">✕</div>
       </div>
       <div class="tip"><i class="fas fa-mouse-pointer"></i> Кликните по блоку, чтобы увидеть детали</div>
     </div>
 
-    <!-- ===== СЛАЙД 3: ЗАГРУЗКА ОТЧЁТОВ ===== -->
-    <div class="slide" data-slide="2">
-      <div class="slide-title"><i class="fas fa-upload"></i>Загрузка отчётов</div>
+    <!-- ===== 4. АВТОЗАГРУЗКА ОТЧЁТОВ ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-robot"></i>Загрузка отчётов — просто положите файлы в папку <span class="ver">2.11</span></div>
       <div class="grid-2">
-        <div class="stat-card">
-          <span class="label">📂 10 отчётов</span>
-          <div class="shop-list">
-            <div class="shop-item"><span class="name">1. Гамма</span> <span class="data">Магазин → Отдел → Details</span></div>
-            <div class="shop-item"><span class="name">2. Резервы</span> <span class="data">Магазин → Отдел → Резервы</span></div>
-            <div class="shop-item"><span class="name">3. УТО</span> <span class="data">Магазин → Отдел → Перебои</span></div>
-            <div class="shop-item"><span class="name">4. БЭСТ</span> <span class="data">Регион → The Best</span></div>
-            <div class="shop-item"><span class="name">5. Автоминимумы</span> <span class="data">Магазин → Отдел → Автоминимумы</span></div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <span class="label">📂 Продолжение</span>
-          <div class="shop-list">
-            <div class="shop-item"><span class="name">6. Максы</span> <span class="data">Магазин → Отдел → Активный MAX</span></div>
-            <div class="shop-item"><span class="name">7. ЭКСПО</span> <span class="data">Магазин → Отдел → EXPO > 0</span></div>
-            <div class="shop-item"><span class="name">8. Недопоставки</span> <span class="data">Магазин → Отдел → По неделям</span></div>
-            <div class="shop-item"><span class="name">9. Коррекции</span> <span class="data">Магазин → Отдел → C1 и C3</span></div>
-            <div class="shop-item"><span class="name">10. Детали поставки</span> <span class="data">Магазин → Отдел → Детали поставок</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="screenshot-area" id="screenshot_upload">
-        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример загрузки отчётов</span>
-        <button class="upload-btn" onclick="document.getElementById('fileInput_upload').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
-        <input type="file" id="fileInput_upload" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_upload', 'upload')">
-        <div class="delete-btn" onclick="deleteScreenshot('screenshot_upload', 'upload')">✕</div>
-      </div>
-      <div class="tip"><i class="fas fa-lightbulb"></i>Как правильно назвать отчет можно узнать по клику загрузчика отчета</div>
-    </div>
-
-    <!-- ===== СЛАЙД 4: СВОДНАЯ ТАБЛИЦА ===== -->
-    <div class="slide" data-slide="3">
-      <div class="slide-title"><i class="fas fa-table"></i>Сводная таблица и фильтры</div>
-      <div class="grid-2">
-        <div class="stat-card">
-          <span class="label">📋 Сводная таблица</span>
-          <div class="value" style="font-size:18px;">Все данные в одном месте</div>
+        <div class="stat-card" style="border-left: 4px solid #27ae60;">
+          <span class="label">🚀 Автозагрузка по содержимому</span>
+          <div class="value" style="font-size:18px;">Имена файлов не важны!</div>
           <div class="sub">
-            <p>После загрузки всех отчётов:</p>
             <ul style="list-style: none; padding-left: 0; margin-top: 6px;">
-              <li style="padding: 4px 0;">✅ 32+ колонок с аналитикой</li>
-              <li style="padding: 4px 0;">✅ Данные по всем магазинам и подотделам</li>
-              <li style="padding: 4px 0;">✅ Возможность редактирования минимумов в онлайн-режиме</li>
+              <li style="padding: 4px 0;">✅ Скачиваете выгрузки из BI как обычно</li>
+              <li style="padding: 4px 0;">✅ Кладёте файлы в рабочую папку — ничего не переименовываете</li>
+              <li style="padding: 4px 0;">✅ Система сама сканирует папку и распознаёт каждый отчёт по содержимому</li>
+              <li style="padding: 4px 0;">✅ Новые файлы подхватываются автоматически</li>
             </ul>
           </div>
         </div>
         <div class="stat-card">
-          <span class="label">🔍 Фильтры</span>
-          <div class="value" style="font-size:18px;">Быстрый поиск</div>
+          <span class="label">📂 10 отчётов система распознаёт сама</span>
+          <div class="shop-list">
+            <div class="shop-item"><span class="name">Гамма · Резервы · УТО · БЭСТ</span> <span class="data">основные данные</span></div>
+            <div class="shop-item"><span class="name">Автоминимумы · Максы · ЭКСПО</span> <span class="data">минимумы и лимиты</span></div>
+            <div class="shop-item"><span class="name">Недопоставки · Коррекции</span> <span class="data">поставки</span></div>
+            <div class="shop-item"><span class="name">Детали поставки</span> <span class="data">логистика</span></div>
+          </div>
+          <div class="sub">
+            <strong>Браузеры:</strong> Chrome · Edge · Opera <span style="color:#e74c3c;">(в Firefox и Safari автозагрузка не работает — там загрузка вручную)</span>
+          </div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_autoload">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример работы автозагрузки</span>
+        <button class="upload-btn" onclick="document.getElementById('fileAutoload').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileAutoload" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_autoload', 'autoload')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_autoload', 'autoload')">✕</div>
+      </div>
+      <div class="tip"><i class="fas fa-lightbulb"></i> Переименовывать файлы больше не нужно — скачали из BI, положили в папку, система сделала всё сама. Хотите проверить, какой файл распознался? Кликните по загрузчику отчёта — увидите подсказку.</div>
+    </div>
+
+    <!-- ===== 5. ВКЛАДКИ ПОРТАЛА ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-folder-open"></i>Четыре вкладки — весь рабочий инструмент <span class="ver">2.11</span></div>
+      <div class="grid-4">
+        <div class="stat-card" style="border-top: 4px solid #003057;">
+          <span class="label">📋 Таблица <span class="kbd" style="margin-left:4px;">F2</span></span>
+          <div class="value" style="font-size:16px;">Сводные данные</div>
+          <div class="sub">Все магазины и подотделы после расчёта. Редактирование минимумов, поиск, фильтры, экспорт.</div>
+        </div>
+        <div class="stat-card" style="border-top: 4px solid #27ae60;">
+          <span class="label">📊 Аналитика <span class="kbd" style="margin-left:4px;">F1</span></span>
+          <div class="value" style="font-size:16px;">Проблемные зоны</div>
+          <div class="sub">Распределение запасов, сводка по магазинам, ТОП-10 дефицита и перезапаса.</div>
+        </div>
+        <div class="stat-card" style="border-top: 4px solid #e74c3c;">
+          <span class="label">🚨 Аномалии <span class="kbd" style="margin-left:4px;">F3</span></span>
+          <div class="value" style="font-size:16px;">Ошибки настроек</div>
+          <div class="sub">Автосканирование ошибок в минимумах, готовые исправления, экспорт.</div>
+        </div>
+        <div class="stat-card" style="border-top: 4px solid #9b59b6;">
+          <span class="label">🎯 МИНЫ</span>
+          <div class="value" style="font-size:16px;">Рекомендации v2.11</div>
+          <div class="sub">Авторасчёт MIN 441 / MIN 500, статусы, применение рекомендаций одной кнопкой.</div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_tabs">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Скриншот вкладок портала</span>
+        <button class="upload-btn" onclick="document.getElementById('fileTabs').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileTabs" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_tabs', 'tabs')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_tabs', 'tabs')">✕</div>
+      </div>
+      <div class="tip"><i class="fas fa-route"></i> Логика простая: <strong>Аналитика</strong> показывает ГДЕ проблема → <strong>Таблица</strong> — ЧТО править → <strong>Аномалии и МИНЫ</strong> — КАК исправить правильно</div>
+    </div>
+
+    <!-- ===== 6. СВОДНАЯ ТАБЛИЦА ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-table"></i>Вкладка «Таблица» — все данные в одном месте</div>
+      <div class="grid-2">
+        <div class="stat-card">
+          <span class="label">📋 Что в таблице</span>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0; margin-top: 6px;">
+              <li style="padding: 4px 0;">✅ 32+ колонок с аналитикой по каждому артикулу</li>
+              <li style="padding: 4px 0;">✅ Данные по всем магазинам и подотделам</li>
+              <li style="padding: 4px 0;">✅ Редактирование минимумов прямо в строке, онлайн</li>
+              <li style="padding: 4px 0;">✅ Клик по товару — открытие карточки в MagPortal</li>
+            </ul>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="label">🔍 Фильтры и поиск</span>
           <div class="sub">
             <ul style="list-style: none; padding-left: 0;">
-              <li style="padding: 4px 0;">🔹 Поиск по магазинам</li>
-              <li style="padding: 4px 0;">🔹 Фильтр по подотделам</li>
-              <li style="padding: 4px 0;">🔹 Сброс всех фильтров</li>
+              <li style="padding: 4px 0;">🔹 Поиск по магазинам и подотделам</li>
+              <li style="padding: 4px 0;">🔹 Быстрые фильтры: 📊 УТО · ⭐ Бест · 📋 Мины</li>
+              <li style="padding: 4px 0;">🔹 Сброс и восстановление фильтров</li>
               <li style="padding: 4px 0;">🔹 Экспорт изменений</li>
             </ul>
           </div>
         </div>
       </div>
-      <div class="screenshot-area" id="screenshot_table">
+      <div class="screenshot-area" id="ss_table">
         <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример сводной таблицы</span>
-        <button class="upload-btn" onclick="document.getElementById('fileInput_table').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
-        <input type="file" id="fileInput_table" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_table', 'table')">
-        <div class="delete-btn" onclick="deleteScreenshot('screenshot_table', 'table')">✕</div>
+        <button class="upload-btn" onclick="document.getElementById('fileTable').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileTable" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_table', 'table')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_table', 'table')">✕</div>
       </div>
     </div>
 
-    <!-- ===== СЛАЙД 5: РАБОТА С УТО / БЕСТ / МИНЫ ===== -->
-    <div class="slide" data-slide="4">
-      <div class="slide-title"><i class="fas fa-filter"></i>Работа с УТО / Бест / Мины</div>
+    <!-- ===== 7. РАБОТА С УТО / БЕСТ / МИНЫ ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-filter"></i>Ежедневная отработка: УТО / Бест / Мины</div>
       <div class="stat-card">
-        <span class="label">📋 Фильтры для отработки</span>
+        <span class="label">📋 Быстрые фильтры</span>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
           <span class="btn btn-danger" style="font-size:13px;">📊 УТО</span>
           <span class="btn btn-warning" style="font-size:13px;">⭐ Бест</span>
@@ -375,137 +468,330 @@
           <strong>Алгоритм работы:</strong>
           <ol style="padding-left: 20px; margin-top: 6px;">
             <li>Выберите фильтр <strong>📊 УТО</strong> (или ⭐ Бест / 📋 Мины)</li>
-            <li>Установите диапазон: <strong>Запас в днях &lt; 22-24 дней</strong> и <strong>В пути &lt; 22-24 дней</strong></li>
-            <li>Получите список артикулов с отображением текущих минимумов</li>
-            <li>В колонках <strong>«Вид минимума»</strong> и <strong>«Кол-во проектов»</strong> скорректируйте значения в онлайн-режиме</li>
+            <li>Установите диапазон: <strong>Запас в днях &lt; 22–24</strong> и <strong>В пути &lt; 22–24</strong></li>
+            <li>Получите список артикулов с текущими минимумами</li>
+            <li>В колонках <strong>«Вид минимума»</strong> и <strong>«Кол-во проектов»</strong> скорректируйте значения онлайн</li>
           </ol>
         </div>
         <div class="tip"><i class="fas fa-mouse-pointer"></i> Изменения применяются мгновенно, данные сохраняются в сессии</div>
       </div>
-      <div class="screenshot-area" id="screenshot_uto">
+      <div class="screenshot-area" id="ss_uto">
         <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример работы с УТО</span>
-        <button class="upload-btn" onclick="document.getElementById('fileInput_uto').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
-        <input type="file" id="fileInput_uto" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_uto', 'uto')">
-        <div class="delete-btn" onclick="deleteScreenshot('screenshot_uto', 'uto')">✕</div>
+        <button class="upload-btn" onclick="document.getElementById('fileUto').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileUto" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_uto', 'uto')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_uto', 'uto')">✕</div>
       </div>
     </div>
 
-    <!-- ===== СЛАЙД 6: ФИЛЬТР ОШИБОК ===== -->
-    <div class="slide" data-slide="5">
-      <div class="slide-title"><i class="fas fa-tools"></i>Фильтр ошибок и предложение исправлений</div>
-      <div class="stat-card">
-        <span class="label">🔍 Фильтр ошибок</span>
-        <div class="error-filter">
-          <span class="tag">MIN 441 > Вместимость</span>
-          <span class="tag">Новинка без MIN 401</span>
-          <span class="tag">Запас > Вместимость</span>
+    <!-- ===== 8. ВКЛАДКА АНАЛИТИКА ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-chart-bar"></i>Вкладка «Аналитика» — проблемы видны сразу <span class="ver">2.11</span></div>
+      <div class="grid-3">
+        <div class="stat-card" style="border-left: 4px solid #003057;">
+          <span class="label">🏬 Сводка по магазинам</span>
+          <div class="sub">Количество позиций, суммы запасов и проблем по каждому магазину — зона риска видна за секунду.</div>
         </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-          <span class="btn btn-success" style="font-size:13px;">✅ Применить фильтр</span>
-          <span class="btn btn-danger" style="font-size:13px;">🗑️ Снять все</span>
-          <span class="btn btn-warning" style="font-size:13px;">💡 Предложить исправления</span>
+        <div class="stat-card" style="border-left: 4px solid #27ae60;">
+          <span class="label">📈 Распределение запасов</span>
+          <div class="sub">Сколько позиций в дефиците, внимании, норме и перезапасе — по всем магазинам и подотделам.</div>
         </div>
-        <div class="sub" style="margin-top: 12px;">
-          <strong>📋 Результат фильтрации:</strong>
-          <table class="fix-table">
-            <thead>
-              <tr>
-                <th>#</th><th>Магазин</th><th>Артикул</th><th>Наименование</th>
-                <th>Поле</th><th>Текущее</th><th>Рекомендуется</th><th>Причина</th><th>Действие</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td><td>8</td><td>18009222</td><td>ВЫШКА КЛАССИКА - 5</td>
-                <td>min 441 ПМ</td><td>6 шт</td><td>4 шт</td><td>MIN 441 (6) > вместимости (4)</td>
-                <td><span class="status-badge pending">⏳ Принять</span></td>
-              </tr>
-              <tr>
-                <td>2</td><td>165</td><td>18628541</td><td>РАПТОР СПИРАЛЬ ОТ КОМАРОВ Б/ЗАПАХА 10 ШТ</td>
-                <td>min 441 ПМ</td><td>48 шт</td><td>30 шт</td><td>MIN 441 (48) > вместимости (30)</td>
-                <td><span class="status-badge pending">⏳ Принять</span></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="stat-card" style="border-left: 4px solid #f39c12;">
+          <span class="label">🏆 ТОП-10</span>
+          <div class="sub">🔴 Товары с избыточным запасом и 🟡 с риском дефицита — с чего начать работу сегодня.</div>
         </div>
+      </div>
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="stat-card">
+          <span class="label">📤 Экспорт из аналитики</span>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="padding: 4px 0;">🔹 Экспорт ТОП-товаров или всех товаров</li>
+              <li style="padding: 4px 0;">🔹 <span class="kbd">F5</span> — обновить аналитику после правок</li>
+            </ul>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="label">💡 Как использовать</span>
+          <div class="sub">Аналитика — это «радар»: она показывает, <strong>где</strong> проблема. Дальше — в «Таблицу», фильтр по магазину и правка минимумов по конкретным артикулам.</div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_analytics">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример вкладки «Аналитика»</span>
+        <button class="upload-btn" onclick="document.getElementById('fileAnalytics').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileAnalytics" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_analytics', 'analytics')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_analytics', 'analytics')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== 9. АНОМАЛИИ И ИСПРАВЛЕНИЯ ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-radiation"></i>Вкладка «Аномалии» — система сама находит ошибки <span class="ver">2.11</span></div>
+      <div class="grid-2">
+        <div class="stat-card" style="border-left: 4px solid #e74c3c;">
+          <span class="label">🚨 Что сканирует система</span>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="padding: 4px 0;">🔴 Перезапас — избыток запаса на полках и в подсобке</li>
+              <li style="padding: 4px 0;">🟡 Дефицит — запас на исходе, риск пустой полки</li>
+              <li style="padding: 4px 0;">🟣 MIN-ошибки — некорректные минимумы в настройках</li>
+              <li style="padding: 4px 0;">🔴 Критические — дефицит + УТО одновременно</li>
+            </ul>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="label">🔍 Фильтры ошибок в настройках</span>
+          <div class="error-filter">
+            <span class="tag">MIN 441 > Вместимость</span>
+            <span class="tag">Новинка без MIN 401</span>
+            <span class="tag">Запас > Вместимость</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+            <span class="btn btn-success" style="font-size:12px;">✅ Применить</span>
+            <span class="btn btn-danger" style="font-size:12px;">🗑️ Снять все</span>
+            <span class="btn btn-warning" style="font-size:12px;">💡 Предложить исправления</span>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card" style="margin-top: 14px;">
+        <span class="label">🛠️ Система предлагает готовые исправления — проверьте и примите</span>
+        <table class="fix-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Магазин</th><th>Артикул</th><th>Наименование</th>
+              <th>Поле</th><th>Текущее</th><th>Рекомендуется</th><th>Причина</th><th>Действие</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td><td>8</td><td>18009222</td><td>ВЫШКА КЛАССИКА - 5</td>
+              <td>min 441 ПМ</td><td>6 шт</td><td>4 шт</td><td>MIN 441 (6) > вместимости (4)</td>
+              <td><span class="status-badge pending">⏳ Принять</span></td>
+            </tr>
+            <tr>
+              <td>2</td><td>165</td><td>18628541</td><td>РАПТОР СПИРАЛЬ ОТ КОМАРОВ Б/ЗАПАХА 10 ШТ</td>
+              <td>min 441 ПМ</td><td>48 шт</td><td>30 шт</td><td>MIN 441 (48) > вместимости (30)</td>
+              <td><span class="status-badge pending">⏳ Принять</span></td>
+            </tr>
+          </tbody>
+        </table>
         <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
           <span class="btn btn-success" style="font-size:13px;"><i class="fas fa-check"></i> Принять все</span>
           <span class="btn btn-danger" style="font-size:13px;"><i class="fas fa-times"></i> Отклонить все</span>
           <span class="btn btn-primary" style="font-size:13px;"><i class="fas fa-file-excel"></i> ВЫГРУЗИТЬ MIN Custom (ВСЕ МАГАЗИНЫ)</span>
         </div>
-        <div class="tip"><i class="fas fa-info-circle"></i> После принятия система формирует готовый шаблон Excel для выгрузки</div>
+        <div class="tip"><i class="fas fa-info-circle"></i> Аномалии находит система, но решение принимает менеджер: проверяйте контекст перед принятием. Артикулы можно копировать в буфер и выгружать по одному или все сразу.</div>
       </div>
-      <div class="screenshot-area" id="screenshot_fix">
-        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример работы с исправлениями</span>
-        <button class="upload-btn" onclick="document.getElementById('fileInput_fix').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
-        <input type="file" id="fileInput_fix" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_fix', 'fix')">
-        <div class="delete-btn" onclick="deleteScreenshot('screenshot_fix', 'fix')">✕</div>
+      <div class="screenshot-area" id="ss_anomalies">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример вкладки «Аномалии»</span>
+        <button class="upload-btn" onclick="document.getElementById('fileAnomalies').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileAnomalies" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_anomalies', 'anomalies')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_anomalies', 'anomalies')">✕</div>
       </div>
     </div>
 
-    <!-- ===== СЛАЙД 7: ТИПИЧНЫЕ ОШИБКИ НОВИЧКОВ ===== -->
-    <div class="slide" data-slide="6">
+    <!-- ===== 10. ВКЛАДКА МИНЫ v2.11 ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-bullseye"></i>Вкладка «МИНЫ» — автоматический расчёт рекомендаций <span class="ver">v2.11</span></div>
+      <div class="grid-2">
+        <div class="stat-card" style="border-left: 4px solid #ffb81c;">
+          <span class="label">🧮 Две формулы расчёта</span>
+          <div class="formula-box">
+            <strong>Продажи в день</strong> = Отгружено за 7 дн ÷ 7<br>
+            <strong>MIN 441</strong> = Вместимость × 90% — «наполни полку», ограничен полкой<br>
+            <strong>MIN 500</strong> = продажи/дн × Дни (обычные — 14 дн, 20/80 и Бест — 22 дн) × сезонность × пики 1.2 — полкой НЕ ограничен
+          </div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #003057;">
+          <span class="label">⚖️ Как выбирается итоговый MIN</span>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="padding: 4px 0;">🔹 Продаж нет → <strong>снять MIN</strong></li>
+              <li style="padding: 4px 0;">🔹 MIN 500 ≤ MIN 441 → берём <strong>441</strong></li>
+              <li style="padding: 4px 0;">🔹 MIN 500 > MIN 441 → берём <strong>500</strong> (ходовой товар, излишек в подсобке)</li>
+              <li style="padding: 4px 0;">🔹 Округление — всегда <strong>вверх</strong> (MIN — минимальный порог)</li>
+              <li style="padding: 4px 0;">🔹 🏷️ = 20/80, ⭐ = Бест — для них срок <strong>22 дн</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card" style="margin-top: 14px;">
+        <span class="label">🚦 Статусы рекомендаций</span>
+        <div>
+          <span class="status-chip green">🟢 Установить</span>
+          <span class="status-chip yellow">🟡 Повысить</span>
+          <span class="status-chip red">🔴 Понизить</span>
+          <span class="status-chip green">✅ Норма</span>
+          <span class="status-chip white">⚪ Снять</span>
+        </div>
+        <div class="sub">
+          <strong>Пример расчёта:</strong> отгрузка 14,7 за неделю → 2,1/дн. MIN 441 = 50 × 90% = 45. MIN 500 = 2,1 × 14 = 30. Так как 30 &lt; 45 → итоговый <strong>MIN 441 = 45</strong>.
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_miny">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример вкладки «МИНЫ» с рекомендациями</span>
+        <button class="upload-btn" onclick="document.getElementById('fileMiny').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileMiny" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_miny', 'miny')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_miny', 'miny')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== 11. ПРИМЕНЕНИЕ И ВЫГРУЗКА ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-file-export"></i>Применение рекомендаций и выгрузка <span class="ver">2.11</span></div>
+      <div class="grid-2">
+        <div class="stat-card">
+          <span class="label">✅ Как применить рекомендацию</span>
+          <div class="sub">
+            <ol style="padding-left: 20px; margin-top: 6px;">
+              <li>На вкладке «МИНЫ» найдите строку с рекомендацией</li>
+              <li>Сравните <strong>MIN 441 тек → рек</strong> и <strong>MIN 500 тек → рек</strong></li>
+              <li>Нажмите <strong>«✅»</strong> в строке — рекомендация запишется как правка</li>
+              <li>Правка автоматически попадёт в «ВЫГРУЗИТЬ MIN Custom»</li>
+            </ol>
+          </div>
+          <div class="tip"><i class="fas fa-undo"></i> Ошиблись? <span style="font-weight:600;">Ctrl+Z</span> — отмена последнего действия</div>
+        </div>
+        <div class="stat-card">
+          <span class="label">📤 Два способа выгрузки</span>
+          <div class="shop-list">
+            <div class="shop-item"><span class="name">📤 ВЫГРУЗИТЬ MIN Custom</span> <span class="data">Все накопленные правки — для загрузки в систему</span></div>
+            <div class="shop-item"><span class="name">⬇️ ШАБЛОН MIN</span> <span class="data">Готовый файл в формате коллег — скачать и передать</span></div>
+          </div>
+          <div class="sub" style="margin-top: 10px;">
+            <strong>⚙️ Настройки расчёта</strong> — сверху вкладки «МИНЫ»: дни запаса, % полки, сезонность, пики. Меняйте под свою категорию — пересчёт мгновенный.
+          </div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_mincustom">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример выгрузки MIN Custom / ШАБЛОНА MIN</span>
+        <button class="upload-btn" onclick="document.getElementById('fileMincustom').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileMincustom" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_mincustom', 'mincustom')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_mincustom', 'mincustom')">✕</div>
+      </div>
+      <div class="tip"><i class="fas fa-exclamation-circle"></i> Выгружайте MIN Custom после каждой сессии правок — иначе изменения останутся только в браузере</div>
+    </div>
+
+    <!-- ===== 12. ГОРЯЧИЕ КЛАВИШИ ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-keyboard"></i>Горячие клавиши и визуальные подсказки <span class="ver">2.11</span></div>
+      <div class="grid-2">
+        <div class="stat-card">
+          <span class="label">⌨️ Горячие клавиши</span>
+          <div class="shop-list" style="margin-top: 10px;">
+            <div class="shop-item"><span class="name"><span class="kbd">F1</span></span> <span class="data">Вкладка «Аналитика»</span></div>
+            <div class="shop-item"><span class="name"><span class="kbd">F2</span></span> <span class="data">Вкладка «Таблица»</span></div>
+            <div class="shop-item"><span class="name"><span class="kbd">F3</span></span> <span class="data">Вкладка «Аномалии»</span></div>
+            <div class="shop-item"><span class="name"><span class="kbd">F5</span></span> <span class="data">Обновить аналитику</span></div>
+            <div class="shop-item"><span class="name"><span class="kbd">Ctrl+Z</span></span> <span class="data">Отменить последнее действие</span></div>
+            <div class="shop-item"><span class="name"><span class="kbd">Enter</span></span> <span class="data">Открыть товар в MagPortal (при наведении на строку)</span></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="label">🎨 Визуальные подсказки</span>
+          <div class="sub">
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="padding: 4px 0;">🏷️ Метка <strong>20/80</strong> — товар группы 20/80, срок 22 дн</li>
+              <li style="padding: 4px 0;">⭐ Метка <strong>Бест</strong> — бестселлер, срок 22 дн</li>
+              <li style="padding: 4px 0;">🚦 Цветовые статусы рекомендаций (🟢🟡🔴✅⚪)</li>
+              <li style="padding: 4px 0;">💬 Toast-уведомления о действиях системы</li>
+              <li style="padding: 4px 0;">🖱️ Наведение на строку — быстрый переход в MagPortal</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_hotkeys">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Скриншот горячих клавиш / подсказок</span>
+        <button class="upload-btn" onclick="document.getElementById('fileHotkeys').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileHotkeys" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_hotkeys', 'hotkeys')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_hotkeys', 'hotkeys')">✕</div>
+      </div>
+    </div>
+
+    <!-- ===== 13. ПОЛНЫЙ РАБОЧИЙ ПРОЦЕСС ===== -->
+    <div class="slide">
+      <div class="slide-title"><i class="fas fa-route"></i>Полный рабочий процесс — день менеджера <span class="ver">2.11</span></div>
+      <div class="grid-2">
+        <div>
+          <div class="instruction-step">
+            <div class="num">1</div>
+            <div class="content"><strong>Положите отчёты в папку</strong> — автозагрузка распознает их сама, переименовывать не нужно</div>
+          </div>
+          <div class="instruction-step">
+            <div class="num">2</div>
+            <div class="content">Нажмите <strong>«ВЫЧИСЛИТЬ»</strong> — получите сводную таблицу по всем магазинам</div>
+          </div>
+          <div class="instruction-step">
+            <div class="num">3</div>
+            <div class="content"><strong>Отфильтруйте</strong> по нужному магазину или отделу</div>
+          </div>
+          <div class="instruction-step">
+            <div class="num">4</div>
+            <div class="content">Откройте <strong>«Аналитику»</strong> (F1) — посмотрите проблемные зоны и ТОП-товары</div>
+          </div>
+        </div>
+        <div>
+          <div class="instruction-step">
+            <div class="num">5</div>
+            <div class="content"><strong>Отработайте УТО / Бест / Мины</strong> — редактируйте минимумы по проблемным артикулам</div>
+          </div>
+          <div class="instruction-step">
+            <div class="num">6</div>
+            <div class="content">Откройте <strong>«Аномалии»</strong> (F3) — примите исправления ошибок настроек</div>
+          </div>
+          <div class="instruction-step">
+            <div class="num">7</div>
+            <div class="content">На вкладке <strong>«МИНЫ»</strong> примите рекомендации MIN 441 / MIN 500 кнопкой «✅»</div>
+          </div>
+          <div class="instruction-step">
+            <div class="num">8</div>
+            <div class="content"><strong>Выгрузите</strong> MIN Custom / ШАБЛОН MIN — готовый файл для загрузки в систему</div>
+          </div>
+        </div>
+      </div>
+      <div class="screenshot-area" id="ss_workflow">
+        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Скриншот полного рабочего процесса</span>
+        <button class="upload-btn" onclick="document.getElementById('fileWorkflow').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+        <input type="file" id="fileWorkflow" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'ss_workflow', 'workflow')">
+        <div class="delete-btn" onclick="deleteScreenshot('ss_workflow', 'workflow')">✕</div>
+      </div>
+      <div class="tip"><i class="fas fa-clock"></i> Весь цикл занимает 10–15 минут в день вместо часов ручной работы в Excel</div>
+    </div>
+
+    <!-- ===== 14. ТИПИЧНЫЕ ОШИБКИ ===== -->
+    <div class="slide">
       <div class="slide-title"><i class="fas fa-exclamation-circle"></i>Типичные ошибки новичков</div>
       <div class="error-list">
+        <div class="error-item warning">
+          <div class="error-title"><span class="icon">⚠️</span> Ошибка 1: Игнорирование фильтров</div>
+          <div class="error-desc">Без фильтров сложно найти нужные артикулы среди сотен строк таблицы.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: используйте поиск по магазинам, фильтр по подотделам и быстрые фильтры УТО / Бест / Мины</div>
+        </div>
         <div class="error-item danger">
-          <div class="error-title"><span class="icon">❌</span> Ошибка 1: Неправильное название файлов</div>
-          <div class="error-desc">Файлы должны иметь строго определённые названия, иначе система их не распознает.</div>
-          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Переименуйте файлы согласно инструкции или используйте кнопку «Загрузить все отчёты»</div>
+          <div class="error-title"><span class="icon">❌</span> Ошибка 2: Несвоевременная загрузка отчётов</div>
+          <div class="error-desc">Актуальность данных зависит от свежести загруженных отчётов.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: загружайте отчёты ежедневно или после каждого обновления в системе</div>
+        </div>
+        <div class="error-item danger">
+          <div class="error-title"><span class="icon">❌</span> Ошибка 3: Правки без выгрузки MIN Custom</div>
+          <div class="error-desc">Изменения минимумов живут в сессии браузера — при закрытии без выгрузки они теряются.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: в конце сессии всегда выгружайте MIN Custom или ШАБЛОН MIN</div>
         </div>
         <div class="error-item warning">
-          <div class="error-title"><span class="icon">⚠️</span> Ошибка 2: Игнорирование фильтров</div>
-          <div class="error-desc">Без фильтров сложно найти нужные артикулы среди сотен строк таблицы.</div>
-          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Используйте поиск по магазинам и фильтр по подотделам</div>
-        </div>
-        <div class="error-item danger">
-          <div class="error-title"><span class="icon">❌</span> Ошибка 3: Несвоевременная загрузка отчётов</div>
-          <div class="error-desc">Актуальность данных зависит от свежести загруженных отчётов.</div>
-          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Загружайте отчёты ежедневно или после каждого обновления в системе</div>
+          <div class="error-title"><span class="icon">⚠️</span> Ошибка 4: Работа в неподдерживаемом браузере</div>
+          <div class="error-desc">Автозагрузка работает только в Chrome / Edge / Opera.</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: открывайте портал в Chromium-браузере</div>
         </div>
         <div class="error-item success">
-          <div class="error-title"><span class="icon">💡</span> Совет: Используйте предложения системы</div>
+          <div class="error-title"><span class="icon">💡</span> Совет: доверяйте рекомендациям — но проверяйте</div>
           <div class="error-desc">Система автоматически анализирует данные и предлагает оптимальные корректировки минимумов.</div>
-          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: Доверяйте рекомендациям, но проверяйте контекст</div>
+          <div class="error-fix"><i class="fas fa-check-circle"></i> Решение: принимайте рекомендации после быстрой проверки контекста</div>
         </div>
       </div>
       <div class="tip"><i class="fas fa-lightbulb"></i> Помните: система — это инструмент, а решения принимает менеджер</div>
     </div>
 
-    <!-- ===== СЛАЙД 8: ALERT-СИСТЕМА ===== -->
-    <div class="slide" data-slide="7">
-      <div class="slide-title"><i class="fas fa-bell"></i>Alert — Аномалии</div>
-      <div class="grid-4">
-        <div class="stat-card" style="border-left: 4px solid #e74c3c;">
-          <span class="label">🔴 Перезапас</span>
-          <div class="value" style="font-size:16px; color:#e74c3c;">Избыток</div>
-          <div class="sub">Слишком большой запас</div>
-        </div>
-        <div class="stat-card" style="border-left: 4px solid #f39c12;">
-          <span class="label">🟡 Дефицит</span>
-          <div class="value" style="font-size:16px; color:#f39c12;">Риск</div>
-          <div class="sub">Запас на исходе</div>
-        </div>
-        <div class="stat-card" style="border-left: 4px solid #9b59b6;">
-          <span class="label">🟣 Ошибки в настройках</span>
-          <div class="value" style="font-size:16px; color:#9b59b6;">MIN-ошибки</div>
-          <div class="sub">Некорректные минимумы</div>
-        </div>
-        <div class="stat-card" style="border-left: 4px solid #c0392b;">
-          <span class="label">🔴 Критические</span>
-          <div class="value" style="font-size:16px; color:#c0392b;">Дефицит + УТО</div>
-          <div class="sub">Срочные действия</div>
-        </div>
-      </div>
-      <div class="screenshot-area" id="screenshot_alert">
-        <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> Пример Alert-системы</span>
-        <button class="upload-btn" onclick="document.getElementById('fileInput_alert').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
-        <input type="file" id="fileInput_alert" accept="image/*" style="display:none" onchange="handleScreenshotUpload(event, 'screenshot_alert', 'alert')">
-        <div class="delete-btn" onclick="deleteScreenshot('screenshot_alert', 'alert')">✕</div>
-      </div>
-    </div>
-
-    <!-- ===== СЛАЙД 9: КОНТАКТЫ ПОДДЕРЖКИ ===== -->
-    <div class="slide" data-slide="8">
+    <!-- ===== 15. КОНТАКТЫ ===== -->
+    <div class="slide">
       <div class="slide-title"><i class="fas fa-headset"></i>Контакты поддержки</div>
       <div class="contact-grid" style="grid-template-columns: 1fr 1fr 1fr;">
         <div class="contact-card">
@@ -547,12 +833,12 @@
       </div>
     </div>
 
-    <!-- ===== СЛАЙД 10: ЗАКЛЮЧЕНИЕ ===== -->
-    <div class="slide" data-slide="9">
+    <!-- ===== 16. ЗАКЛЮЧЕНИЕ ===== -->
+    <div class="slide">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; text-align: center;">
         <i class="fas fa-check-circle" style="font-size: 64px; color: #27ae60; margin-bottom: 16px;"></i>
         <h2 style="color: #003057; font-size: 28px; margin-bottom: 8px;">Обучение завершено!</h2>
-        <p style="font-size: 18px; color: #2c3e50; margin-bottom: 8px;">Теперь вы готовы работать с порталом STOCKWISE</p>
+        <p style="font-size: 18px; color: #2c3e50; margin-bottom: 8px;">Теперь вы готовы работать с порталом STOCKWISE 2.11</p>
         <div style="margin-top: 24px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
           <span class="btn btn-primary" onclick="goToSlide(0)"><i class="fas fa-home"></i> К началу</span>
           <span class="btn btn-success" onclick="window.open('https://shzapas.github.io/my-site/', '_blank')"><i class="fas fa-external-link-alt"></i> Открыть портал</span>
@@ -598,6 +884,7 @@
       dot.className = 'dot' + (i === 0 ? ' active-dot' : '');
       dot.textContent = i + 1;
       dot.dataset.index = i;
+      dot.title = slides[i].querySelector('.slide-title') ? slides[i].querySelector('.slide-title').textContent.trim() : 'Слайд ' + (i + 1);
       dot.addEventListener('click', () => goToSlide(i));
       dotsContainer.appendChild(dot);
     }
@@ -653,54 +940,69 @@
   // ============================================================
   const screenshotData = {};
 
+  const SCREENSHOT_LABELS = {
+    'ss_main': 'Главный экран портала',
+    'ss_structure': 'Скриншот структуры портала',
+    'ss_autoload': 'Пример работы автозагрузки',
+    'ss_tabs': 'Вкладки портала',
+    'ss_table': 'Пример сводной таблицы',
+    'ss_uto': 'Пример работы с УТО',
+    'ss_analytics': 'Пример вкладки «Аналитика»',
+    'ss_anomalies': 'Пример вкладки «Аномалии»',
+    'ss_miny': 'Вкладка «МИНЫ» — рекомендации v2.11',
+    'ss_mincustom': 'Выгрузка MIN Custom / ШАБЛОН MIN',
+    'ss_hotkeys': 'Горячие клавиши и подсказки',
+    'ss_workflow': 'Полный рабочий процесс'
+  };
+
+  const SLOT_FILES = {
+    'main': 'Main', 'structure': 'Structure', 'autoload': 'Autoload', 'tabs': 'Tabs',
+    'table': 'Table', 'uto': 'Uto', 'analytics': 'Analytics', 'anomalies': 'Anomalies',
+    'miny': 'Miny', 'mincustom': 'Mincustom', 'hotkeys': 'Hotkeys', 'workflow': 'Workflow'
+  };
+
   window.handleScreenshotUpload = function(event, containerId, storageId) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
       const dataUrl = e.target.result;
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      
       screenshotData[storageId] = dataUrl;
-      
-      container.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = dataUrl;
-      img.alt = 'скриншот';
-      img.onclick = function(e) { e.stopPropagation(); openFullscreen(this.src); };
-      container.appendChild(img);
-      container.classList.add('has-image');
-      
-      const deleteBtn = document.createElement('div');
-      deleteBtn.className = 'delete-btn';
-      deleteBtn.textContent = '✕';
-      deleteBtn.title = 'Удалить скриншот';
-      deleteBtn.onclick = function(e) {
-        e.stopPropagation();
-        deleteScreenshot(containerId, storageId);
-      };
-      container.appendChild(deleteBtn);
+      renderScreenshot(containerId, storageId, dataUrl);
     };
     reader.readAsDataURL(file);
   };
+
+  function renderScreenshot(containerId, storageId, dataUrl) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = 'скриншот';
+    img.onclick = function(e) { e.stopPropagation(); openFullscreen(this.src); };
+    container.appendChild(img);
+    container.classList.add('has-image');
+    
+    const deleteBtn = document.createElement('div');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '✕';
+    deleteBtn.title = 'Удалить скриншот';
+    deleteBtn.onclick = function(e) {
+      e.stopPropagation();
+      deleteScreenshot(containerId, storageId);
+    };
+    container.appendChild(deleteBtn);
+  }
 
   window.deleteScreenshot = function(containerId, storageId) {
     if (!confirm('Удалить этот скриншот?')) return;
     const container = document.getElementById(containerId);
     if (!container) return;
     delete screenshotData[storageId];
-    const labels = {
-      'screenshot_structure': 'Скриншот структуры портала',
-      'screenshot_upload': 'Пример загрузки отчётов',
-      'screenshot_table': 'Пример сводной таблицы',
-      'screenshot_uto': 'Пример работы с УТО',
-      'screenshot_fix': 'Пример исправлений',
-      'screenshot_alert': 'Пример Alert-системы'
-    };
     container.innerHTML = `
-      <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> ${labels[containerId] || 'Скриншот'}</span>
-      <button class="upload-btn" onclick="document.getElementById('fileInput_${storageId}').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
+      <span style="color: #4a5b6f; font-size: 13px;"><i class="fas fa-image"></i> ${SCREENSHOT_LABELS[containerId] || 'Скриншот'}</span>
+      <button class="upload-btn" onclick="document.getElementById('file${SLOT_FILES[storageId] || ''}').click()"><i class="fas fa-plus"></i> Добавить скриншот</button>
     `;
     container.classList.remove('has-image');
   };
@@ -725,7 +1027,7 @@
     
     try {
       const exportData = {
-        version: '1.0',
+        version: '2.0',
         exportedAt: new Date().toISOString(),
         screenshots: screenshotData
       };
@@ -734,7 +1036,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'stockwise_presentation.json';
+      a.download = 'stockwise_presentation_v2.json';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -765,12 +1067,10 @@
       if (!data.version) throw new Error('Неверный формат');
       
       const map = {
-        'structure': 'screenshot_structure',
-        'upload': 'screenshot_upload',
-        'table': 'screenshot_table',
-        'uto': 'screenshot_uto',
-        'fix': 'screenshot_fix',
-        'alert': 'screenshot_alert'
+        'main': 'ss_main', 'structure': 'ss_structure', 'autoload': 'ss_autoload',
+        'tabs': 'ss_tabs', 'table': 'ss_table', 'uto': 'ss_uto',
+        'analytics': 'ss_analytics', 'anomalies': 'ss_anomalies', 'miny': 'ss_miny',
+        'mincustom': 'ss_mincustom', 'hotkeys': 'ss_hotkeys', 'workflow': 'ss_workflow'
       };
       
       let count = 0;
@@ -778,26 +1078,9 @@
         for (const [storageId, dataUrl] of Object.entries(data.screenshots)) {
           screenshotData[storageId] = dataUrl;
           const containerId = map[storageId];
-          if (containerId) {
-            const container = document.getElementById(containerId);
-            if (container) {
-              container.innerHTML = '';
-              const img = document.createElement('img');
-              img.src = dataUrl;
-              img.alt = 'скриншот';
-              img.onclick = function(e) { e.stopPropagation(); openFullscreen(this.src); };
-              container.appendChild(img);
-              container.classList.add('has-image');
-              const deleteBtn = document.createElement('div');
-              deleteBtn.className = 'delete-btn';
-              deleteBtn.textContent = '✕';
-              deleteBtn.onclick = function(e) {
-                e.stopPropagation();
-                deleteScreenshot(containerId, storageId);
-              };
-              container.appendChild(deleteBtn);
-              count++;
-            }
+          if (containerId && document.getElementById(containerId)) {
+            renderScreenshot(containerId, storageId, dataUrl);
+            count++;
           }
         }
       }
