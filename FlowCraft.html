@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FlowCraft — сайты и автоматизация для бизнеса</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='40' y2='40' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23d99a3a'/%3E%3Cstop offset='1' stop-color='%23c08528'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='40' height='40' rx='10' fill='url(%23g)'/%3E%3Cpath d='M12 10h16v4H16v4h10v4H16v8h-4V10z' fill='%23fff'/%3E%3C/svg%3E">
+
+    <style>
+        /* ===== ПАЛИТРА (ЧУТЬ ТЕМНЕЕ) ===== */
+        :root {
+            --bg: #f4ede4;              /* Было #faf7f2 — стало чуть темнее и теплее */
+            --bg-card: #ffffff;         
+            --text: #3a2e28;
+            --text-muted: #8a7a70;
+            --accent: #9c867f;
+            --accent-dark: #7a665f;
+            --accent-amber: #d99a3a;
+            --accent-amber-dark: #c08528;
+            --accent-blue: #e0f2fe;     
+            --accent-blue-dark: #7dd3fc;
+            --border: #e8dcd2;          
+            --green: #4a9d5f;
+            --radius: 14px;
+            --shadow: 0 2px 12px rgba(122,102,95,0.06);
+            --shadow-hover: 0 12px 32px rgba(122,102,95,0.12);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--text);
+            line-height: 1.55; overflow-x: hidden; font-size: 15px;
+            min-height: 100vh;
+        }
+        a { color: var(--accent-dark); text-decoration: none; }
+
+        /* ===== ЖИВОЙ ФОН ===== */
+        .bg-blobs {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+            background: linear-gradient(135deg, #f6f0e8 0%, #edf5f9 100%); /* Тёплый + голубой */
+        }
+        .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; animation: blobFloat 18s ease-in-out infinite; }
+        .blob.b1 { width: 450px; height: 450px; background: #fcebd6; top: -120px; left: -120px; } 
+        .blob.b2 { width: 380px; height: 380px; background: #e0f2fe; bottom: -100px; right: -80px; animation-delay: -6s; } 
+        .blob.b3 { width: 300px; height: 300px; background: #f0e2d4; top: 40%; left: 60%; animation-delay: -12s; }
+        @keyframes blobFloat { 0%, 100% { transform: translate(0,0) scale(1); } 33% { transform: translate(40px,-30px) scale(1.1); } 66% { transform: translate(-30px,30px) scale(.95); } }
+
+        /* ===== ПРОГРЕСС-БАР ===== */
+        .read-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue-dark)); z-index: 999; transition: width .1s linear; box-shadow: 0 0 10px rgba(217,154,58,.4); }
+
+        .container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* ===== ПЛАВАЮЩАЯ ШАПКА ===== */
+        header {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 40px); max-width: 1080px;
+            z-index: 100; padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(16px);
+            border: 1px solid rgba(237,229,221,0.8);
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(122,102,95,0.06);
+            transition: all 0.3s ease;
+        }
+        .header-inner { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        
+        .logo-mark {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-dark));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(217,154,58,.3);
+            animation: floatLogo 3s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes floatLogo { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .logo-mark svg { width: 18px; height: 18px; fill: #fff; }
+        .logo span { color: var(--text); }
+        .logo small { display: block; font-size: 0.65rem; font-weight: 400; color: var(--accent-amber-dark); letter-spacing: 1px; text-transform: uppercase; line-height: 1; margin-top: 2px; }
+
+        .nav-links { display: flex; gap: 24px; font-size: 0.85rem; font-weight: 600; }
+        .nav-links a { color: var(--text-muted); transition: color 0.2s; }
+        .nav-links a:hover { color: var(--accent-amber-dark); }
+
+        /* ГЛАВНЫЙ ЭКРАН */
+        .hero { padding: 140px 0 50px; border-bottom: 1px solid var(--border); }
+        .hero-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; align-items: center; }
+        .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: 16px; letter-spacing: -0.8px; color: var(--accent-dark); }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, #9c867f, #7a665f, #d99a3a, #7dd3fc, #9c867f);
+            background-size: 300% 300%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            animation: gradientFlow 6s ease infinite;
+        }
+        @keyframes gradientFlow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .hero .subtitle { font-size: 1.05rem; color: var(--text-muted); margin-bottom: 28px; max-width: 480px; }
+        .hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+        
+        .btn { padding: 12px 24px; border-radius: 50px; font-weight: 700; font-size: 0.92rem; transition: all 0.25s ease; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-dark)); color: #fff; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(217,154,58,0.4); }
+        .btn-outline { background: transparent; color: var(--accent-dark); border: 2px solid var(--border); }
+        .btn-outline:hover { border-color: var(--accent-amber); background: rgba(217,154,58,0.05); }
+        
+        .hero-facts { display: grid; gap: 12px; }
+        .fact {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px 20px; display: flex; align-items: center; gap: 16px;
+            transition: all 0.25s ease; box-shadow: var(--shadow);
+            animation: breathe 4s ease-in-out infinite;
+            position: relative; overflow: hidden;
+        }
+        .fact::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--accent-blue-dark); opacity: 0.5;
+        }
+        .fact:nth-child(2) { animation-delay: 1s; }
+        .fact:nth-child(3) { animation-delay: 2s; }
+        @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        .fact:hover { border-color: var(--accent-blue-dark); animation-play-state: paused; box-shadow: var(--shadow-hover); }
+        .fact-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .fact-text strong { display: block; font-size: 1.1rem; color: var(--accent-dark); font-weight: 800; margin-bottom: 2px; }
+        .fact-text span { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+        /* СЕКЦИИ */
+        section { padding: 60px 0; }
+        .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent-amber-dark); margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 8px; height: 8px; background: var(--accent-amber); border-radius: 50%; box-shadow: 0 0 0 4px rgba(217,154,58,0.2); flex-shrink: 0; }
+        .section-heading { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; color: var(--accent-dark); }
+        .section-desc { color: var(--text-muted); max-width: 600px; margin-bottom: 32px; font-size: 0.95rem; }
+
+        /* УСЛУГИ */
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+        .service-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; transition: all 0.3s cubic-bezier(0.2,0.8,0.2,1);
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
+        }
+        .service-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue-dark));
+            transform: scaleX(0); transform-origin: left; transition: transform 0.35s ease;
+        }
+        .service-card:hover::before { transform: scaleX(1); }
+        .service-card:hover {
+            border-color: var(--accent-blue-dark); transform: translateY(-6px) scale(1.02);
+            background: var(--bg-card); box-shadow: var(--shadow-hover);
+        }
+        .service-icon { font-size: 1.5rem; margin-bottom: 10px; transition: transform 0.3s; display: inline-block; }
+        .service-card:hover .service-icon { transform: scale(1.15); }
+        .service-card h3 { font-size: 1.05rem; margin-bottom: 6px; color: var(--accent-dark); font-weight: 700; }
+        .service-card p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; }
+        .service-meta { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.8rem; }
+        .service-price { color: var(--accent-amber-dark); font-weight: 800; }
+        .service-term { color: var(--text-muted); font-weight: 500; }
+
+        /* КЕЙСЫ */
+        .cases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .case-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; transition: all 0.3s cubic-bezier(0.2,0.8,0.2,1);
+            box-shadow: var(--shadow); display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+        }
+        .case-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue-dark));
+            transform: scaleX(0); transform-origin: left; transition: transform 0.35s ease;
+        }
+        .case-card:hover::before { transform: scaleX(1); }
+        .case-card:hover { border-color: var(--accent-blue-dark); transform: translateY(-6px); box-shadow: var(--shadow-hover); }
+        .case-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .case-emoji { font-size: 1.6rem; transition: transform 0.3s; }
+        .case-card:hover .case-emoji { transform: scale(1.15); }
+        .case-card h3 { font-size: 1.05rem; line-height: 1.3; color: var(--accent-dark); font-weight: 700; }
+        .case-card > p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; }
+        .case-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        
+        .case-tag { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: var(--accent-blue); color: #0284c7; border: 1px solid var(--accent-blue-dark); font-weight: 600; }
+        
+        .case-result { font-size: 0.8rem; color: var(--green); font-weight: 700; margin-bottom: 14px; }
+
+        /* ДЕМО */
+        .demo { background: #f8fafc; border: 1px dashed var(--accent-blue-dark); border-radius: 10px; padding: 12px; margin-top: auto; font-size: 0.8rem; }
+        .demo-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
+
+        .demo-dash table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .demo-dash th { text-align: left; padding: 6px; color: var(--text-muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+        .demo-dash td { padding: 6px; border-bottom: 1px solid rgba(232,220,210,0.5); }
+        .demo-dash .ok { color: var(--green); font-weight: 800; }
+        .demo-dash .bad { color: #c0392b; font-weight: 800; }
+        .demo-dash tr[data-status="bad"] { background: rgba(192,57,43,0.06); }
+        .demo-filter { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+        .demo-filter button { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); cursor: pointer; transition: all 0.2s; font-weight: 600; }
+        .demo-filter button.active { background: var(--accent-amber); color: #fff; border-color: var(--accent-amber); }
+        .demo-filter button:hover:not(.active) { border-color: var(--accent-amber); }
+
+        .demo-parser textarea { width: 100%; height: 60px; font-size: 0.72rem; font-family: monospace; padding: 8px; border: 1px solid var(--accent-blue-dark); border-radius: 6px; background: #fff; color: var(--text); resize: none; margin-bottom: 8px; }
+        .demo-parser button { font-size: 0.72rem; padding: 6px 14px; border-radius: 20px; border: none; background: var(--accent-amber); color: #fff; cursor: pointer; font-weight: 700; transition: all 0.2s; animation: btnPulse 2.5s ease-in-out infinite; }
+        .demo-parser button:hover { background: var(--accent-amber-dark); transform: scale(1.05); animation-play-state: paused; }
+        @keyframes btnPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(217,154,58,0.4); } 50% { box-shadow: 0 0 0 8px rgba(217,154,58,0); } }
+        .demo-parser .result { margin-top: 8px; font-family: monospace; font-size: 0.72rem; min-height: 16px; line-height: 1.4; }
+        .demo-parser .fixed { color: var(--green); font-weight: 800; }
+
+        .demo-form input { width: 100%; padding: 8px; font-size: 0.75rem; border: 1px solid var(--accent-blue-dark); border-radius: 6px; background: #fff; color: var(--text); margin-bottom: 8px; }
+        .demo-form button { width: 100%; padding: 8px; border-radius: 20px; border: none; background: var(--accent-amber); color: #fff; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; animation: btnPulse 2.5s ease-in-out infinite; }
+        .demo-form button:hover { background: var(--accent-amber-dark); transform: scale(1.02); animation-play-state: paused; }
+        .demo-form .result { margin-top: 8px; font-size: 0.75rem; text-align: center; min-height: 16px; }
+        .demo-form .success { color: var(--green); font-weight: 800; }
+
+        /* ОБО МНЕ */
+        .about-section {
+            display: flex; align-items: center; gap: 24px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 32px; box-shadow: var(--shadow); margin-top: 20px;
+            position: relative; overflow: hidden;
+        }
+        .about-section::after {
+            content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px;
+            background: var(--accent-blue); border-radius: 50%; opacity: 0.5; filter: blur(20px);
+        }
+        .about-avatar {
+            width: 80px; height: 80px; border-radius: 50%; background: var(--accent-blue);
+            display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+            flex-shrink: 0; border: 2px solid var(--accent-blue-dark); position: relative; z-index: 2;
+        }
+        .about-text h3 { font-size: 1.2rem; color: var(--accent-dark); margin-bottom: 6px; font-weight: 800; }
+        .about-text p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+
+        /* ПРОЦЕСС + ОТЗЫВЫ */
+        .split-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+        .steps { display: grid; gap: 10px; }
+        .step { display: flex; gap: 14px; align-items: flex-start; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; transition: all 0.25s ease; box-shadow: var(--shadow); }
+        .step:hover { transform: translateX(4px); border-color: var(--accent-blue-dark); }
+        .step-num { font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent-amber), var(--accent-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; min-width: 28px; }
+        .step h3 { font-size: 0.95rem; margin-bottom: 2px; color: var(--accent-dark); font-weight: 700; }
+        .step p { color: var(--text-muted); font-size: 0.82rem; }
+
+        .reviews-list { display: grid; gap: 10px; }
+        .review-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; transition: all 0.25s ease; box-shadow: var(--shadow); }
+        .review-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--accent-blue-dark); }
+        .review-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .review-stars { color: var(--accent-amber); font-size: 0.85rem; letter-spacing: 1px; }
+        .review-author { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .review-text { font-size: 0.88rem; color: var(--text); font-style: italic; line-height: 1.5; }
+
+        /* ФОРМА */
+        .form-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .form-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue-dark)); }
+        .form-section h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--accent-dark); font-weight: 800; }
+        .form-section p { color: var(--text-muted); margin-bottom: 20px; font-size: 0.92rem; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .form-field label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--accent-dark); margin-bottom: 4px; }
+        .form-field input, .form-field textarea { width: 100%; padding: 10px 12px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; transition: all 0.2s; }
+        .form-field input:focus, .form-field textarea:focus { outline: none; border-color: var(--accent-amber); box-shadow: 0 0 0 3px rgba(217,154,58,0.1); }
+        .form-field textarea { resize: vertical; min-height: 80px; }
+        .form-submit { width: 100%; padding: 12px; border-radius: 50px; border: none; background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-dark)); color: #fff; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+        .form-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(217,154,58,0.4); }
+        .form-submit:disabled { opacity: 0.6; cursor: wait; }
+        .form-msg { margin-top: 10px; font-size: 0.88rem; text-align: center; min-height: 20px; font-weight: 600; }
+        .form-msg.success { color: var(--green); }
+        .form-msg.error { color: #c0392b; }
+
+        /* FAQ */
+        .faq-list { display: grid; gap: 8px; }
+        .faq-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: all 0.25s ease; }
+        .faq-item:hover { border-color: var(--accent-blue-dark); }
+        .faq-q { padding: 16px 20px; cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--accent-dark); display: flex; justify-content: space-between; align-items: center; gap: 12px; user-select: none; }
+        .faq-q::after { content: '+'; font-size: 1.3rem; color: var(--accent-amber); transition: transform 0.3s; flex-shrink: 0; font-weight: 800; }
+        .faq-item.active .faq-q::after { content: '−'; }
+        .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; padding: 0 20px; color: var(--text-muted); font-size: 0.88rem; }
+        .faq-item.active .faq-a { max-height: 300px; padding: 0 20px 16px; }
+
+        /* КОНТАКТЫ */
+        .contact-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; text-align: center; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .contact-box::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue-dark)); }
+        .contact-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--accent-dark); font-weight: 800; }
+        .contact-box p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.92rem; }
+        .contact-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .contact-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 50px; background: var(--bg); border: 1px solid var(--border); color: var(--accent-dark); font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+        .contact-link:hover { border-color: var(--accent-blue-dark); background: var(--accent-blue); color: #0284c7; transform: translateY(-2px); }
+
+        footer { padding: 24px 0; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 0.8rem; }
+
+        /* ===== КНОПКА НАВЕРХ ===== */
+        .to-top {
+            position: fixed; bottom: 24px; left: 24px;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-dark));
+            color: #fff; border: none; font-size: 1.2rem; cursor: pointer;
+            box-shadow: 0 6px 18px rgba(217,154,58,.4);
+            opacity: 0; visibility: hidden; transform: translateY(20px);
+            transition: all 0.3s; z-index: 99;
+        }
+        .to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .to-top:hover { transform: translateY(-3px) scale(1.08); }
+
+        /* ===== ТОСТ ===== */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: var(--accent-dark); color: #fff;
+            padding: 14px 18px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.2);
+            font-size: 0.85rem; max-width: 320px;
+            display: flex; gap: 10px; align-items: flex-start;
+            transform: translateY(140%); opacity: 0;
+            transition: all 0.4s cubic-bezier(.2,.8,.2,1);
+            z-index: 1000; border-left: 4px solid var(--accent-blue-dark);
+            pointer-events: none;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+        .toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+        .toast-text strong { display: block; margin-bottom: 2px; color: var(--accent-blue-dark); }
+        .toast-close { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 1.1rem; padding: 0 3px; transition: 0.2s; }
+        .toast-close:hover { color: #fff; transform: rotate(90deg); }
+
+        /* ========================================================= */
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (ОПТИМИЗИРОВАНО) ===== */
+        /* ========================================================= */
+        
+        /* Планшеты и небольшие ноутбуки */
+        @media (max-width: 860px) {
+            .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+            .split-section { grid-template-columns: 1fr; gap: 32px; }
+            .hero { padding: 120px 0 40px; }
+        }
+
+        /* Телефоны */
+        @media (max-width: 600px) {
+            /* Шапка становится компактнее */
+            header {
+                top: 10px;
+                width: calc(100% - 24px);
+                padding: 8px 16px;
+                border-radius: 20px;
+            }
+            .logo { font-size: 1rem; gap: 8px; }
+            .logo-mark { width: 30px; height: 30px; border-radius: 8px; }
+            .logo-mark svg { width: 16px; height: 16px; }
+            .logo small { font-size: 0.55rem; }
+            .nav-links { display: none; } /* Скрываем меню на телефоне */
+
+            /* Главный экран */
+            .hero { padding: 100px 0 30px; }
+            .hero h1 { font-size: 2rem; }
+            .hero .subtitle { font-size: 0.95rem; margin-bottom: 20px; }
+            
+            /* Кнопки встают в колонку */
+            .hero-buttons { flex-direction: column; gap: 10px; }
+            .btn { width: 100%; justify-content: center; padding: 14px; }
+
+            /* Плашки-факты */
+            .fact { padding: 12px 16px; gap: 12px; }
+            .fact-text strong { font-size: 1rem; }
+            .fact-text span { font-size: 0.75rem; }
+
+            /* Секции */
+            section { padding: 40px 0; }
+            .section-heading { font-size: 1.5rem; }
+            
+            /* Сетки в одну колонку */
+            .services-grid, .cases-grid { grid-template-columns: 1fr; }
+            
+            /* Блок "Обо мне" */
+            .about-section { flex-direction: column; text-align: center; padding: 24px 16px; gap: 16px; }
+            .about-avatar { width: 70px; height: 70px; font-size: 2rem; }
+
+            /* Демо-блоки делаем чуть крупнее */
+            .demo-dash table { font-size: 0.85rem; }
+            .demo-filter button { font-size: 0.75rem; padding: 5px 12px; }
+            .demo-parser textarea { font-size: 0.8rem; height: 70px; }
+            .demo-form input { font-size: 0.85rem; padding: 10px; }
+
+            /* Форма */
+            .form-grid { grid-template-columns: 1fr; }
+            .form-section { padding: 24px 16px; }
+
+            /* Контакты */
+            .contact-links { flex-direction: column; }
+            .contact-link { justify-content: center; width: 100%; }
+
+            /* Тост прижимается к низу */
+            .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; padding: 12px 16px; }
+            
+            /* Кнопка наверх */
+            .to-top { bottom: 16px; left: 16px; width: 40px; height: 40px; font-size: 1rem; }
+        }
+
+        /* Очень маленькие экраны (iPhone SE) */
+        @media (max-width: 380px) {
+            .hero h1 { font-size: 1.7rem; }
+            .fact-icon { font-size: 1.2rem; }
+            .fact-text strong { font-size: 0.95rem; }
+            .demo-filter { flex-direction: column; }
+            .demo-filter button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ЖИВОЙ ФОН -->
+<div class="bg-blobs">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+</div>
+
+<!-- ПРОГРЕСС-БАР -->
+<div class="read-progress" id="readProgress"></div>
+
+<!-- ПЛАВАЮЩАЯ ШАПКА -->
+<header>
+    <div class="header-inner">
+        <div class="logo">
+            <div class="logo-mark">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10h16v4H16v4h10v4H16v8h-4V10z" fill="#fff"/>
+                    <path d="M28 10l4 4-4 4V10z" fill="#fff" opacity="0.5"/>
+                </svg>
+            </div>
+            <div>
+                <span>FlowCraft</span>
+                <small>Digital Solutions</small>
+            </div>
+        </div>
+        <nav class="nav-links">
+            <a href="#services">Услуги</a>
+            <a href="#cases">Кейсы</a>
+            <a href="#form">Заявка</a>
+            <a href="#faq">FAQ</a>
+            <a href="#contact">Контакты</a>
+        </nav>
+    </div>
+</header>
+
+<!-- ГЛАВНЫЙ ЭКРАН -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-grid">
+            <div>
+                <h1>Сайты и автоматизация для <span class="gradient">бизнеса</span></h1>
+                <p class="subtitle">Создаю сайты-визитки, лендинги, дашборды и инструменты автоматизации. Помогаю экономить время и деньги — без лишней сложности.</p>
+                <div class="hero-buttons">
+                    <a href="#cases" class="btn btn-primary">Попробовать демо →</a>
+                    <a href="#form" class="btn btn-outline">Оставить заявку</a>
+                </div>
+            </div>
+            <div class="hero-facts">
+                <div class="fact">
+                    <div class="fact-icon">⚡</div>
+                    <div class="fact-text">
+                        <strong><span class="counter" data-target="2">0</span> ч/день</strong>
+                        <span>экономия на рутине</span>
+                    </div>
+                </div>
+                <div class="fact">
+                    <div class="fact-icon">🚀</div>
+                    <div class="fact-text">
+                        <strong><span class="counter" data-target="3">0</span>–5 дней</strong>
+                        <span>запуск сайта под ключ</span>
+                    </div>
+                </div>
+                <div class="fact">
+                    <div class="fact-icon">📊</div>
+                    <div class="fact-text">
+                        <strong><span class="counter" data-target="10">0</span>+ отчётов</strong>
+                        <span>в одном дашборде</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- УСЛУГИ -->
+<section id="services" class="reveal">
+    <div class="container">
+        <div class="section-title">Услуги</div>
+        <h2 class="section-heading">Что я делаю</h2>
+        <p class="section-desc">Решения, которые экономят время. Без лишней сложности и переплат.</p>
+        <div class="services-grid">
+            <div class="service-card"><div class="service-icon">🌐</div><h3>Сайт-визитка</h3><p>1–3 страницы, адаптив, форма связи, быстрая загрузка.</p><div class="service-meta"><span class="service-price">от 4 000 ₽</span><span class="service-term">3–5 дней</span></div></div>
+            <div class="service-card"><div class="service-icon">📄</div><h3>Лендинг</h3><p>Продающая структура, призывы к действию, адаптив.</p><div class="service-meta"><span class="service-price">от 8 000 ₽</span><span class="service-term">5–7 дней</span></div></div>
+            <div class="service-card"><div class="service-icon">📊</div><h3>Дашборд / аналитика</h3><p>Сбор данных из таблиц, визуализация, фильтры, алерты.</p><div class="service-meta"><span class="service-price">от 15 000 ₽</span><span class="service-term">7–14 дней</span></div></div>
+            <div class="service-card"><div class="service-icon">⚙️</div><h3>Автоматизация</h3><p>Приём заказов в Google Таблицы, парсинг, скрипты.</p><div class="service-meta"><span class="service-price">от 5 000 ₽</span><span class="service-term">2–5 дней</span></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- КЕЙСЫ С ДЕМО -->
+<section id="cases" class="reveal">
+    <div class="container">
+        <div class="section-title">Кейсы</div>
+        <h2 class="section-heading">Попробуйте демо</h2>
+        <p class="section-desc">Не скриншоты — живые мини-примеры. Покликайте прямо здесь.</p>
+        <div class="cases-grid">
+
+            <!-- ДЕМО 1: Дашборд -->
+            <div class="case-card">
+                <div class="case-header"><div class="case-emoji">📊</div><h3>Дашборд для отдела закупок</h3></div>
+                <p>Сбор данных из отчётов в единую панель с фильтрами и алертами.</p>
+                <div class="case-tags"><span class="case-tag">Google Sheets</span><span class="case-tag">Аналитика</span></div>
+                <div class="case-result">⚡ Экономия 2 ч/день</div>
+                <div class="demo demo-dash">
+                    <div class="demo-label">Демо: фильтр по статусу</div>
+                    <div class="demo-filter">
+                        <button class="active" data-filter="all">Все</button>
+                        <button data-filter="ok">В норме</button>
+                        <button data-filter="bad">Дефицит</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Товар</th><th>Запас</th><th>Статус</th></tr></thead>
+                        <tbody id="dashBody">
+                            <tr data-status="ok"><td>Кофемолка</td><td>24 дн</td><td class="ok">OK</td></tr>
+                            <tr data-status="bad"><td>Чайник</td><td>2 дн</td><td class="bad">Дефицит</td></tr>
+                            <tr data-status="ok"><td>Наушники</td><td>18 дн</td><td class="ok">OK</td></tr>
+                            <tr data-status="bad"><td>Тостер</td><td>1 дн</td><td class="bad">Дефицит</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ДЕМО 2: Умная проверка данных -->
+            <div class="case-card">
+                <div class="case-header"><div class="case-emoji">🔍</div><h3>Умная проверка данных</h3></div>
+                <p>Находит ошибки в таблицах: дубли, пустые поля, цену ниже закупки — и исправляет.</p>
+                <div class="case-tags"><span class="case-tag">JavaScript</span><span class="case-tag">Excel</span></div>
+                <div class="case-result">⚡ Снижение ошибок на 40%</div>
+                <div class="demo demo-parser">
+                    <div class="demo-label">Демо: проверьте список товаров</div>
+                    <textarea id="parserInput">Кофемолка — 2990 — 1500
+Чайник — 0 — 1200
+Наушники — 4500 — 5000
+Наушники — 4500 — 3000</textarea>
+                    <button id="parserBtn">Проверить</button>
+                    <div class="result" id="parserResult"></div>
+                </div>
+            </div>
+
+            <!-- ДЕМО 3: Форма заказа -->
+            <div class="case-card">
+                <div class="case-header"><div class="case-emoji">📦</div><h3>Приём заказов через сайт</h3></div>
+                <p>Форма на сайте → Google Таблица → уведомление.</p>
+                <div class="case-tags"><span class="case-tag">HTML</span><span class="case-tag">Apps Script</span></div>
+                <div class="case-result">⚡ Заказы без ручной работы</div>
+                <div class="demo demo-form">
+                    <div class="demo-label">Демо: отправка заказа</div>
+                    <input type="text" id="demoSku" placeholder="Название товара (напр. Кофемолка)">
+                    <input type="number" id="demoQty" placeholder="Количество" value="1">
+                    <button id="demoSend">Отправить</button>
+                    <div class="result" id="demoFormResult"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ОБО МНЕ -->
+<section class="reveal">
+    <div class="container">
+        <div class="about-section">
+            <div class="about-avatar">👨‍💻</div>
+            <div class="about-text">
+                <h3>Привет, я — разработчик FlowCraft</h3>
+                <p>Имею практический опыт в товарном запасе и аналитике. Знаю, как устроен бизнес изнутри, и делаю инструменты, которые реально решают задачи, а не просто красиво выглядят. Работаю быстро, объясняю понятно.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ПРОЦЕСС + ОТЗЫВЫ -->
+<section class="reveal">
+    <div class="container">
+        <div class="split-section">
+            <div id="process">
+                <div class="section-title">Процесс</div>
+                <h2 class="section-heading">Как я работаю</h2>
+                <p class="section-desc">Прозрачно и без сюрпризов.</p>
+                <div class="steps">
+                    <div class="step"><div class="step-num">01</div><div><h3>Заявка</h3><p>Пишете в Telegram или оставляете заявку. Обсуждаем задачу.</p></div></div>
+                    <div class="step"><div class="step-num">02</div><div><h3>Оценка</h3><p>Согласовываем объём, цену и сроки.</p></div></div>
+                    <div class="step"><div class="step-num">03</div><div><h3>Работа</h3><p>Делаю проект, показываю результат, правлю.</p></div></div>
+                    <div class="step"><div class="step-num">04</div><div><h3>Сдача</h3><p>Передаю проект, объясняю, как пользоваться.</p></div></div>
+                </div>
+            </div>
+            <div id="reviews">
+                <div class="section-title">Отзывы</div>
+                <h2 class="section-heading">Что говорят</h2>
+                <p class="section-desc">Реальные отзывы коллег.</p>
+                <div class="reviews-list">
+                    <div class="review-card"><div class="review-top"><div class="review-stars">★★★★★</div><div class="review-author">Менеджер товарного запаса</div></div><p class="review-text">«Спасибо за такие волшебные вещи. Очень помогает в работе»</p></div>
+                    <div class="review-card"><div class="review-top"><div class="review-stars">★★★★★</div><div class="review-author">Специалист по запасам</div></div><p class="review-text">«Супер. Спасибо большое. Всё понятно и быстро»</p></div>
+                    <div class="review-card"><div class="review-top"><div class="review-stars">★★★★★</div><div class="review-author">Коллега, команда закупок</div></div><p class="review-text">«Крутой инструмент. Практику уже переняли»</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ФОРМА ЗАЯВКИ -->
+<section id="form" class="reveal">
+    <div class="container">
+        <div class="form-section">
+            <h2>Оставить заявку</h2>
+            <p>Опишите задачу — я свяжусь с вами в течение дня. Без обязательств.</p>
+            <form id="leadForm">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Ваше имя</label>
+                        <input type="text" id="leadName" required placeholder="Иван">
+                    </div>
+                    <div class="form-field">
+                        <label>Контакт (Telegram / телефон / email)</label>
+                        <input type="text" id="leadContact" required placeholder="@ivan / +7... / ivan@mail.ru">
+                    </div>
+                </div>
+                <div class="form-field" style="margin-bottom:12px;">
+                    <label>Опишите задачу или проект</label>
+                    <textarea id="leadTask" required placeholder="Например: нужен сайт-визитка для студии маникюра, 2 страницы, форма записи"></textarea>
+                </div>
+                <button type="submit" class="form-submit" id="leadSubmit">Отправить заявку</button>
+                <div class="form-msg" id="leadMsg"></div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="reveal">
+    <div class="container">
+        <div class="section-title">FAQ</div>
+        <h2 class="section-heading">Частые вопросы</h2>
+        <p class="section-desc">Коротко о главном.</p>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-q">Сколько стоит сайт-визитка?</div>
+                <div class="faq-a">От 4 000 ₽ за 1–3 страницы с адаптивом и формой связи. Точная цена зависит от объёма и дизайна.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Сколько времени занимает разработка?</div>
+                <div class="faq-a">Сайт-визитка — 3–5 дней. Лендинг — 5–7 дней. Дашборд или автоматизация — 7–14 дней в зависимости от сложности.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Что нужно, чтобы начать?</div>
+                <div class="faq-a">Опишите задачу в заявке или напишите в Telegram. Я задам уточняющие вопросы и предложу решение с ценой и сроками.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Вы работаете с Google Таблицами?</div>
+                <div class="faq-a">Да. Делаю приём заказов в таблицы, автоматические отчёты, дашборды, парсинг данных и интеграции.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Можно ли доработать существующий сайт?</div>
+                <div class="faq-a">Да, беру небольшие правки и доработки. Стоимость — от 1 000 ₽ в зависимости от задачи.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Как происходит оплата?</div>
+                <div class="faq-a">Обсуждаем индивидуально: обычно 50% предоплата, 50% после сдачи. Работаю с физлицами и ИП.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- КОНТАКТЫ -->
+<section id="contact" class="reveal">
+    <div class="container">
+        <div class="contact-box">
+            <h2>Или напишите напрямую</h2>
+            <p>Отвечу в течение дня.</p>
+            <div class="contact-links">
+                <a href="https://t.me/ВАШ_НИК" target="_blank" class="contact-link">✈️ Telegram</a>
+                <a href="https://wa.me/ВАШ_НОМЕР" target="_blank" class="contact-link">💬 WhatsApp</a>
+                <a href="mailto:ВАШ_EMAIL" class="contact-link">✉️ Email</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">© 2026 FlowCraft. Сайты и автоматизация для бизнеса.</div>
+</footer>
+
+<!-- КНОПКА НАВЕРХ -->
+<button class="to-top" id="toTop" aria-label="Наверх">↑</button>
+
+<!-- ТОСТ -->
+<div class="toast" id="toast">
+    <div class="toast-icon">👋</div>
+    <div class="toast-text">
+        <strong>Привет!</strong>
+        <span>Посмотрите живые примеры в разделе Кейсы 👇</span>
+    </div>
+    <button class="toast-close" id="toastClose">✕</button>
+</div>
+
+<script>
+    /* ===== ПРОГРЕСС-БАР ===== */
+    const progressBar = document.getElementById('readProgress');
+    window.addEventListener('scroll', () => {
+        const h = document.documentElement;
+        const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+        progressBar.style.width = scrolled + '%';
+        
+        const toTop = document.getElementById('toTop');
+        if (window.scrollY > 400) toTop.classList.add('show');
+        else toTop.classList.remove('show');
+    });
+    
+    document.getElementById('toTop').addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* ===== ТОСТ ===== */
+    const toast = document.getElementById('toast');
+    setTimeout(() => {
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 6000);
+    }, 2000);
+    document.getElementById('toastClose').addEventListener('click', () => {
+        toast.classList.remove('show');
+    });
+
+    /* ===== АНИМИРОВАННЫЕ ЦИФРЫ ===== */
+    const counters = document.querySelectorAll('.counter');
+    const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                const target = +el.dataset.target;
+                let current = 0;
+                const step = Math.max(1, Math.ceil(target / 30));
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) { current = target; clearInterval(timer); }
+                    el.textContent = current;
+                }, 40);
+                counterObserver.unobserve(el);
+            }
+        });
+    }, { threshold: 0.5 });
+    counters.forEach(c => counterObserver.observe(c));
+
+    /* ===== ПОЯВЛЕНИЕ ПРИ СКРОЛЛЕ ===== */
+    const revealItems = document.querySelectorAll('.service-card, .case-card, .step, .review-card, .faq-item');
+    revealItems.forEach((el, i) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        el.style.transitionDelay = (i % 4) * 0.08 + 's';
+    });
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+    revealItems.forEach(el => observer.observe(el));
+
+    const reveals = document.querySelectorAll('.reveal');
+    const obs2 = new IntersectionObserver((entries) => {
+        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+    }, { threshold: 0.15 });
+    reveals.forEach(el => obs2.observe(el));
+
+    /* ===== ПЛАВНЫЙ СКРОЛЛ ===== */
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const offset = 80;
+                const targetPos = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({ top: targetPos, behavior: 'smooth' });
+            }
+        });
+    });
+
+    /* ===== ДЕМО 1: ДАШБОРД ===== */
+    document.querySelectorAll('.demo-filter button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.demo-filter button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.filter;
+            document.querySelectorAll('#dashBody tr').forEach(row => {
+                row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+            });
+        });
+    });
+
+    /* ===== ДЕМО 2: УМНАЯ ПРОВЕРКА ДАННЫХ ===== */
+    document.getElementById('parserBtn').addEventListener('click', () => {
+        const input = document.getElementById('parserInput').value.trim();
+        const res = document.getElementById('parserResult');
+        if (!input) { res.innerHTML = '<span style="color:#c0392b;">Введите данные</span>'; return; }
+        const lines = input.split('\n').filter(l => l.trim());
+        const names = {};
+        let issues = [];
+        let fixed = 0;
+        lines.forEach((line, i) => {
+            const parts = line.split('—').map(s => s.trim());
+            const name = parts[0] || '—';
+            const price = parseFloat(parts[1]) || 0;
+            const cost = parseFloat(parts[2]) || 0;
+            if (names[name]) { issues.push(`Строка ${i+1}: дубликат «${name}» — удалён`); fixed++; return; }
+            names[name] = true;
+            if (!name || name === '—') { issues.push(`Строка ${i+1}: пустое название — пропущено`); fixed++; return; }
+            if (price <= 0) { issues.push(`Строка ${i+1}: «${name}» — цена 0, исправлено на ${Math.round(cost * 1.3)} ₽`); fixed++; }
+            else if (cost > 0 && price < cost) { issues.push(`Строка ${i+1}: «${name}» — цена ${price} ₽ ниже закупки, исправлено на ${Math.round(cost * 1.3)} ₽`); fixed++; }
+        });
+        if (issues.length === 0) { res.innerHTML = '<span class="fixed">✅ Ошибок не найдено</span>'; }
+        else { res.innerHTML = `<span class="fixed">✅ Найдено и исправлено: ${fixed}</span><br>` + issues.map(i => `<span style="color:#7a665f;">• ${i}</span>`).join('<br>'); }
+    });
+
+    /* ===== ДЕМО 3: ФОРМА ЗАКАЗА ===== */
+    document.getElementById('demoSend').addEventListener('click', () => {
+        const name = document.getElementById('demoSku').value.trim();
+        const qty = document.getElementById('demoQty').value;
+        const res = document.getElementById('demoFormResult');
+        if (!name) { res.innerHTML = '<span style="color:#c0392b;">Введите название товара</span>'; return; }
+        res.innerHTML = `<span class="success">✅ «${name}» × ${qty} — отправлено (демо)</span>`;
+        document.getElementById('demoSku').value = '';
+        setTimeout(() => { res.innerHTML = ''; }, 3000);
+    });
+
+    /* ===== FAQ ===== */
+    document.querySelectorAll('.faq-q').forEach(q => {
+        q.addEventListener('click', () => {
+            const item = q.parentElement;
+            const wasActive = item.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+            if (!wasActive) item.classList.add('active');
+        });
+    });
+
+    /* ===== ФОРМА ЗАЯВКИ ===== */
+    const LEAD_URL = 'https://script.google.com/macros/s/AKfycbzkuLIiNntzt7elcxJXkv86qZ5WtYWT4Wh1SHAiKQzvTcgpzHA4vQI_1XWAwjACNNUn/exec';
+    const leadForm = document.getElementById('leadForm');
+    const leadMsg = document.getElementById('leadMsg');
+    const leadSubmit = document.getElementById('leadSubmit');
+    leadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('leadName').value.trim();
+        const contact = document.getElementById('leadContact').value.trim();
+        const task = document.getElementById('leadTask').value.trim();
+        if (!name || !contact || !task) { leadMsg.textContent = 'Заполните все поля'; leadMsg.className = 'form-msg error'; return; }
+        leadSubmit.disabled = true; leadMsg.textContent = 'Отправка...'; leadMsg.className = 'form-msg';
+        try {
+            await fetch(LEAD_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact, task }) });
+            leadMsg.textContent = '✅ Заявка отправлена! Свяжусь с вами в течение дня.';
+            leadMsg.className = 'form-msg success';
+            leadForm.reset();
+        } catch (err) {
+            leadMsg.textContent = '❌ Ошибка. Напишите в Telegram.';
+            leadMsg.className = 'form-msg error';
+        }
+        leadSubmit.disabled = false;
+    });
+</script>
+
+</body>
+</html>
