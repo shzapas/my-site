@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>STOCKWISE 2.11</title>
+    <title>STOCKWISE 2.11 — единый движок MIN</title>
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){
             m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -1467,6 +1467,23 @@
                 </ul>
             </div>
 
+            <div class="help-section">
+                <h3>🎯 Вкладка "МИНЫ" — логика рекомендаций <span class="badge">v2.11</span></h3>
+                <p><strong>Продажи в день = Отгружено за 7 дн ÷ 7</strong> (в отчёте это недельная сумма!).</p>
+                <div class="help-grid">
+                    <div class="grid-item"><strong>MIN 441 = Вместимость × 90%</strong><span>«Наполни полку» — ограничен полкой</span></div>
+                    <div class="grid-item"><strong>MIN 500 = продажи/дн × Дни</strong><span>обычные — 14 дн, 20/80 и Бест — 22 дн; × сезонность × пики 1.2. Полкой НЕ ограничен</span></div>
+                </div>
+                <ul>
+                    <li>Продаж нет → <strong>снять MIN</strong>. Иначе: если MIN 500 ≤ MIN 441 — берём 441, если больше — берём 500 (ходовой товар, излишек в подсобке).</li>
+                    <li>Округление — <strong>всегда вверх</strong> (MIN — минимальный порог).</li>
+                    <li>Пример: отгрузка 14.7 за нед → 2.1/дн; 441 = 50×90% = 45; 500 = 2.1×14 = 30. 30 &lt; 45 → <strong>MIN 441 = 45</strong>.</li>
+                    <li>Метка 🏷️ = 20/80, ⭐ = Бест — для них свой срок 22 дн.</li>
+                    <li>Статусы: 🟢 установить · 🟡 повысить · 🔴 понизить · ✅ норма · ⚪ снять.</li>
+                    <li>Настройки (дни, % полки, сезонность, пики) — сверху вкладки, кнопка «⬇️ ШАБЛОН MIN» — готовый файл коллегам.</li>
+                </ul>
+            </div>
+
             <div class="help-section" style="margin-bottom:0;">
                 <h3>📝 Для связи</h3>
                 <p>По всем вопросам и предложениям — <a href="https://connect.lemanapro.ru/net_home/people/36702?tab=Feed" target="_blank" style="color:#FF8C00;font-weight:bold;">ссылка в коннект</a></p>
@@ -2023,6 +2040,14 @@
                             <button class="btn-export-all" onclick="exportMinTemplate()">📤 Выгрузить шаблон</button>
                         </div>
                     </h4>
+                    <div id="minTypeFilter" style="display:flex; gap:6px; margin:0 0 8px; flex-wrap:wrap;">
+                        <button class="chip-type active" data-t="all" onclick="setMinTypeFilter('all')" style="cursor:pointer;border:1px solid rgba(255,140,0,0.4);background:rgba(255,140,0,0.15);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">Все</button>
+                        <button class="chip-type" data-t="441" onclick="setMinTypeFilter('441')" style="cursor:pointer;border:1px solid rgba(59,130,246,0.4);background:rgba(59,130,246,0.15);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">MIN 441</button>
+                        <button class="chip-type" data-t="500" onclick="setMinTypeFilter('500')" style="cursor:pointer;border:1px solid rgba(255,140,0,0.4);background:rgba(255,140,0,0.15);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">MIN 500</button>
+                        <button class="chip-type" data-t="снять" onclick="setMinTypeFilter('снять')" style="cursor:pointer;border:1px solid rgba(229,57,53,0.4);background:rgba(229,57,53,0.15);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">⚪ Снять</button>
+                        <button class="chip-type" data-t="повысить" onclick="setMinTypeFilter('повысить')" style="cursor:pointer;border:1px solid rgba(46,125,50,0.4);background:rgba(46,125,50,0.12);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">🟡 Повысить</button>
+                        <button class="chip-type" data-t="понизить" onclick="setMinTypeFilter('понизить')" style="cursor:pointer;border:1px solid rgba(229,57,53,0.4);background:rgba(229,57,53,0.12);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">🔴 Понизить</button>
+                    </div>
                     <div class="top-table-wrapper" style="max-height:420px;">
                         <table class="top-table" id="minRecTable">
                             <thead>
@@ -7815,6 +7840,17 @@ function computeMinRecommendations() {
     showToast('✅ Рекомендации MIN рассчитаны', 'success');
 }
 
+// 🆕 фильтр рекомендаций по типу / действию
+let minTypeFilter = 'all';
+function setMinTypeFilter(t) {
+    minTypeFilter = (minTypeFilter === t) ? 'all' : t;
+    document.querySelectorAll('#minTypeFilter .chip-type').forEach(function (b) {
+        const on = b.getAttribute('data-t') === minTypeFilter;
+        b.style.outline = on ? '2px solid #FF8C00' : 'none';
+    });
+    renderMinTable();
+}
+
 function renderMinTable() {
     const tbody = document.getElementById('minRecBody');
     if (!tbody) return;
@@ -7823,7 +7859,15 @@ function renderMinTable() {
         tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">Нажмите «🧮 РАССЧИТАТЬ» после вычисления сводной таблицы</td></tr>';
         return;
     }
-    const sorted = minCalcResults.filter(function (r) { return r.action !== "Без изменений"; });
+    let sorted = minCalcResults.filter(function (r) { return r.action !== "Без изменений"; });
+    if (minTypeFilter !== 'all') {
+        sorted = sorted.filter(function (r) {
+            if (minTypeFilter === 'снять') return r.qty === 0;
+            if (minTypeFilter === 'повысить') return r.action.indexOf('Повысить') === 0 || r.action.indexOf('Поднять') === 0 || r.action.indexOf('Установить') === 0;
+            if (minTypeFilter === 'понизить') return r.action.indexOf('Снизить') === 0 || r.action.indexOf('Снять') === 0;
+            return r.type === minTypeFilter;
+        });
+    }
     sorted.forEach(function (r) {
         const idx = minCalcResults.indexOf(r);
         const tr = document.createElement('tr');
@@ -7847,7 +7891,8 @@ function renderMinTable() {
         tbody.appendChild(tr);
     });
     if (sorted.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">✅ Все позиции без изменений</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">' +
+            (minTypeFilter !== 'all' ? '🔎 Нет рекомендаций по выбранному фильтру' : '✅ Все позиции без изменений') + '</td></tr>';
     }
 }
 
