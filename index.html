@@ -3383,7 +3383,7 @@ function calculateRow(gammaItem) {
     const minAmbitsiya = sums["min 500 Проект"] || 0;
     const minV2B = sums["min 902 B2B"] || 0;
     const brak = sums["Брак"] || 0;
-    const ekspo = sums["ЭКСПО"] || 0;
+    const ekspo = (sums["ЭКСПО"] || 0) + (ekspoMap.get(`${extractStoreNumber(store)}|${artikul}`) || 0);
     const prezMinimum = sums["През. минимум"] || 0;
     const tjPak = sums["ТЖ/ПАК"] || 0;
     const podiumMagazina = sums["Подиум магазина"] || 0;
