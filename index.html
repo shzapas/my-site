@@ -7823,7 +7823,8 @@ function computeMinRecommendations() {
         const cur500 = toNumber(row["min 500 Проект"], 0);
         const cur = (type === "441") ? cur441 : cur500;
         let action;
-        if (qty === 0) action = "Снять MIN";
+        if (qty === 0 && cur500 === 0) { action = "Без изменений"; why = "нет продаж, MIN 500 не задан"; }
+        else if (qty === 0) action = "Снять MIN";
         else if (cur === qty) action = "Без изменений";
         else if (cur === 0) action = "Поставить MIN";
         else if (qty > cur) action = "Поднять " + cur + "→" + qty;
