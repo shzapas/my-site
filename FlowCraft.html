@@ -7,9 +7,9 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='40' y2='40' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23d99a3a'/%3E%3Cstop offset='1' stop-color='%23c08528'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='40' height='40' rx='10' fill='url(%23g)'/%3E%3Cpath d='M12 10h16v4H16v4h10v4H16v8h-4V10z' fill='%23fff'/%3E%3C/svg%3E">
 
     <style>
-        /* ===== ПАЛИТРА (ЧУТЬ ТЕМНЕЕ) ===== */
+        /* ===== ПАЛИТРА ===== */
         :root {
-            --bg: #f4ede4;              /* Было #faf7f2 — стало чуть темнее и теплее */
+            --bg: #f4ede4;              
             --bg-card: #ffffff;         
             --text: #3a2e28;
             --text-muted: #8a7a70;
@@ -38,7 +38,7 @@
         /* ===== ЖИВОЙ ФОН ===== */
         .bg-blobs {
             position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
-            background: linear-gradient(135deg, #f6f0e8 0%, #edf5f9 100%); /* Тёплый + голубой */
+            background: linear-gradient(135deg, #f6f0e8 0%, #edf5f9 100%); 
         }
         .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; animation: blobFloat 18s ease-in-out infinite; }
         .blob.b1 { width: 450px; height: 450px; background: #fcebd6; top: -120px; left: -120px; } 
@@ -280,7 +280,24 @@
         .contact-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--accent-dark); font-weight: 800; }
         .contact-box p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.92rem; }
         .contact-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        .contact-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 50px; background: var(--bg); border: 1px solid var(--border); color: var(--accent-dark); font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+        
+        /* Кнопки контактов (обновлено для 3-х кнопок) */
+        .contact-link { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 10px 20px; 
+            border-radius: 50px; 
+            background: var(--bg); 
+            border: 1px solid var(--border); 
+            color: var(--accent-dark); 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            transition: all 0.2s; 
+            flex: 1;
+            min-width: 140px;
+            justify-content: center;
+        }
         .contact-link:hover { border-color: var(--accent-blue-dark); background: var(--accent-blue); color: #0284c7; transform: translateY(-2px); }
 
         footer { padding: 24px 0; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 0.8rem; }
@@ -317,79 +334,46 @@
         .toast-close { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 1.1rem; padding: 0 3px; transition: 0.2s; }
         .toast-close:hover { color: #fff; transform: rotate(90deg); }
 
-        /* ========================================================= */
-        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (ОПТИМИЗИРОВАНО) ===== */
-        /* ========================================================= */
-        
-        /* Планшеты и небольшие ноутбуки */
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
         @media (max-width: 860px) {
             .hero-grid { grid-template-columns: 1fr; gap: 32px; }
             .split-section { grid-template-columns: 1fr; gap: 32px; }
             .hero { padding: 120px 0 40px; }
         }
-
-        /* Телефоны */
         @media (max-width: 600px) {
-            /* Шапка становится компактнее */
-            header {
-                top: 10px;
-                width: calc(100% - 24px);
-                padding: 8px 16px;
-                border-radius: 20px;
-            }
+            header { top: 10px; width: calc(100% - 24px); padding: 8px 16px; border-radius: 20px; }
             .logo { font-size: 1rem; gap: 8px; }
             .logo-mark { width: 30px; height: 30px; border-radius: 8px; }
             .logo-mark svg { width: 16px; height: 16px; }
             .logo small { font-size: 0.55rem; }
-            .nav-links { display: none; } /* Скрываем меню на телефоне */
-
-            /* Главный экран */
+            .nav-links { display: none; }
             .hero { padding: 100px 0 30px; }
             .hero h1 { font-size: 2rem; }
             .hero .subtitle { font-size: 0.95rem; margin-bottom: 20px; }
-            
-            /* Кнопки встают в колонку */
             .hero-buttons { flex-direction: column; gap: 10px; }
             .btn { width: 100%; justify-content: center; padding: 14px; }
-
-            /* Плашки-факты */
             .fact { padding: 12px 16px; gap: 12px; }
             .fact-text strong { font-size: 1rem; }
             .fact-text span { font-size: 0.75rem; }
-
-            /* Секции */
             section { padding: 40px 0; }
             .section-heading { font-size: 1.5rem; }
-            
-            /* Сетки в одну колонку */
             .services-grid, .cases-grid { grid-template-columns: 1fr; }
-            
-            /* Блок "Обо мне" */
             .about-section { flex-direction: column; text-align: center; padding: 24px 16px; gap: 16px; }
             .about-avatar { width: 70px; height: 70px; font-size: 2rem; }
-
-            /* Демо-блоки делаем чуть крупнее */
             .demo-dash table { font-size: 0.85rem; }
             .demo-filter button { font-size: 0.75rem; padding: 5px 12px; }
             .demo-parser textarea { font-size: 0.8rem; height: 70px; }
             .demo-form input { font-size: 0.85rem; padding: 10px; }
-
-            /* Форма */
             .form-grid { grid-template-columns: 1fr; }
             .form-section { padding: 24px 16px; }
-
-            /* Контакты */
-            .contact-links { flex-direction: column; }
-            .contact-link { justify-content: center; width: 100%; }
-
-            /* Тост прижимается к низу */
-            .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; padding: 12px 16px; }
             
-            /* Кнопка наверх */
+            /* Контакты на телефоне в столбик */
+            .contact-links { flex-direction: column; }
+            .contact-link { width: 100%; min-width: auto; }
+            
+            .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; padding: 12px 16px; }
             .to-top { bottom: 16px; left: 16px; width: 40px; height: 40px; font-size: 1rem; }
         }
-
-        /* Очень маленькие экраны (iPhone SE) */
         @media (max-width: 380px) {
             .hero h1 { font-size: 1.7rem; }
             .fact-icon { font-size: 1.2rem; }
@@ -669,11 +653,20 @@
     <div class="container">
         <div class="contact-box">
             <h2>Или напишите напрямую</h2>
-            <p>Отвечу в течение дня.</p>
+            <p>Отвечу в течение дня. Выберите удобный мессенджер.</p>
             <div class="contact-links">
-                <a href="https://t.me/ВАШ_НИК" target="_blank" class="contact-link">✈️ Telegram</a>
-                <a href="https://wa.me/ВАШ_НОМЕР" target="_blank" class="contact-link">💬 WhatsApp</a>
-                <a href="mailto:ВАШ_EMAIL" class="contact-link">✉️ Email</a>
+                <!-- Telegram -->
+                <a href="https://t.me/+79248386596" target="_blank" class="contact-link">
+                    ✈️ Telegram
+                </a>
+                <!-- MAX -->
+                <a href="https://max.ru/u/+79248386596" target="_blank" class="contact-link">
+                    🟣 MAX
+                </a>
+                <!-- Email -->
+                <a href="mailto:sh.dencic@mail.ru" class="contact-link">
+                    ✉️ Email
+                </a>
             </div>
         </div>
     </div>
