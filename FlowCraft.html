@@ -211,6 +211,142 @@
         .demo-form .result { margin-top: 8px; font-size: 0.75rem; text-align: center; min-height: 16px; }
         .demo-form .success { color: var(--green); font-weight: 800; }
 
+        /* ========================================================= */
+        /* ===== НОВОЕ: ГАЛЕРЕЯ РЕАЛЬНЫХ КЕЙСОВ (КАРУСЕЛЬ) ===== */
+        /* ========================================================= */
+        .gallery-container {
+            position: relative;
+            max-width: 940px;
+            margin: 0 auto 24px auto;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-hover);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .gallery-viewport { position: relative; aspect-ratio: 16 / 9; background: #f0e9e2; }
+        .gallery-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+        .gallery-slide.active { opacity: 1; pointer-events: auto; }
+        .gallery-slide img {
+            width: 100%; height: 100%; object-fit: contain; display: block;
+            background: #fff;
+        }
+        /* Заглушка, пока скриншот не положен в папку */
+        .gallery-placeholder {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 8px;
+            background: linear-gradient(135deg, #faf5ee 0%, #eef6fa 100%);
+            color: var(--text-muted); text-align: center; padding: 24px;
+        }
+        .gallery-placeholder .ph-icon { font-size: 2.6rem; }
+        .gallery-placeholder .ph-title { font-weight: 800; color: var(--accent-dark); font-size: 1rem; }
+        .gallery-placeholder .ph-hint { font-size: 0.78rem; max-width: 420px; }
+        /* Подпись поверх слайда */
+        .gallery-caption {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(0deg, rgba(58,46,40,0.82) 0%, rgba(58,46,40,0) 100%);
+            color: #fff; padding: 36px 20px 14px;
+            font-size: 0.85rem; font-weight: 600; text-align: center;
+            pointer-events: none;
+        }
+        .gallery-caption small { display: block; font-weight: 400; opacity: 0.85; font-size: 0.75rem; margin-top: 2px; }
+        /* Стрелки */
+        .gallery-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 42px; height: 42px; border-radius: 50%;
+            background: rgba(255,255,255,0.92); color: var(--accent-dark);
+            border: 1px solid var(--border); font-size: 1.2rem; font-weight: 800;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(122,102,95,0.2); transition: all 0.2s; z-index: 5;
+            user-select: none;
+        }
+        .gallery-arrow:hover { background: var(--accent-amber); color: #fff; border-color: var(--accent-amber); }
+        .gallery-arrow.prev { left: 12px; }
+        .gallery-arrow.next { right: 12px; }
+        /* Счётчик */
+        .gallery-counter {
+            position: absolute; top: 12px; right: 12px; z-index: 5;
+            background: rgba(58,46,40,0.65); color: #fff; backdrop-filter: blur(6px);
+            font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+        }
+        /* Нижняя панель управления */
+        .gallery-controls {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: var(--bg-card); border-top: 1px solid var(--border); gap: 12px;
+        }
+        .gallery-dots { display: flex; gap: 8px; flex: 1; justify-content: center; }
+        .gallery-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--border); border: none; cursor: pointer; transition: all 0.25s; padding: 0;
+        }
+        .gallery-dot.active { background: var(--accent-amber); transform: scale(1.25); box-shadow: 0 0 0 4px rgba(217,154,58,0.2); }
+        .gallery-btn {
+            background: var(--bg); border: 1px solid var(--border);
+            padding: 7px 16px; border-radius: 20px; cursor: pointer;
+            font-weight: 700; font-size: 0.8rem; color: var(--accent-dark);
+            transition: all 0.2s; font-family: inherit; white-space: nowrap;
+        }
+        .gallery-btn:hover { background: var(--accent-amber); color: #fff; border-color: var(--accent-amber); }
+
+        /* ========================================================= */
+        /* ===== НОВОЕ: ЖИВОЕ ДЕМО — КАЛЬКУЛЯТОР МАРЖИ ===== */
+        /* ========================================================= */
+        .mini-app {
+            max-width: 800px; margin: 32px auto 0;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+        .mini-app::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue-dark)); }
+        .mini-app-header {
+            background: var(--bg); color: var(--accent-dark);
+            padding: 16px 24px; display: flex; align-items: center; gap: 12px;
+            font-weight: 800; font-size: 1.05rem; border-bottom: 1px solid var(--border);
+        }
+        .mini-app-header span.badge {
+            background: var(--accent-blue); color: #0284c7;
+            border: 1px solid var(--accent-blue-dark);
+            padding: 2px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .mini-app-body {
+            padding: 24px; background: var(--bg-card);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+        }
+        .app-inputs { display: flex; flex-direction: column; gap: 12px; }
+        .app-input-group { display: flex; flex-direction: column; gap: 4px; }
+        .app-input-group label { font-size: 0.8rem; font-weight: 700; color: var(--accent-dark); }
+        .app-input-group input {
+            padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 1rem; font-weight: 600; color: var(--text);
+            outline: none; transition: all 0.2s; background: var(--bg); font-family: inherit;
+        }
+        .app-input-group input:focus {
+            border-color: var(--accent-amber);
+            box-shadow: 0 0 0 3px rgba(217,154,58,0.12);
+            background: #fff;
+        }
+        .app-result {
+            background: var(--bg); border-radius: 10px; padding: 20px;
+            border: 1px dashed var(--border);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .app-result .profit-value { font-size: 2.2rem; font-weight: 800; color: var(--green); margin-bottom: 4px; transition: color 0.3s; }
+        .app-result .profit-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px; }
+        .app-result .margin-line { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+        .app-result .margin-line strong { color: var(--accent-dark); }
+        .app-result .status-badge {
+            background: rgba(74,157,95,0.12); color: var(--green);
+            padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 800;
+            transition: all 0.3s; border: 1px solid transparent;
+        }
+        .app-result .status-badge.warn { background: rgba(217,154,58,0.12); color: var(--accent-amber-dark); border-color: var(--accent-amber); }
+        .app-result .status-badge.danger { background: rgba(192,57,43,0.1); color: #c0392b; border-color: #c0392b; }
+
         /* ОБО МНЕ */
         .about-section {
             display: flex; align-items: center; gap: 24px;
@@ -280,23 +416,12 @@
         .contact-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--accent-dark); font-weight: 800; }
         .contact-box p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.92rem; }
         .contact-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        
-        /* Кнопки контактов (обновлено для 3-х кнопок) */
         .contact-link { 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px; 
-            padding: 10px 20px; 
-            border-radius: 50px; 
-            background: var(--bg); 
-            border: 1px solid var(--border); 
-            color: var(--accent-dark); 
-            font-size: 0.9rem; 
-            font-weight: 600; 
-            transition: all 0.2s; 
-            flex: 1;
-            min-width: 140px;
-            justify-content: center;
+            display: inline-flex; align-items: center; gap: 8px; 
+            padding: 10px 20px; border-radius: 50px; 
+            background: var(--bg); border: 1px solid var(--border); 
+            color: var(--accent-dark); font-size: 0.9rem; font-weight: 600; 
+            transition: all 0.2s; flex: 1; min-width: 140px; justify-content: center;
         }
         .contact-link:hover { border-color: var(--accent-blue-dark); background: var(--accent-blue); color: #0284c7; transform: translateY(-2px); }
 
@@ -366,13 +491,22 @@
             .demo-form input { font-size: 0.85rem; padding: 10px; }
             .form-grid { grid-template-columns: 1fr; }
             .form-section { padding: 24px 16px; }
-            
-            /* Контакты на телефоне в столбик */
             .contact-links { flex-direction: column; }
             .contact-link { width: 100%; min-width: auto; }
-            
             .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; padding: 12px 16px; }
             .to-top { bottom: 16px; left: 16px; width: 40px; height: 40px; font-size: 1rem; }
+            /* Галерея на телефоне */
+            .gallery-viewport { aspect-ratio: 4 / 3; }
+            .gallery-arrow { width: 34px; height: 34px; font-size: 1rem; }
+            .gallery-arrow.prev { left: 6px; }
+            .gallery-arrow.next { right: 6px; }
+            .gallery-caption { font-size: 0.75rem; padding: 28px 12px 10px; }
+            .gallery-caption small { font-size: 0.68rem; }
+            .gallery-controls { flex-wrap: wrap; }
+            .gallery-dots { order: -1; width: 100%; margin-bottom: 4px; }
+            /* Калькулятор на телефоне */
+            .mini-app-body { grid-template-columns: 1fr; padding: 16px; }
+            .app-result .profit-value { font-size: 1.8rem; }
         }
         @media (max-width: 380px) {
             .hero h1 { font-size: 1.7rem; }
@@ -428,7 +562,7 @@
                 <h1>Сайты и автоматизация для <span class="gradient">бизнеса</span></h1>
                 <p class="subtitle">Создаю сайты-визитки, лендинги, дашборды и инструменты автоматизации. Помогаю экономить время и деньги — без лишней сложности.</p>
                 <div class="hero-buttons">
-                    <a href="#cases" class="btn btn-primary">Попробовать демо →</a>
+                    <a href="#cases" class="btn btn-primary">Смотреть кейсы →</a>
                     <a href="#form" class="btn btn-outline">Оставить заявку</a>
                 </div>
             </div>
@@ -474,8 +608,77 @@
     </div>
 </section>
 
-<!-- КЕЙСЫ С ДЕМО -->
+<!-- КЕЙСЫ: ГАЛЕРЕЯ РЕАЛЬНЫХ ЭКРАНОВ + ЖИВОЕ ДЕМО -->
 <section id="cases" class="reveal">
+    <div class="container">
+        <div class="section-title">Мои инструменты</div>
+        <h2 class="section-heading">Как это выглядит в работе</h2>
+        <p class="section-desc">Скриншоты реальных рабочих систем (данные обезличены). Листайте карусель, а ниже — живое демо, которое можно попробовать прямо сейчас.</p>
+
+        <!-- 1. КАРУСЕЛЬ СО СКРИНШОТАМИ -->
+        <div class="gallery-container" id="gallery">
+            <div class="gallery-viewport" id="galleryViewport">
+                <!-- Слайд 1 -->
+                <div class="gallery-slide active">
+                    <img src="case1.jpg" alt="Обучающий портал «Учет»" data-caption="Обучающий портал «Учет» — 16 интерактивных уроков для сотрудников" data-sub="Витрина знаний: интерактивные карточки, навигация по урокам, тесты">
+                    <div class="gallery-caption"></div>
+                </div>
+                <!-- Слайд 2 -->
+                <div class="gallery-slide">
+                    <img src="case2.jpg" alt="Аналитика стока" data-caption="Аналитика стока — ТОП-10 токсичных артикулов и рекомендации по трансферу" data-sub="ТС между магазинами, УТО/Путо, выгрузка в Google Sheets одной кнопкой">
+                    <div class="gallery-caption"></div>
+                </div>
+                <!-- Слайд 3 -->
+                <div class="gallery-slide">
+                    <img src="case3.jpg" alt="Умный анализ цен" data-caption="Умный анализ цен — снижение закупочной цены по выделенным артикулам" data-sub="Фильтры по отделам, ТОП и условиям · целевая наценка · выгрузка сводной">
+                    <div class="gallery-caption"></div>
+                </div>
+                <!-- Стрелки и счётчик -->
+                <button class="gallery-arrow prev" id="galPrev" aria-label="Предыдущий слайд">‹</button>
+                <button class="gallery-arrow next" id="galNext" aria-label="Следующий слайд">›</button>
+                <div class="gallery-counter" id="galCounter">1 / 3</div>
+            </div>
+            <div class="gallery-controls">
+                <button class="gallery-btn" id="galAutoplay">⏸ Пауза</button>
+                <div class="gallery-dots" id="galleryDots"></div>
+                <button class="gallery-btn" id="galFullscreen">⛶ Во весь экран</button>
+            </div>
+        </div>
+
+        <!-- 2. ЖИВОЕ ДЕМО — КАЛЬКУЛЯТОР МАРЖИ -->
+        <div class="mini-app">
+            <div class="mini-app-header">
+                <span>🧮 Калькулятор маржи с учётом скидки</span>
+                <span class="badge">Живое демо</span>
+            </div>
+            <div class="mini-app-body">
+                <div class="app-inputs">
+                    <div class="app-input-group">
+                        <label>Закупочная цена (₽)</label>
+                        <input type="number" id="costPrice" value="1500" min="0">
+                    </div>
+                    <div class="app-input-group">
+                        <label>Цена продажи (₽)</label>
+                        <input type="number" id="sellPrice" value="2990" min="0">
+                    </div>
+                    <div class="app-input-group">
+                        <label>Планируемая скидка (%)</label>
+                        <input type="number" id="discount" value="0" min="0" max="99">
+                    </div>
+                </div>
+                <div class="app-result">
+                    <div class="profit-label">Чистая прибыль с учётом скидки:</div>
+                    <div class="profit-value" id="profitValue">1 490 ₽</div>
+                    <div class="margin-line">Маржинальность: <strong id="marginValue">49,8%</strong></div>
+                    <div class="status-badge" id="statusBadge">✅ Отличная маржа</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- КЕЙСЫ: ЖИВЫЕ МИНИ-ДЕМО -->
+<section class="reveal">
     <div class="container">
         <div class="section-title">Кейсы</div>
         <h2 class="section-heading">Попробуйте демо</h2>
@@ -655,18 +858,9 @@
             <h2>Или напишите напрямую</h2>
             <p>Отвечу в течение дня. Выберите удобный мессенджер.</p>
             <div class="contact-links">
-                <!-- Telegram -->
-                <a href="https://t.me/+79248386596" target="_blank" class="contact-link">
-                    ✈️ Telegram
-                </a>
-                <!-- MAX -->
-                <a href="https://max.ru/u/+79248386596" target="_blank" class="contact-link">
-                    🟣 MAX
-                </a>
-                <!-- Email -->
-                <a href="mailto:sh.dencic@mail.ru" class="contact-link">
-                    ✉️ Email
-                </a>
+                <a href="https://t.me/+79248386596" target="_blank" class="contact-link">✈️ Telegram</a>
+                <a href="https://max.ru/u/+79248386596" target="_blank" class="contact-link">🟣 MAX</a>
+                <a href="mailto:sh.dencic@mail.ru" class="contact-link">✉️ Email</a>
             </div>
         </div>
     </div>
@@ -684,24 +878,22 @@
     <div class="toast-icon">👋</div>
     <div class="toast-text">
         <strong>Привет!</strong>
-        <span>Посмотрите живые примеры в разделе Кейсы 👇</span>
+        <span>Посмотрите скриншоты и живые примеры в разделе Кейсы 👇</span>
     </div>
     <button class="toast-close" id="toastClose">✕</button>
 </div>
 
 <script>
-    /* ===== ПРОГРЕСС-БАР ===== */
+    /* ===== ПРОГРЕСС-БАР + КНОПКА НАВЕРХ ===== */
     const progressBar = document.getElementById('readProgress');
     window.addEventListener('scroll', () => {
         const h = document.documentElement;
         const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
         progressBar.style.width = scrolled + '%';
-        
         const toTop = document.getElementById('toTop');
         if (window.scrollY > 400) toTop.classList.add('show');
         else toTop.classList.remove('show');
     });
-    
     document.getElementById('toTop').addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -772,6 +964,147 @@
             }
         });
     });
+
+    /* ========================================================= */
+    /* ===== ГАЛЕРЕЯ РЕАЛЬНЫХ КЕЙСОВ (КАРУСЕЛЬ) ===== */
+    /* ========================================================= */
+    const gallerySlides = Array.from(document.querySelectorAll('.gallery-slide'));
+    const galleryDotsBox = document.getElementById('galleryDots');
+    const galleryCounter = document.getElementById('galCounter');
+    let galIndex = 0;
+    let galTimer = null;
+    let galPlaying = true;
+    const GAL_DELAY = 5000;
+
+    // Точки навигации
+    gallerySlides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'gallery-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Слайд ' + (i + 1));
+        dot.addEventListener('click', () => { setSlide(i); restartAutoplay(); });
+        galleryDotsBox.appendChild(dot);
+    });
+    const galleryDots = Array.from(galleryDotsBox.children);
+
+    // Подписи из data-атрибутов + заглушки, если скриншота ещё нет
+    gallerySlides.forEach((slide, i) => {
+        const img = slide.querySelector('img');
+        const caption = slide.querySelector('.gallery-caption');
+        const cap = img.dataset.caption || '';
+        const sub = img.dataset.sub || '';
+        caption.innerHTML = cap + (sub ? '<small>' + sub + '</small>' : '');
+
+        img.addEventListener('error', () => {
+            const ph = document.createElement('div');
+            ph.className = 'gallery-placeholder';
+            ph.innerHTML =
+                '<div class="ph-icon">🖼️</div>' +
+                '<div class="ph-title">' + cap + '</div>' +
+                '<div class="ph-hint">' + sub + '</div>' +
+                '<div class="ph-hint" style="opacity:.7;">Положите файл <b>' + img.getAttribute('src') + '</b> рядом с index.html — скриншот появится здесь автоматически</div>';
+            img.replaceWith(ph);
+        });
+        img.addEventListener('load', () => { /* скриншот на месте — показываем как есть */ });
+    });
+
+    function setSlide(index) {
+        galIndex = (index + gallerySlides.length) % gallerySlides.length;
+        gallerySlides.forEach((s, i) => s.classList.toggle('active', i === galIndex));
+        galleryDots.forEach((d, i) => d.classList.toggle('active', i === galIndex));
+        galleryCounter.textContent = (galIndex + 1) + ' / ' + gallerySlides.length;
+    }
+    function nextSlide() { setSlide(galIndex + 1); }
+    function prevSlide() { setSlide(galIndex - 1); }
+    function restartAutoplay() {
+        if (galTimer) clearInterval(galTimer);
+        if (galPlaying) galTimer = setInterval(nextSlide, GAL_DELAY);
+    }
+    document.getElementById('galNext').addEventListener('click', () => { nextSlide(); restartAutoplay(); });
+    document.getElementById('galPrev').addEventListener('click', () => { prevSlide(); restartAutoplay(); });
+
+    // Пауза / воспроизведение
+    const autoplayBtn = document.getElementById('galAutoplay');
+    autoplayBtn.addEventListener('click', () => {
+        galPlaying = !galPlaying;
+        autoplayBtn.textContent = galPlaying ? '⏸ Пауза' : '▶ Играть';
+        restartAutoplay();
+    });
+    restartAutoplay();
+
+    // Пауза при наведении мыши
+    const galleryBox = document.getElementById('gallery');
+    galleryBox.addEventListener('mouseenter', () => { if (galTimer) clearInterval(galTimer); });
+    galleryBox.addEventListener('mouseleave', restartAutoplay);
+
+    // Свайпы на телефоне
+    let touchX = 0;
+    const viewport = document.getElementById('galleryViewport');
+    viewport.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    viewport.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 40) { dx < 0 ? nextSlide() : prevSlide(); restartAutoplay(); }
+    }, { passive: true });
+
+    // Полноэкранный просмотр
+    document.getElementById('galFullscreen').addEventListener('click', () => {
+        if (document.fullscreenElement) { document.exitFullscreen(); }
+        else if (galleryBox.requestFullscreen) { galleryBox.requestFullscreen(); }
+    });
+    // В полноэкранном режиме скриншот занимает всю высоту
+    document.addEventListener('fullscreenchange', () => {
+        const vp = document.getElementById('galleryViewport');
+        vp.style.aspectRatio = document.fullscreenElement ? 'auto' : '';
+        vp.style.height = document.fullscreenElement ? '100vh' : '';
+    });
+
+    // Стрелки клавиатуры, когда галерея в фокусе
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' && galleryBox.matches(':hover')) nextSlide();
+        if (e.key === 'ArrowLeft' && galleryBox.matches(':hover')) prevSlide();
+    });
+
+    /* ========================================================= */
+    /* ===== ЖИВОЕ ДЕМО — КАЛЬКУЛЯТОР МАРЖИ ===== */
+    /* ========================================================= */
+    const costInput = document.getElementById('costPrice');
+    const sellInput = document.getElementById('sellPrice');
+    const discountInput = document.getElementById('discount');
+    const profitDisplay = document.getElementById('profitValue');
+    const marginDisplay = document.getElementById('marginValue');
+    const badgeDisplay = document.getElementById('statusBadge');
+
+    function calculateProfit() {
+        const cost = parseFloat(costInput.value) || 0;
+        const sell = parseFloat(sellInput.value) || 0;
+        const discount = parseFloat(discountInput.value) || 0;
+
+        const finalSellPrice = sell - (sell * discount / 100);
+        const profit = finalSellPrice - cost;
+        const margin = finalSellPrice > 0 ? (profit / finalSellPrice) * 100 : 0;
+
+        profitDisplay.textContent = Math.round(profit).toLocaleString('ru-RU') + ' ₽';
+        marginDisplay.textContent = margin.toFixed(1).replace('.', ',') + '%';
+
+        if (profit < 0) {
+            profitDisplay.style.color = '#c0392b';
+            badgeDisplay.textContent = '❌ Убыток!';
+            badgeDisplay.className = 'status-badge danger';
+        } else if (margin < 15) {
+            profitDisplay.style.color = 'var(--accent-amber-dark)';
+            badgeDisplay.textContent = '⚠️ Низкая маржа';
+            badgeDisplay.className = 'status-badge warn';
+        } else {
+            profitDisplay.style.color = 'var(--green)';
+            badgeDisplay.textContent = '✅ Отличная маржа';
+            badgeDisplay.className = 'status-badge';
+        }
+    }
+    if (costInput) {
+        costInput.addEventListener('input', calculateProfit);
+        sellInput.addEventListener('input', calculateProfit);
+        discountInput.addEventListener('input', calculateProfit);
+        calculateProfit();
+    }
 
     /* ===== ДЕМО 1: ДАШБОРД ===== */
     document.querySelectorAll('.demo-filter button').forEach(btn => {
