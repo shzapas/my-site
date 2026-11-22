@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Коммунальный расчет</title>
     
-    <!-- Домик (Favicon) -->
+    <!-- Иконка для вкладки браузера (компьютер и Android) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+
+    <!-- Иконка для домашнего экрана iPhone -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFlMjkzYiIgcng9IjIwIi8+PHRleHQgeT0iLjllbSIgeD0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjYwIj7wn4+gPC90ZXh0Pjwvc3ZnPg==">
+
+    <!-- Настройки для работы как нативное приложение на iPhone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
         :root {
@@ -23,10 +30,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            /* Системный шрифт — загружается моментально */
+            /* Системный шрифт — загружается моментально, без задержек */
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: var(--bg-gradient);
-            background-attachment: fixed; /* Фон не скроллится, работает быстрее */
+            background-attachment: fixed;
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -40,12 +47,12 @@
             width: 100%;
             background: #ffffff;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Легкая, четкая тень */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             overflow: hidden;
         }
 
         header {
-            background: #1e293b; /* Сплошной цвет вместо тяжелого градиента */
+            background: #1e293b;
             color: white;
             padding: 20px 30px;
             display: flex;
@@ -188,7 +195,6 @@
         }
         .btn-danger:hover { background: var(--danger); color: white; }
 
-        /* Легкая, но дорогая плашка расчетов */
         .result-box {
             background: #ffffff;
             border: 2px solid #e2e8f0;
