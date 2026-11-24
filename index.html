@@ -171,6 +171,9 @@
             animation: fadeIn 0.3s ease;
         }
         .modal-overlay.show { display: flex; }
+        /* 🆕 инструкция всегда строго по центру страницы */
+        #helpModal { place-items: center; }
+        #helpModal .modal-content { margin: auto; }
         
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -1324,13 +1327,30 @@
             .filter-checkbox { font-size: 0.55rem; padding: 2px 8px; }
             .search-filter-status { font-size: 0.5rem; }
         }
-        
+
+        /* ===== v2.13: закрепление колонок #, Магазин, Артикул, Наименование в таблице трансферов при горизонтальном скролле ===== */
+        #trTable th, #trTable td { position: sticky; }
+        #trTable th:nth-child(1), #trTable td:nth-child(1) { left: 0; min-width: 34px; width: 34px; z-index: 2; }
+        #trTable th:nth-child(2), #trTable td:nth-child(2) { left: 34px; min-width: 58px; width: 58px; z-index: 2; }
+        #trTable th:nth-child(3), #trTable td:nth-child(3) { left: 92px; min-width: 92px; width: 92px; z-index: 2; }
+        #trTable th:nth-child(4), #trTable td:nth-child(4) { left: 184px; min-width: 168px; max-width: 168px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 2; }
+        #trTable th:nth-child(4) { z-index: 3; }
+        #trTable th:nth-child(-n+4), #trTable td:nth-child(-n+4) {
+            background: var(--card-bg, #fff);
+        }
+        #trTable td:nth-child(-n+4) { color: var(--text-primary, inherit); }
+        #trTable th:nth-child(4)::after, #trTable td:nth-child(4)::after {
+            content: ''; position: absolute; top: 0; right: -4px; width: 4px; height: 100%;
+            background: linear-gradient(90deg, rgba(0,0,0,0.06), transparent);
+            pointer-events: none;
+        }
+        #trTable td:nth-child(4) { position: sticky; }
     </style>
 </head>
 <body>
 <div class="app-container" id="appContainer">
     <div class="header">
-        <h1>📊 STOCKWISE <small>Умный анализ запасов</small> <span style="font-size:0.55em;background:#1B5E20;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle">v2.11 · единый движок MIN</span></h1>
+        <h1>📊 STOCKWISE <small>Умный анализ запасов</small> <span style="font-size:0.55em;background:#1B5E20;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle">v2.13 · единый движок MIN + ПУТО/УТО</span></h1>
         <div class="header-controls">
             <button id="helpToggleBtn" class="help-toggle-btn">❓ Инструкция</button>
             <button id="themeToggleBtn" class="theme-toggle-btn">🌙 Тёмная</button>
@@ -1497,6 +1517,30 @@
                     <li>Статусы: 🟢 установить · 🟡 повысить · 🔴 понизить · ✅ норма · ⚪ снять.</li>
                     <li>Настройки (дни, % полки, сезонность, пики) — сверху вкладки, кнопка «⬇️ ШАБЛОН MIN» — готовый файл коллегам.</li>
                 </ul>
+            </div>
+
+            <div class="help-section" style="margin-bottom:0;">
+                <h3>🗂️ Шпаргалки по вкладкам — короткие шаги</h3>
+                <div class="help-grid">
+                    <div class="grid-item"><strong>📋 Вкладка «Таблица»</strong>
+                        <span>1. Загрузите отчёты (папка или вручную). 2. Нажмите «🧮 ВЫЧИСЛИТЬ». 3. Фильтруйте слева (магазин/отдел/подотдел/тип/ТОП/дни). 4. Правьте «Вид минимума»/«Кол-во проектов» в онлайн-режиме. 5. «⬇️ ВЫГРУЗИТЬ ВСЕ» — Excel со всей раскраской.</span>
+                    </div>
+                    <div class="grid-item"><strong>📊 Вкладка «Аналитика»</strong>
+                        <span>1. «🔄 Обновить» после расчёта. 2. Карточки — клик = выгрузка списка. 3. Топ-10 проблемных — выгрузка ТОП-10 или ВСЕ. 4. Сводка по магазинам — где дефицит, где избыток.</span>
+                    </div>
+                    <div class="grid-item"><strong>🚨 Вкладка «Аномалии»</strong>
+                        <span>1. «🔍 Сканировать». 2. Выберите типы ошибок галочками. 3. «💡 Предложить исправления» → примите нужные «✅ Принять». 4. Выгрузите рекомендации для поставщиков. Принятое попадёт в «ВЫГРУЗИТЬ MIN Custom».</span>
+                    </div>
+                    <div class="grid-item"><strong>🎯 Вкладка «МИНЫ»</strong>
+                        <span>1. Сначала «🧮 ВЫЧИСЛИТЬ» на Таблице. 2. Проверьте настройки (дни, % полки, пики). 3. «🧮 РАССЧИТАТЬ». 4. Фильтруйте чипами (MIN 441 / 500 / Снять / Повысить / ⭐). 5. Применяйте по одной «✅» или «✅ ПРИМЕНИТЬ ВСЕ». 6. «⬇️ ШАБЛОН MIN» — файл коллегам. Колонка «Гамма» и тег 🆕 — новинки/вновь открытые артикулы: MIN, возможно, не нужен.</span>
+                    </div>
+                    <div class="grid-item"><strong>🚚 Вкладка «ПУТО/УТО»</strong>
+                        <span>1. Слева выберите магазин-получатель + подотделы. 2. Настройте правила (горизонт, порог, локальная группа). 3. «🚚 РАССЧИТАТЬ». 4. Добавляйте «➕» в заявку. 5. «📦 Быстрая сборка» — проверьте разбивку по донорам и суммы DPAC → у каждого донора «⬇️ Шаблон» (CSV только его артикулов). 6. «🧾 Сопроводиловка» — Excel на согласование. История заявок — «🕘».</span>
+                    </div>
+                    <div class="grid-item"><strong>🟠 УТО и ПУТО — в чём разница</strong>
+                        <span>УТО — уже упущенная выручка (факт из отчёта). ПУТО — прогноз потерь вперёд: продажи/дн × дефицитные дни × Цена DPAC. В ПУТО/УТО приоритет и сортировка идут по сумме УТО+ПУТО.</span>
+                    </div>
+                </div>
             </div>
 
             <div class="help-section" style="margin-bottom:0;">
@@ -1712,6 +1756,7 @@
                 <button class="tab-btn" data-tab="analytics">📊 Аналитика</button>
                 <button class="tab-btn" data-tab="alerts">🚨 Аномалии</button>
                 <button class="tab-btn" data-tab="mincalc">🎯 МИНЫ</button>
+                <button class="tab-btn" data-tab="transfer">🚚 ПУТО/УТО</button>
             </div>
 
             <div id="tab-table" class="tab-content active">
@@ -2055,6 +2100,7 @@
                 </div>
 
                 <div id="minCalcSummary" class="stats-badge" style="display:none;"></div>
+                <div id="minStoreSummary" class="stats-badge" style="display:none;"></div>
 
                 <div class="analytics-section">
                     <h4>🎯 Рекомендации по MIN
@@ -2069,12 +2115,13 @@
                         <button class="chip-type" data-t="снять" onclick="setMinTypeFilter('снять')" style="cursor:pointer;border:1px solid rgba(229,57,53,0.4);background:rgba(229,57,53,0.15);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">⚪ Снять</button>
                         <button class="chip-type" data-t="повысить" onclick="setMinTypeFilter('повысить')" style="cursor:pointer;border:1px solid rgba(46,125,50,0.4);background:rgba(46,125,50,0.12);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">🟡 Повысить</button>
                         <button class="chip-type" data-t="понизить" onclick="setMinTypeFilter('понизить')" style="cursor:pointer;border:1px solid rgba(229,57,53,0.4);background:rgba(229,57,53,0.12);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">🔴 Понизить</button>
+                        <button class="chip-type" data-t="vip" onclick="setMinTypeFilter('vip')" title="Только приоритетные позиции: Бест ⭐ и 20/80 🏷️ — по ним MIN критичен для продаж" style="cursor:pointer;border:1px solid rgba(255,193,7,0.5);background:rgba(255,193,7,0.18);color:inherit;border-radius:14px;padding:3px 12px;font-size:0.62rem;font-weight:600;">⭐ 20/80 и Бест</button>
                     </div>
                     <div class="top-table-wrapper" style="max-height:420px;">
                         <table class="top-table" id="minRecTable">
                             <thead>
                                 <tr>
-                                    <th>#</th><th>Магазин</th><th>Артикул</th><th>Наименование</th>
+                                    <th>#</th><th>Магазин</th><th>Артикул</th><th>Наименование</th><th>Гамма</th>
                                     <th>MIN 441 тек → рек</th><th>MIN 500 тек → рек</th>
                                     <th>Тип</th><th>Кол-во</th><th>Действие</th><th>Логика</th><th>✅</th>
                                 </tr>
@@ -2082,7 +2129,128 @@
                             <tbody id="minRecBody"></tbody>
                         </table>
                     </div>
-                    <div class="info-note" style="margin-top:4px;">Кнопка «✅» записывает рекомендацию как правку — она попадёт в «ВЫГРУЗИТЬ MIN Custom». «⬇️ ШАБЛОН MIN» — готовый файл в формате коллег.</div>
+                    <div class="info-note" style="margin-top:4px;">Кнопка «✅» записывает рекомендацию как правку — она попадёт в «ВЫГРУЗИТЬ MIN Custom». «⬇️ ШАБЛОН MIN» — готовый файл в формате коллег. 🚚 <b>Связка с ПУТО/УТО:</b> если артикул стоит в заявке на трансфер, строка подсвечивается голубым — MIN, возможно, не нужен. Подсветка появляется после «🧮 РАССЧИТАТЬ» на вкладке ПУТО/УТО (заявка хранится до очистки). «≈ N дн» в колонке Кол-во — на сколько дней продаж хватит рекомендуемого MIN.</div>
+                </div>
+            </div>
+            <div id="tab-transfer" class="tab-content">
+                <div class="right-header">
+                    <h3>🚚 ПУТО/УТО — кандидаты на трансфер</h3>
+                    <div class="action-buttons">
+                        <button id="computeTransferBtn" class="btn-compute">🧮 РАССЧИТАТЬ</button>
+                        <button id="exportTransferDocBtn" class="btn-export-all" title="Excel-сопроводиловка: Магазин, Артикул, Наименование, Кол-во, Стоимость ₽, Донор + итоговая строка">🧾 Сопроводиловка</button>
+                    </div>
+                </div>
+
+                <details class="info-note" style="margin:8px 0; padding:8px 14px;">
+                    <summary style="cursor:pointer; font-weight:800; font-size:0.78rem;">⚙️ Как настроить расчёт — короткая инструкция (нажмите, чтобы раскрыть)</summary>
+                    <div style="margin-top:6px; line-height:1.55; font-size:0.68rem;">
+                        1️⃣ Загрузите выгрузки (ГАММА по всем магазинам-донорам и получателям, УТО, поставки) → «🧮 ВЫЧИСЛИТЬ» на вкладке Таблица.<br>
+                        2️⃣ <b>Горизонт, дн (15)</b> — на сколько дней вперёд обеспечиваем получателя: К перемещению = 15×СДО − запас − в пути.<br>
+                        3️⃣ <b>Порог запаса получателя (10 дн)</b> — если товар в магазине закончится раньше, чем через 10 дней, магазин попадает в кандидаты.<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;• Покрытие = Запас, дн. (на сколько дней хватит остатка при текущих продажах). Пример: остаток 7 шт, продаём 1 шт/дн → покрытие 7 дн ≤ 10 дн → кандидат.<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;• Если покрытие больше порога (например 12 дн) — товара пока хватает, магазин в расчёт не берётся.<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;• Дополнительно проверяем поставку: если заказ уже едет и придёт ≤ «Ждать поставку (2 дн)», и после неё запаса хватит — перемещение не нужно, строка отсеется.<br>
+                        4️⃣ <b>Ждать поставку (2 дн)</b> — см. пункт 3️⃣: сколько дней ещё можно ждать приход заказа, прежде чем ехать за товаром в другой магазин.<br>
+                        5️⃣ <b>Макс. доля донора (50%)</b> — защита донора от разорения, работает в два шага:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;• Шаг А. Донор обязан оставить себе <b>«неприкосновенный запас» = max(2; 15×СДО)</b> — то есть либо минимум 2 шт, либо запас на 15 дней его собственных продаж (что больше). Пример: донор продаёт 3 шт/дн → оставит себе max(2; 45) = 45 шт.<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;• Шаг Б. Кроме того, донор отдаст <b>не более 50% своего остатка</b> (чтобы не оголять полку вдвое).<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;• Итог: «Передать, шт» = меньшее из «сколько нужно получателю» и «сколько донор может отдать» (Шаг А и Шаг Б). Колонка донора показывает остаток после передачи — «после: X дн / Y шт»; красным 🛡️, если донору осталось меньше 14 дн.<br>
+                        6️⃣ <b>Высокий приоритет от (10 000 ₽)</b> — кандидаты с УТО+ПУТО выше суммы помечаются 🔴, остальные 🟡.<br>
+                        7️⃣ <b>Локальная группа (8, 92, 147, 165, 258)</b> — магазины, между которыми возим в первую очередь; галочка «Только локальные доноры» оставляет лишь их. Галочка <b>«Скрыть товары с датой AVS»</b> убирает из кандидатов товары с AVS.<br>
+                        8️⃣ <b>Получатель</b> — фильтр по магазину-получателю (по умолчанию берётся фильтр магазина основной панели). <b>Фильтры основной панели</b> (подотдел, тип, ТОП, дни) применяются и к получателям, и к донорам; фильтр «Магазин» действует только на получателей — доноры ищутся по всем загруженным магазинам.<br>
+                        9️⃣ Нажмите «🧮 РАССЧИТАТЬ» → таблица отсортирована по стоимости DPAC (сначала дорогие) → клик по заголовку меняет сортировку → добавляйте нужные строки «➕» в заявку.<br>
+                        🔟 <b>Далее:</b> «📦 Быстрая сборка» — заявка по магазинам-донорам с суммами DPAC; в шапке каждого донора кнопка «⬇️ Шаблон для магазина N» — CSV (Артикул;Кол-во) <b>только с его артикулами</b>, грузите каждый файл под своего донора. «🧾 Сопроводиловка» — Excel для согласования с итоговой суммой.<br>
+                        <br>
+                        <b>🟠 Как считается ПУТО (потенциальный УТО), ₽</b><br>
+                        • <b>УТО (факт)</b> — выручка, уже упущенная за прошлый период (из отчёта УТО).<br>
+                        • <b>ПУТО (прогноз)</b> — сколько потеряем <b>впереди</b>, если ничего не переместим: <b>ПУТО = продажи/дн × дефицитные дни × Цена DPAC</b>, где дефицитные дни = Горизонт (15) − текущее покрытие.<br>
+                        • Пример: продаём 0.7 шт/дн, покрытие 2.2 дн, горизонт 15 дн → дефицитных дней 12.8 → ПУТО = 0.7 × 12.8 × DPAC.<br>
+                        • В колонке «УТО+ПУТО ₽» показывается сумма с разбивкой (фиолетовым факт, оранжевым прогноз) — по ней же считается приоритет 🔴/🟡 и сортировка.
+                    </div>
+                </details>
+
+                <div class="filters-area" style="min-height:auto; padding:10px 14px; margin:8px 0;">
+                    <div style="font-weight:700; font-size:0.75rem; color:var(--text-secondary); margin-bottom:6px;">🚚 Правила трансферов (по памятке)</div>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-size:0.65rem;">Горизонт, дн
+                            <input type="number" id="trHorizon" value="15" min="1" max="90" style="width:52px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;">Порог запаса получателя, дн
+                            <input type="number" id="trRiskDays" value="10" min="1" max="90" style="width:52px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;">Ждать поставку, дн
+                            <input type="number" id="trSupplyWait" value="2" min="0" max="60" style="width:52px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;">Макс. доля донора, %
+                            <input type="number" id="trDonorShare" value="50" min="1" max="100" style="width:52px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;">Высокий приоритет от, ₽
+                            <input type="number" id="trHiFrom" value="10000" min="0" max="1000000" step="500" style="width:64px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;">Локальная группа
+                            <input type="text" id="trLocalGroup" value="8, 92, 147, 165, 258" style="width:150px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label class="filter-checkbox" style="margin:0;">
+                            <input type="checkbox" id="trOnlyLocal"> Только локальные доноры
+                        </label>
+                        <label class="filter-checkbox" style="margin:0;">
+                            <input type="checkbox" id="trHideAvs"> Скрыть товары с датой AVS
+                        </label>
+                        <label class="filter-checkbox" style="margin:0;" title="Округлять «Передать, шт» до целых упаковок (по колонке «Размер упаковки» из ГАММА). Полезно для крупногабаритного товара; для обычного можно выключить.">
+                            <input type="checkbox" id="trPackRound"> Округлять до упаковки 📦
+                        </label>
+                        <label style="font-size:0.65rem;">Получатель
+                            <select id="trStoreFilter" style="padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                                <option value="">— все магазины —</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="info-note" style="margin-top:6px;">
+                        Логика (флоучарт коллег): получатель = СДО&gt;0, запас ≤ 10 дн, есть УТО/ПУТО. Есть заказ и ≤ 2 дн до поставки (и после неё запаса хватит) — ждём. Донор = с продажами, один с наибольшим запасом (локальные приоритетны); оставляет себе max(2; 15×СДО) и не более 50% остатка. К перемещению = min(15×СДО − запас − в пути; может дать). Приоритет: УТО+ПУТО ≥ 10 000 ₽ — высокий.</div>
+                </div>
+
+                <div id="trSummary" class="stats-badge" style="display:none;"></div>
+
+                <div class="analytics-section">
+                    <h4>🚚 Кандидаты на трансфер
+                        <div class="section-actions">
+                            <span id="trBasketInfo" style="font-size:0.68rem; color:var(--text-secondary);">в заявке: 0</span>
+                            <button class="btn-export-all" onclick="trExportCandidatesExcel()" title="Вся таблица кандидатов списком в Excel — удобно просматривать и обсуждать с коллегами">⬇️ Excel</button>
+                            <button class="btn-export-all" onclick="trOpenAssembly()" title="Сгруппировать заявку по магазинам-донорам: сколько и на какую сумму забрать с каждого">📦 Быстрая сборка</button>
+                            <button class="btn-export-all" id="trHistoryBtn" onclick="trOpenHistory()" title="Выгруженные заявки: дата, сумма, позиции — контроль «что мы уже запланировали»">🕘 История (0)</button>
+                            <button class="btn-export-all" onclick="clearTransferBasket()">🗑️ Очистить заявку</button>
+                        </div>
+                    </h4>
+                    <div class="top-table-wrapper" style="max-height:480px;">
+                        <table class="top-table" id="trTable">
+                            <thead>
+                                <tr id="trHeadRow">
+                                    <th data-k="idx" title="№ строки">#</th>
+                                    <th data-k="store" title="Магазин-получатель">Магазин</th>
+                                    <th data-k="art" title="Артикул">Артикул</th>
+                                    <th data-k="name" title="Наименование">Наименование</th>
+                                    <th data-k="gamma" title="Гамма товара">Гамма</th>
+                                    <th data-k="uto" title="УТО+ПУТО, руб.">УТО+ПУТО ₽</th>
+                                    <th data-k="prio" title="Приоритет">Приоритет</th>
+                                    <th data-k="stock" title="Остаток получателя, шт">Остаток</th>
+                                    <th data-k="sdo" title="Среднедневные отгрузки, шт/дн">СДО</th>
+                                    <th data-k="cover" title="Покрытие запасом, дн">Покрытие, дн</th>
+                                    <th data-k="supplyDn" title="Поставка / в пути">Поставка</th>
+                                    <th data-k="donor" title="Донор (его запас, дн)">Донор (запас)</th>
+                                    <th data-k="give" title="Количество к перемещению, шт">Передать, шт</th>
+                                    <th data-k="cost" title="Стоимость товара в ДЕПАК: кол-во × Цена DPAC">Стоимость, ₽ (DPAC)</th>
+                                    <th>➕</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="info-note" style="margin-top:4px;">
+                        🔽 Сортировка: кликните по заголовку любой колонки — первый клик «от большего к меньшему», повторный — наоборот. По умолчанию — <b>«Стоимость, ₽ (DPAC)» по убыванию</b> (сначала самые дорогие перемещения).
+                    </div>
+                    <div class="info-note" style="margin-top:4px;">
+                        «➕» добавляет артикул в заявку. Выгрузка для загрузчика дочерних заказов (Артикул;Количество, без ЛМ-кода) — кнопкой «⬇️ Шаблон для магазина N» в «📦 Быстрой сборке», у каждого магазина-донора свой файл. Колонка «Стоимость, ₽ (DPAC)» = количество к перемещению × «Сумма Цена DPAC» из отчёта ГАММА (стоимость товара в ДЕПАК).
+                    </div>
                 </div>
             </div>
         </div>
@@ -2091,6 +2259,672 @@
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+
+
+<script>
+// ==================== 🚚 v2.12: вкладка ПУТО/УТО ====================
+const trState = { allRows: [], rows: [], basket: new Set(), mainFilter: "", sortKey: 'cost', sortDir: -1 };
+
+// 🔽 сортировка кликом по заголовку таблицы трансферов
+const TR_SORT_NUMERIC = new Set(['idx','uto','stock','sdo','cover','give','cost']);
+function trSetSort(k) {
+    if (trState.sortKey === k) { trState.sortDir = -trState.sortDir; }
+    else { trState.sortKey = k; trState.sortDir = (k === 'name' || k === 'store' || k === 'art') ? 1 : -1; } // числа: сначала большие, текст: А→Я
+    renderTransferTable();
+}
+function trSortRows(rows) {
+    const k = trState.sortKey, d = trState.sortDir, num = TR_SORT_NUMERIC.has(k);
+    return rows.slice().sort((a, b) => {
+        let va, vb;
+        if (k === 'idx') { va = trState.rows.indexOf(a); vb = trState.rows.indexOf(b); }
+        else if (k === 'prio') { va = a.prio.indexOf('🔴') === 0 ? 1 : 0; vb = b.prio.indexOf('🔴') === 0 ? 1 : 0; }
+        else if (k === 'donor') { va = a.donor.cover; vb = b.donor.cover; }
+        else if (k === 'supplyDn') { const p = s => parseFloat(String(s)) || 999; va = p(a.supplyDn); vb = p(b.supplyDn); }
+        else { va = a[k]; vb = b[k]; }
+        if (num) return (vb - va) * (d === -1 ? 1 : -1);
+        return String(va).localeCompare(String(vb), 'ru') * (d === 1 ? 1 : -1);
+    });
+}
+
+function trNum(v){ const n = parseFloat(String(v ?? '').replace(',', '.')); return isNaN(n) ? 0 : n; }
+
+// 🆕 Пул ДОНОРОВ: все загруженные магазины, но с учётом фильтров панели
+// (подотдел/тип/ТОП). Фильтр «Магазин» на доноров НЕ влияет — он выбирает получателя.
+function trDonorPool() {
+    const base = (cachedData.fullData && cachedData.fullData.length) ? cachedData.fullData : [];
+    const selArr = (typeof selectedSubdepartments !== 'undefined') ? Array.from(selectedSubdepartments) : [];
+    const subSel = document.getElementById('subdepartmentFilter');
+    const subVal = subSel ? subSel.value : 'all';
+    const typeEl = document.getElementById('typeFilter');
+    const typeVal = typeEl ? typeEl.value : 'all';
+    const topEl = document.getElementById('topFilter');
+    const topVal = topEl ? topEl.value : 'all';
+    return base.filter(r => {
+        const sub = String(r["Подотдел"] ?? '');
+        if (selArr.length) { if (!selArr.includes(sub)) return false; }
+        else if (subVal !== 'all' && subVal !== '__multi__' && sub !== subVal) return false;
+        if (typeVal !== 'all' && String(r["ТИП"] ?? '') !== typeVal) return false;
+        if (topVal !== 'all') {
+            const t = String(r["ТОП"] ?? '').replace(/\.00$/, '').trim();
+            if (topVal === '0') { if (t !== '' && t !== '0') return false; }
+            else if (t !== topVal) return false;
+        }
+        return true;
+    });
+}
+
+function computeTransferRecommendations() {
+    // 🆕 уважаем фильтры ОСНОВНОЙ панели (магазин/отдел/подотдел/тип/ТОП/дни):
+    // кандидаты и доноры ищутся только среди отфильтрованных товаров
+    let src = null, srcFiltered = false;
+    try {
+        if (filteredCalculatedResult && filteredCalculatedResult.length) { src = filteredCalculatedResult; srcFiltered = true; }
+        else if (cachedData.fullData && cachedData.fullData.length) { src = cachedData.fullData; }
+    } catch (e) {}
+    if (!src) { showToast('Сначала нажмите «🧮 ВЫЧИСЛИТЬ» на вкладке Таблица', 'warning'); return; }
+    if (srcFiltered) {
+        showToast('🚚 Расчёт по фильтрам основной панели: ' + src.length + ' товаров (доноры — тоже из выбранных подотделов)', 'info', 4000);
+    }
+
+    const horizon  = trNum(document.getElementById('trHorizon').value) || 15;
+    const waitDays = trNum(document.getElementById('trSupplyWait').value);
+    const donorShr = trNum(document.getElementById('trDonorShare').value) / 100;
+    const hiFrom   = trNum(document.getElementById('trHiFrom').value);
+    const localSet = new Set(String(document.getElementById('trLocalGroup').value || '').split(',').map(x => x.trim()).filter(Boolean));
+    const onlyLocal = document.getElementById('trOnlyLocal').checked;
+
+    const byArticle = new Map();
+    // 🆕 доноры — из пула ВСЕХ магазинов (с фильтрами подотдел/тип/ТОП, но без фильтра «Магазин»)
+    for (const r of trDonorPool()) {
+        const art = String(r["Артикул"] ?? '').trim();
+        if (!art) continue;
+        if (!byArticle.has(art)) byArticle.set(art, []);
+        byArticle.get(art).push(r);
+    }
+
+    // ===== АЛГОРИТМ (флоучарт коллег): ТРАНСФЕРЫ УТО =====
+    // Получатель: СДО>0, запас<=порога (10 дн), теряет деньги (УТО>0 или ПУТО>0)
+    // Ждать: есть заказ и <= waitDays дн до поставки, и после поставки запас > порога
+    // Донор: СДО>0, один с наибольшим запасом шт.; оставляет max(2; 15*СДО), отдает не более 50%
+    // К перемещению = min(15*СДО - запас - в пути; может дать)
+    const out = [];
+    for (const r of src) {
+        const uto  = trNum(r["УТО, руб."]);
+        const puto = trNum(r["ПУТО"]) === 1 || String(r["ПУТО"]).trim() === '1';
+        if (!uto && !puto) continue;
+
+        const store = String(r["№ магазина"] ?? '').trim();
+        const art   = String(r["Артикул"] ?? '').trim();
+        const name  = String(r["Наименование"] ?? '');
+        const sdo   = trNum(r["Отгружено в сред. За 7 дн"]) / 7;
+        if (sdo <= 0) continue;
+        const stock  = trNum(r["Запас, шт."]);
+        const onWay  = trNum(r["В пути, шт."]);
+        let cover    = trNum(r["Запас, дн."]);
+        if (!cover && sdo > 0) cover = stock / sdo;
+
+        const riskDays = trNum(document.getElementById('trRiskDays').value) || 10;
+        if (cover > riskDays) continue;
+
+        const onWayDays = trNum(r["В пути, дн."]);
+        let supplyDn = trNum(r["Срок поставки в магазин"]);
+        if (!supplyDn) supplyDn = onWayDays;
+        const hasOrder = onWay > 0 || supplyDn > 0;
+        const afterSupply = (stock + onWay) / sdo;
+        if (hasOrder && supplyDn <= waitDays && afterSupply > riskDays) continue;
+
+        const donors = [];
+        for (const d of (byArticle.get(art) || [])) {
+            const dStore = String(d["№ магазина"] ?? '').trim();
+            if (!dStore || dStore === store) continue;
+            const dSdo = trNum(d["Отгружено в сред. За 7 дн"]) / 7;
+            if (dSdo <= 0) continue;
+            const dStock = trNum(d["Запас, шт."]);
+            if (dStock <= 0) continue;
+            const keepD = Math.max(2, Math.ceil(15 * dSdo));
+            const canGive = Math.max(0, Math.min(dStock - keepD, Math.floor(dStock * donorShr)));
+            if (canGive <= 0) continue;
+            let dCover = trNum(d["Запас, дн."]);
+            if (!dCover) dCover = dStock / dSdo;
+            donors.push({ store: dStore, cover: dCover, stock: dStock, sdo: dSdo, local: localSet.has(dStore), maxGive: canGive });
+        }
+        donors.sort((a, b) => ((b.local ? 1 : 0) - (a.local ? 1 : 0)) || (b.stock - a.stock) || (b.maxGive - a.maxGive));
+        let best = donors.find(d => d.local);
+        if (!best && !onlyLocal) best = donors[0];
+        if (!best) continue;
+
+        const needQty = Math.ceil(horizon * sdo - stock - onWay);
+        let give = Math.max(0, Math.min(needQty, best.maxGive));
+        if (give <= 0) continue;
+        // 📦 округление до целых упаковок (по «Размер упаковки» из ГАММА), вкл/выкл галочкой
+        const packSize = Math.max(1, Math.round(trNum(r["Размер упаковки"])) || 1);
+        const roundPack = document.getElementById('trPackRound');
+        if (roundPack && roundPack.checked && packSize > 1) {
+            give = Math.min(best.maxGive, Math.max(packSize, Math.ceil(give / packSize) * packSize));
+        }
+        const barcode = String(r["Штрихкод"] ?? '').trim();
+
+        const dpac = trNum(r["Цена DPAC"]);
+        // 🆕 ПУТО, руб. — ПОТЕНЦИАЛЬНЫЙ УТО: сколько выручки потеряем за горизонт,
+        // если не перебросим товар: продажи/дн × (горизонт − текущее покрытие) × Цена DPAC
+        const putoRub = Math.round(sdo * Math.max(0, horizon - cover) * dpac);
+        const utoTotal = uto + putoRub; // суммарная упущенная выручка (факт + прогноз)
+        const prio = utoTotal >= hiFrom ? '🔴 высокий' : '🟡 средний';
+        // 🛡️ контроль донора: покрытие донора ПОСЛЕ передачи (защита от перекладывания УТО)
+        const donorAfter = best.sdo > 0 ? (best.stock - give) / best.sdo : best.cover;
+        const donorAfterStock = Math.max(0, best.stock - give); // 🆕 остаток донора в ШТ после передачи
+        // ⚠️ AVS: у товара-получателя есть дата AVS
+        const avs = String(r["Дата AVS"] || "").trim();
+        out.push({ store, art, name, gamma: String(r["Гамма"] ?? '').trim(), uto, puto, putoRub, utoTotal, prio, stock, sdo, cover,
+                   supplyDn: (onWay > 0 ? ('в пути ' + (supplyDn || '?') + ' дн') : (supplyDn ? ('поставка ' + supplyDn + ' дн') : '—')), donor: best, give, dpac, cost: Math.round(give * dpac), donorAfter, donorAfterStock, avs, barcode, packSize });
+    }
+
+    out.sort((a, b) => ((b.prio.indexOf('🔴') === 0 ? 1 : 0) - (a.prio.indexOf('🔴') === 0 ? 1 : 0)) || (b.utoTotal - a.utoTotal));
+    // фильтр магазина с ОСНОВНОЙ панели (sidеbar): выбрали 8 - смотрим трансферы для 8
+    let mainStore = '';
+    try {
+        const ms = document.getElementById('storeFilter');
+        if (ms && ms.value && ms.value !== 'all' && ms.value !== '-- Все магазины --') mainStore = String(ms.value).trim();
+    } catch (e) {}
+    trState.mainFilter = mainStore;
+    trState.allRows = out;
+    // 🆕 снапшот строк: заявка не теряет стоимость/количество при смене фильтров
+    if (!trState.snapshot) trState.snapshot = new Map();
+    for (const r of out) trState.snapshot.set(r.store + '|' + r.art, r);
+    const sel = document.getElementById('trStoreFilter');
+    if (sel) { sel.value = ''; while (sel.options.length > 1) sel.remove(1); }
+    trApplyStoreFilter();
+    // 🚚 связка МИНЫ ↔ ПУТО: после расчёта трансферов обновляем подсветку на вкладке МИНЫ
+    if (typeof minCalcResults !== 'undefined' && minCalcResults.length) {
+        try { renderMinTable(); } catch (e) {}
+        showToast('🚚 Трансферы рассчитаны — позиции из заявки подсвечены на вкладке МИНЫ', 'info');
+    }
+}
+
+function trApplyStoreFilter() {
+    const sel = document.getElementById('trStoreFilter');
+    const f = sel ? sel.value : '';
+    // база: учёт фильтра магазина основной панели
+    let base = trState.mainFilter ? trState.allRows.filter(r => r.store === trState.mainFilter) : trState.allRows;
+    // ⚠️ AVS: опционально скрываем товары с датой AVS
+    const hideAvs = document.getElementById('trHideAvs');
+    if (hideAvs && hideAvs.checked) base = base.filter(r => !r.avs);
+    if (sel) {
+        while (sel.options.length > 1) sel.remove(1);
+        const stores = [...new Set(base.map(r => r.store))].sort();
+        for (const st of stores) {
+            const o = document.createElement('option'); o.value = st; o.textContent = 'Магазин ' + st; sel.appendChild(o);
+        }
+        if (trState.mainFilter) sel.value = trState.mainFilter;
+    }
+    trState.rows = f ? base.filter(r => r.store === f) : base;
+    renderTransferTable();
+}
+
+function renderTransferTable() {
+    const body = document.getElementById('trBody');
+    if (!body) return;
+    // 🔽 применяем сортировку к копии (порядок в trState.rows не меняем)
+    const shown = trSortRows(trState.rows);
+    // индикатор в шапке
+    const headRow = document.getElementById('trHeadRow');
+    if (headRow) {
+        headRow.querySelectorAll('th[data-k]').forEach(th => {
+            const base = th.getAttribute('data-k');
+            th.textContent = th.textContent.replace(/ [▼▲]$/, '');
+            if (base === trState.sortKey) th.textContent += (trState.sortDir === -1 ? ' ▼' : ' ▲');
+        });
+    }
+    if (!shown.length) {
+        body.innerHTML = '<tr><td colspan="15" style="text-align:center; padding:24px; color:var(--text-secondary);">Кандидатов не найдено (либо загрузите выгрузки и нажмите РАССЧИТАТЬ)</td></tr>';
+    } else {
+        body.innerHTML = shown.map((r, i) => {
+            const key = r.store + '|' + r.art;
+            const inB = trState.basket.has(key);
+            return '<tr>'
+                + '<td>' + (i + 1) + '</td><td>' + r.store + '</td>'
+                + '<td><a href="#" onclick="openProductInMagPortal(\'' + r.art + '\');return false;" style="color:#FF8C00;font-weight:700;text-decoration:underline;" title="Открыть в MagPortal">' + r.art + '</a>' + (r.avs ? ' <span style="color:#e53935;font-weight:700;font-size:0.55rem;" title="У товара есть дата AVS (' + r.avs + ')">⚠️AVS</span>' : '')
+                + (r.barcode ? '<div style="font-size:0.52rem; color:var(--text-secondary);" title="Штрихкод — для набора товара на складе">' + r.barcode + '</div>' : '')
+                + (r.packSize > 1 ? '<div style="font-size:0.52rem; color:var(--text-secondary);" title="Размер упаковки (ГАММА)">📦 упак. ' + r.packSize + '</div>' : '') + '</td>'
+                + '<td>' + r.name + '</td>'
+                + '<td style="font-size:0.55rem; color:var(--text-secondary); white-space:nowrap;" title="Гамма товара">' + (r.gamma || '—') + '</td>'
+                + '<td style="font-weight:700;" title="УТО факт — уже упущенная выручка; ПУТО — прогноз потерь за горизонт без трансфера: продажи/дн × дефицитные дни × Цена DPAC">'
+                + r.utoTotal.toLocaleString('ru') + ' ₽'
+                + '<div style="font-size:0.52rem; font-weight:400;">'
+                + (r.uto > 0 ? '<span style="color:#7b1fa2;">УТО ' + r.uto.toLocaleString('ru') + '</span>' : '')
+                + (r.uto > 0 && r.putoRub > 0 ? ' + ' : '')
+                + (r.putoRub > 0 ? '<span style="color:#e65100;">ПУТО ' + r.putoRub.toLocaleString('ru') + '</span>' : '')
+                + (r.uto === 0 && r.putoRub === 0 ? '—' : '')
+                + '</div></td>'
+                + '<td>' + r.prio + '</td>'
+                + '<td>' + r.stock + '</td><td>' + r.sdo.toFixed(1) + '</td>'
+                + '<td style="color:' + (r.cover < 7 ? '#e53935' : 'inherit') + ';font-weight:700;">' + r.cover.toFixed(1) + '</td>'
+                + '<td>' + r.supplyDn + '</td>'
+                + (() => {
+                    // 🛡️ защита от перекладывания УТО: у донора после передачи должно оставаться ≥ 14 дн
+                    const warn = r.donorAfter < 14;
+                    const ttl = 'Покрытие донора ПОСЛЕ передачи: ' + r.donorAfter.toFixed(1) + ' дн' + (warn ? ' — меньше 14 дн, донор сам попадёт в дефицит!' : ' — в норме');
+                    return '<td' + (warn ? ' style="background:rgba(229,57,53,0.14);color:#e53935;font-weight:700;"' : '') + ' title="' + ttl
+                        + '">' + r.donor.store + ' (' + r.donor.cover.toFixed(0) + ' дн)' + (r.donor.local ? '' : ' ⚠️далеко')
+                        + '<div style="font-size:0.55rem;">после: ' + r.donorAfter.toFixed(1) + ' дн / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)) + ' шт' + (warn ? ' 🛡️' : '') + '</div></td>';
+                })()
+                + '<td style="font-weight:800;color:#2e7d50;">'
+                + '<input type="number" min="1" value="' + r.give + '" '
+                + 'onchange="trSetGive(\'' + key + '\', this.value)" '
+                + 'style="width:52px; padding:1px 4px; font-weight:800; color:#2e7d50; border:1px solid var(--input-border); border-radius:6px; background:var(--input-bg); font-size:0.62rem;" '
+                + 'title="Можно изменить вручную — стоимость и покрытие донора пересчитаются. 📦 упак. ' + r.packSize + '">'
+                + '</td>'
+                + '<td style="font-weight:700;color:#1565c0;">' + (r.cost > 0 ? r.cost.toLocaleString('ru') + ' ₽' : '—') + '</td>'
+                + '<td><button class="btn-compute" style="padding:2px 8px;font-size:0.6rem;" onclick="toggleTransferBasket(\'' + key.replace(/'/g, "\\'") + '\')">' + (inB ? '✅' : '➕') + '</button></td>'
+                + '</tr>';
+        }).join('');
+    }
+    const sum = document.getElementById('trSummary');
+    if (sum) {
+        sum.style.display = 'block';
+        const costSum = trState.rows.reduce((s, r) => s + (r.cost || 0), 0);
+        sum.innerHTML = '🚚 Кандидатов: <b>' + trState.rows.length + '</b> · с высоким приоритетом: <b>' + trState.rows.filter(r => r.prio.indexOf('🔴') === 0).length + '</b> · в заявке: <b>' + trState.basket.size + '</b>'
+            + ' · стоимость товара к перемещению (DPAC): <b style="color:#1565c0;">' + costSum.toLocaleString('ru') + ' ₽</b>'
+            + (trState.mainFilter ? ' · <b>по магазину ' + trState.mainFilter + '</b> (фильтр панели; доноры - из всех загруженных магазинов)' : ' · по всем магазинам');
+    }
+    const bi = document.getElementById('trBasketInfo');
+    if (bi) bi.textContent = 'в заявке: ' + trState.basket.size;
+    // 🧾 сумма стоимости (DPAC) товаров заявки — теперь показывается в «📦 Быстрой сборке»
+}
+
+function toggleTransferBasket(key) {
+    if (trState.basket.has(key)) {
+        trState.basket.delete(key);
+    } else {
+        trState.basket.add(key);
+        // 🆕 фиксируем строку в снапшоте, если её нет в текущем расчёте
+        if (!trState.snapshot) trState.snapshot = new Map();
+        const live = trState.allRows.find(r => (r.store + '|' + r.art) === key);
+        if (live && !trState.snapshot.has(key)) trState.snapshot.set(key, live);
+        // 🔁 контроль повторного перемещения (не блокирует — только предупреждает)
+        const [st, art] = key.split('|');
+        // 1) этот же артикул уже в заявке с другим донором
+        const other = trState.allRows.find(r => r.art === art && (r.store + '|' + r.art) !== key && trState.basket.has(r.store + '|' + r.art));
+        if (other) showToast('⚠️ Артикул ' + art + ' уже в заявке с донором ' + other.donor.store + ' → магазин ' + other.store + '. Проверьте, что не перемещаете его дважды.', 'warning');
+        // 2) артикул уже был в прошлых выгруженных заявках
+        const past = trFindInHistory(art);
+        if (past) showToast('🕘 Артикул ' + art + ' уже был в заявке от ' + past.date + ' (' + past.give + ' шт → магазин ' + past.store + '). Если он уже перемещён — сейчас может быть лишним.', 'warning', 10000);
+    }
+    renderTransferTable();
+}
+
+// 🆕 единый сборщик позиций заявки: живые строки приоритетны, снапшот — запасной вариант
+// (раньше заявка «теряла» стоимость, если фильтр магазина менялся после добавления)
+function trBasketItems() {
+    const items = [];
+    if (!trState.snapshot) trState.snapshot = new Map();
+    for (const key of trState.basket) {
+        const live = trState.allRows.find(r => (r.store + '|' + r.art) === key);
+        const r = live || trState.snapshot.get(key);
+        if (r) items.push(r);
+    }
+    return items;
+}
+
+// ✍️ ручная правка «Передать, шт» с пересчётом стоимости и контроля донора
+function trSetGive(key, val) {
+    const r = trState.allRows.find(x => (x.store + '|' + x.art) === key);
+    if (!r) return;
+    let n = Math.floor(toNumber(val, 0));
+    if (!n || n < 1) { n = 1; showToast('⚠️ Количество должно быть ≥ 1', 'warning', 2000); }
+    // не больше, чем донор физически может отдать (оставив max(2; 15×СДО))
+    const cap = r.donor.stock - Math.max(2, Math.ceil(15 * r.donor.sdo));
+    if (n > cap) { n = Math.max(1, cap); showToast('🛡️ Донор ' + r.donor.store + ' не может отдать больше ' + n + ' шт (иначе сам уйдёт в дефицит)', 'warning', 6000); }
+    r.give = n;
+    r.cost = Math.round(n * (r.dpac || 0));
+    r.donorAfter = r.donor.sdo > 0 ? (r.donor.stock - n) / r.donor.sdo : r.donor.cover;
+    r.donorAfterStock = Math.max(0, r.donor.stock - n); // 🆕 остаток донора в шт
+    renderTransferTable();
+}
+
+// ==================== 🕘 v2.13: история заявок (localStorage) ====================
+const TR_HISTORY_KEY = 'stockwise_tr_history_v1';
+function trLoadHistory() {
+    try { return JSON.parse(localStorage.getItem(TR_HISTORY_KEY) || '[]'); } catch (e) { return []; }
+}
+function trSaveHistoryEntry() {
+    if (!trState.basket.size) return;
+    const items = trBasketItems().map(r => ({
+        store: r.store, art: r.art, name: r.name, give: r.give, cost: r.cost || 0, donor: r.donor.store, key: r.store + '|' + r.art
+    }));
+    if (!items.length) return;
+    const h = trLoadHistory();
+    const d = new Date();
+    h.unshift({
+        date: d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+        ts: d.getTime(),
+        count: items.length,
+        qty: items.reduce((s, r) => s + r.give, 0),
+        cost: items.reduce((s, r) => s + r.cost, 0),
+        items: items
+    });
+    while (h.length > 50) h.pop(); // храним последние 50 заявок
+    try { localStorage.setItem(TR_HISTORY_KEY, JSON.stringify(h)); } catch (e) {}
+    trUpdateHistoryBtn();
+}
+function trFindInHistory(art) {
+    for (const e of trLoadHistory()) {
+        const it = e.items.find(i => i.art === art);
+        if (it) return { date: e.date, give: it.give, store: it.store };
+    }
+    return null;
+}
+function trUpdateHistoryBtn() {
+    const b = document.getElementById('trHistoryBtn');
+    if (b) b.textContent = '🕘 История (' + trLoadHistory().length + ')';
+}
+function trOpenHistory() {
+    const h = trLoadHistory();
+    if (!h.length) { trShowModal('🕘 История заявок', '<div style="padding:20px; text-align:center; color:var(--text-secondary);">Заявок пока нет — они появляются здесь после выгрузки шаблона в «📦 Быстрой сборке» или «🧾 Сопроводиловка».</div>'); return; }
+    let html = '<div style="max-height:60vh; overflow:auto;">';
+    for (let i = 0; i < h.length; i++) {
+        const e = h[i];
+        html += '<div style="border:1px solid var(--input-border); border-radius:10px; margin-bottom:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">'
+            + '<div><b>' + e.date + '</b> · ' + e.count + ' поз. · ' + e.qty + ' шт · <span style="color:#1565c0; font-weight:800;">' + e.cost.toLocaleString('ru') + ' ₽</span></div>'
+            + '<div style="display:flex; gap:6px;">'
+            + '<button class="btn-compute" style="padding:3px 10px; font-size:0.62rem;" onclick="trViewHistoryEntry(' + i + ')">👁 Открыть</button>'
+            + '<button class="btn-compute" style="padding:3px 10px; font-size:0.62rem;" onclick="trRestoreHistoryEntry(' + i + ')" title="Загрузить эти позиции в текущую заявку">📥 В заявку</button>'
+            + '<button class="btn-export-all" style="padding:3px 10px; font-size:0.62rem;" onclick="trDeleteHistoryEntry(' + i + ')">🗑</button>'
+            + '</div></div>';
+    }
+    html += '</div>';
+    trShowModal('🕘 История заявок — «что мы уже запланировали»', html);
+}
+function trViewHistoryEntry(i) {
+    const e = trLoadHistory()[i];
+    if (!e) return;
+    let html = '<div style="font-weight:700; margin-bottom:8px;">' + e.date + ' · ' + e.count + ' поз. · ' + e.qty + ' шт · <span style="color:#1565c0;">' + e.cost.toLocaleString('ru') + ' ₽</span></div>';
+    html += '<table style="width:100%; border-collapse:collapse; font-size:0.65rem;"><tr style="color:var(--text-secondary);"><th style="text-align:left; padding:4px 8px;">Артикул</th><th style="text-align:left; padding:4px 8px;">Наименование</th><th style="padding:4px 8px;">→ магазин</th><th style="padding:4px 8px;">шт</th><th style="padding:4px 8px;">₽ DPAC</th><th style="padding:4px 8px;">донор</th></tr>';
+    for (const it of e.items) {
+        html += '<tr style="border-top:1px solid var(--input-border);"><td style="padding:4px 8px; font-weight:700; color:#FF8C00;">' + it.art + '</td><td style="padding:4px 8px;">' + (it.name || '').substring(0, 34) + '</td><td style="padding:4px 8px; text-align:center;">' + it.store + '</td><td style="padding:4px 8px; text-align:center; font-weight:800;">' + it.give + '</td><td style="padding:4px 8px; text-align:right;">' + it.cost.toLocaleString('ru') + '</td><td style="padding:4px 8px; text-align:center;">' + it.donor + '</td></tr>';
+    }
+    html += '</table><div style="margin-top:10px;"><button class="btn-compute" onclick="trRestoreHistoryEntry(' + i + ')">📥 Загрузить в текущую заявку</button></div>';
+    trShowModal('🕘 Заявка от ' + e.date, html);
+}
+function trRestoreHistoryEntry(i) {
+    const e = trLoadHistory()[i];
+    if (!e) return;
+    let restored = 0, missing = 0;
+    for (const it of e.items) {
+        if (trState.allRows.some(r => (r.store + '|' + r.art) === it.key)) { trState.basket.add(it.key); restored++; }
+        else missing++;
+    }
+    renderTransferTable();
+    showToast('📥 В заявку добавлено ' + restored + ' поз.' + (missing ? ' (ещё ' + missing + ' не найдены в текущем расчёте — пересчитайте трансферы)' : ''), 'info');
+    const ov = document.getElementById('trModalOverlay');
+    if (ov) ov.remove();
+}
+function trDeleteHistoryEntry(i) {
+    const h = trLoadHistory();
+    if (!h[i]) return;
+    if (!confirm('Удалить заявку от ' + h[i].date + ' из истории?')) return;
+    h.splice(i, 1);
+    try { localStorage.setItem(TR_HISTORY_KEY, JSON.stringify(h)); } catch (e) {}
+    trUpdateHistoryBtn();
+    trOpenHistory();
+}
+function clearTransferBasket(){ trState.basket.clear(); renderTransferTable(); }
+
+// 🧾 Excel-сопроводиловка к заявке: для согласования руководителем
+async function exportTransferDocExcel() {
+    if (!trState.basket.size) { showToast('Заявка пуста — добавьте артикулы кнопкой «➕»', 'warning'); return; }
+    if (typeof ExcelJS === 'undefined') { showToast('ExcelJS не загружен', 'error'); return; }
+    const items = trBasketItems();
+    if (!items.length) { showToast('В заявке нет валидных строк', 'warning'); return; }
+    trSaveHistoryEntry(); // 🕘 фиксируем заявку в историю
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Сопроводиловка');
+    ws.columns = [
+        { header: 'Магазин-получатель', key: 'store', width: 12 },
+        { header: 'Артикул', key: 'art', width: 14 },
+        { header: 'Наименование', key: 'name', width: 42 },
+        { header: 'Кол-во, шт', key: 'give', width: 11 },
+        { header: 'Стоимость ₽ (DPAC)', key: 'cost', width: 17 },
+        { header: 'Донор (откуда)', key: 'donor', width: 12 },
+        { header: 'Покрытие донора после, дн / шт', key: 'donorAfter', width: 16 },
+        { header: 'УТО+ПУТО ₽', key: 'uto', width: 12 },
+        { header: 'Приоритет', key: 'prio', width: 12 },
+        { header: 'AVS', key: 'avs', width: 12 }
+    ];
+    const head = ws.getRow(1);
+    head.font = { bold: true, size: 10 };
+    head.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    head.height = 28;
+    head.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF3E0' } }; c.border = { bottom: { style: 'thin', color: { argb: 'FF999999' } } }; });
+
+    for (const r of items) {
+        const row = ws.addRow({
+            store: r.store, art: r.art, name: r.name, give: r.give, cost: r.cost,
+            donor: r.donor.store,
+            donorAfter: Math.round(r.donorAfter * 10) / 10 + ' / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)),
+            uto: r.uto, prio: r.prio, avs: r.avs || ''
+        });
+        row.getCell('cost').numFmt = '# ##0';
+        if (r.donorAfter < 14) row.getCell('donorAfter').font = { color: { argb: 'FFE53935' }, bold: true };
+        if (r.avs) { row.getCell('avs').font = { color: { argb: 'FFE53935' }, bold: true }; }
+    }
+    const totalCost = items.reduce((s, r) => s + (r.cost || 0), 0);
+    const totalQty = items.reduce((s, r) => s + (r.give || 0), 0);
+    const trow = ws.addRow({ name: 'ИТОГО позиций: ' + items.length, give: totalQty, cost: totalCost });
+    trow.font = { bold: true, size: 11 };
+    trow.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } }; });
+    trow.getCell('cost').numFmt = '# ##0';
+
+    const d = new Date();
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'сопроводиловка_трансфер_' + d.toLocaleDateString('ru-RU') + '.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast('🧾 Сопроводиловка сохранена (' + items.length + ' позиций, ' + totalCost.toLocaleString('ru') + ' ₽)', 'success');
+}
+
+// 🆕 Выгрузка ВСЕЙ таблицы кандидатов в Excel (списком — удобно смотреть коллегам)
+async function trExportCandidatesExcel() {
+    const rows = trState.rows;
+    if (!rows || !rows.length) { showToast('Сначала нажмите «🧮 РАССЧИТАТЬ»', 'warning'); return; }
+    if (typeof ExcelJS === 'undefined') { showToast('ExcelJS не загружен', 'error'); return; }
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Кандидаты на трансфер');
+    ws.columns = [
+        { header: '№', key: 'n', width: 5 },
+        { header: 'Магазин', key: 'store', width: 9 },
+        { header: 'Артикул', key: 'art', width: 12 },
+        { header: 'Штрихкод', key: 'barcode', width: 15 },
+        { header: 'Наименование', key: 'name', width: 40 },
+        { header: 'Гамма', key: 'gamma', width: 12 },
+        { header: 'УТО факт ₽', key: 'uto', width: 11 },
+        { header: 'ПУТО прогноз ₽', key: 'putoRub', width: 13 },
+        { header: 'УТО+ПУТО ₽', key: 'utoTotal', width: 12 },
+        { header: 'Приоритет', key: 'prio', width: 11 },
+        { header: 'Остаток, шт', key: 'stock', width: 9 },
+        { header: 'СДО, шт/дн', key: 'sdo', width: 9 },
+        { header: 'Покрытие, дн', key: 'cover', width: 10 },
+        { header: 'Поставка', key: 'supplyDn', width: 13 },
+        { header: 'Донор', key: 'donor', width: 8 },
+        { header: 'Запас донора, дн', key: 'dCover', width: 12 },
+        { header: 'Передать, шт', key: 'give', width: 10 },
+        { header: 'Стоимость ₽ (DPAC)', key: 'cost', width: 14 },
+        { header: 'Донор после: дн', key: 'dAfter', width: 12 },
+        { header: 'Донор после: шт', key: 'dAfterStock', width: 12 },
+        { header: 'Упак.', key: 'packSize', width: 7 },
+        { header: 'AVS', key: 'avs', width: 12 },
+        { header: 'В заявке?', key: 'inB', width: 9 }
+    ];
+    const head = ws.getRow(1);
+    head.font = { bold: true, size: 10 };
+    head.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    head.height = 30;
+    head.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF3E0' } }; c.border = { bottom: { style: 'thin', color: { argb: 'FF999999' } } }; });
+
+    let n = 0;
+    for (const r of rows) {
+        n++;
+        const row = ws.addRow({
+            n, store: r.store, art: r.art, barcode: r.barcode || '', name: r.name, gamma: r.gamma || '',
+            uto: r.uto, putoRub: r.putoRub || 0, utoTotal: r.utoTotal, prio: r.prio,
+            stock: r.stock, sdo: Math.round(r.sdo * 100) / 100, cover: Math.round(r.cover * 10) / 10,
+            supplyDn: r.supplyDn, donor: r.donor.store, dCover: Math.round(r.donor.cover * 10) / 10,
+            give: r.give, cost: r.cost,
+            dAfter: Math.round(r.donorAfter * 10) / 10,
+            dAfterStock: (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)),
+            packSize: r.packSize || 1, avs: r.avs || '',
+            inB: trState.basket.has(r.store + '|' + r.art) ? '✅ да' : ''
+        });
+        if (r.utoTotal >= 10000) row.getCell('prio').font = { color: { argb: 'FFC62828' }, bold: true };
+        if (r.uto > 0) row.getCell('uto').font = { color: { argb: 'FF7B1FA2' } };
+        if (r.putoRub > 0) row.getCell('putoRub').font = { color: { argb: 'FFE65100' } };
+        if (r.donorAfter < 14) row.getCell('dAfter').font = { color: { argb: 'FFE53935' }, bold: true };
+        if (r.avs) row.getCell('avs').font = { color: { argb: 'FFE53935' }, bold: true };
+        row.getCell('cost').numFmt = '# ##0';
+        row.getCell('utoTotal').numFmt = '# ##0';
+    }
+    // итоги по донорам (как в Быстрой сборке)
+    ws.addRow({});
+    const byDonor = new Map();
+    for (const r of rows) {
+        if (!byDonor.has(r.donor.store)) byDonor.set(r.donor.store, { qty: 0, cost: 0, cnt: 0 });
+        const d = byDonor.get(r.donor.store);
+        d.qty += r.give; d.cost += r.cost; d.cnt++;
+    }
+    for (const [dStore, d] of [...byDonor.entries()].sort((a, b) => b[1].cost - a[1].cost)) {
+        const sub = ws.addRow({ name: 'ИТОГО донор ' + dStore + ' (' + d.cnt + ' поз.)', give: d.qty, cost: d.cost });
+        sub.font = { bold: true, size: 10 };
+        sub.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } }; });
+        sub.getCell('cost').numFmt = '# ##0';
+    }
+    const tot = ws.addRow({ name: 'ВСЕГО кандидатов: ' + rows.length, give: rows.reduce((s2, r) => s2 + r.give, 0), cost: rows.reduce((s2, r) => s2 + r.cost, 0) });
+    tot.font = { bold: true, size: 11 };
+    tot.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } }; });
+    tot.getCell('cost').numFmt = '# ##0';
+    ws.autoFilter = { from: 'A1', to: 'W1' };
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    const d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = 'кандидаты_трансфер_' + (trState.mainFilter ? 'магазин_' + trState.mainFilter + '_' : '') + d.toLocaleDateString('ru-RU') + '.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast('⬇️ Выгружено кандидатов: ' + rows.length + ' (с итогами по донорам)', 'success');
+}
+
+// 📦 Быстрая сборка: группировка заявки по магазинам-донорам
+function trOpenAssembly() {
+    if (!trState.basket.size) { showToast('Заявка пуста — добавьте артикулы кнопкой «➕»', 'warning'); return; }
+    const items = trBasketItems();
+    if (!items.length) { showToast('В заявке нет валидных строк', 'warning'); return; }
+    const byDonor = new Map();
+    for (const r of items) {
+        const k = r.donor.store;
+        if (!byDonor.has(k)) byDonor.set(k, []);
+        byDonor.get(k).push(r);
+    }
+    const donors = [...byDonor.entries()].sort((a, b) => b[1].reduce((s, r) => s + r.cost, 0) - a[1].reduce((s, r) => s + r.cost, 0));
+    const gTotalCost = items.reduce((s, r) => s + (r.cost || 0), 0);
+    const gTotalQty = items.reduce((s, r) => s + (r.give || 0), 0);
+
+    let html = '<div style="max-height:60vh; overflow:auto;">';
+    for (const [dStore, list] of donors) {
+        const dCost = list.reduce((s, r) => s + (r.cost || 0), 0);
+        const dQty = list.reduce((s, r) => s + (r.give || 0), 0);
+        html += '<div style="border:1px solid var(--input-border); border-radius:10px; margin-bottom:8px; overflow:hidden;">'
+            + '<div style="background:#fff3e0; padding:6px 10px; font-weight:800; font-size:0.75rem; display:flex; justify-content:space-between;">'
+            + '<span>🏬 Донор: магазин <b>' + dStore + '</b>' + (list[0].donor.local ? ' (локальный)' : ' ⚠️далеко') + '</span>'
+            + '<span style="display:flex; align-items:center; gap:10px;">'
+            + '<span>' + list.length + ' поз. · ' + dQty + ' шт · <span style="color:#1565c0;">' + dCost.toLocaleString('ru') + ' ₽</span></span>'
+            + '<button class="btn-compute" style="padding:3px 12px; font-size:0.62rem;" onclick="trExportDonorCsv(\'' + dStore + '\')" title="CSV-шаблон (Артикул;Количество) только для этого магазина-донора — именно его грузим, чтобы составить трансфер">⬇️ Шаблон для магазина ' + dStore + '</button>'
+            + '</span></div>'
+            + '<table style="width:100%; border-collapse:collapse; font-size:0.62rem;">'
+            + '<tr style="color:var(--text-secondary);"><th style="text-align:left; padding:3px 8px;">Артикул</th><th style="text-align:left; padding:3px 8px;">Наименование</th><th style="text-align:left; padding:3px 8px;">Гамма</th><th style="padding:3px 8px;">→ получатель</th><th style="padding:3px 8px;">шт</th><th style="padding:3px 8px;">₽ DPAC</th><th style="padding:3px 8px;">после, дн/шт</th></tr>';
+        for (const r of list) {
+            html += '<tr style="border-top:1px solid var(--input-border);">'
+                + '<td style="padding:3px 8px; font-weight:700; color:#FF8C00;">' + r.art + (r.avs ? ' <span style="color:#e53935;" title="Дата AVS: ' + r.avs + '">⚠️AVS</span>' : '') + '</td>'
+                + '<td style="padding:3px 8px;">' + (r.name || '').substring(0, 30) + '</td>'
+                + '<td style="padding:3px 8px; font-size:0.55rem; color:var(--text-secondary);" title="Гамма товара">' + (r.gamma || '—') + '</td>'
+                + '<td style="padding:3px 8px; text-align:center;">' + r.store + '</td>'
+                + '<td style="padding:3px 8px; text-align:center; font-weight:800; color:#2e7d50;">' + r.give + '</td>'
+                + '<td style="padding:3px 8px; text-align:right;">' + (r.cost || 0).toLocaleString('ru') + '</td>'
+                + '<td style="padding:3px 8px; text-align:center;' + (r.donorAfter < 14 ? 'color:#e53935;font-weight:700;' : '') + '">' + r.donorAfter.toFixed(1) + ' / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)) + (r.donorAfter < 14 ? ' 🛡️' : '') + '</td></tr>';
+        }
+        html += '</table></div>';
+    }
+    html += '</div><div style="margin-top:8px; font-weight:800; font-size:0.75rem; text-align:right;">ИТОГО: ' + donors.length + ' донор(ов) · ' + gTotalQty + ' шт · <span style="color:#1565c0;">' + gTotalCost.toLocaleString('ru') + ' ₽</span></div>'
+        + '<div style="margin-top:6px; font-size:0.6rem; color:var(--text-secondary);">⬇️ Шаблон (CSV «Артикул;Количество») скачивается <b>отдельно для каждого магазина-донора</b> — кнопкой в шапке его блока. В файл попадают только артикулы, которые забираем именно у этого магазина. Сопроводиловка остаётся доступной по кнопке в шапке вкладки.</div>';
+
+    trShowModal('📦 Быстрая сборка — заявка по донорам', html);
+}
+
+// 🆕 CSV-шаблон для КОНКРЕТНОГО магазина-донора: только его артикулы
+function trExportDonorCsv(dStore) {
+    const items = trBasketItems().filter(r => String(r.donor.store) === String(dStore));
+    if (!items.length) { showToast('Для донора ' + dStore + ' в заявке нет позиций', 'warning'); return; }
+    trSaveHistoryEntry(); // фиксируем всю заявку в истории (как при полной выгрузке)
+    const lines = items.map(r => r.art + ';' + r.give);
+    const blob = new Blob(["\ufeff" + lines.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    const d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = 'заявка_трансфер_донор_' + dStore + '_' + d.toLocaleDateString('ru-RU') + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast('⬇️ Шаблон для магазина ' + dStore + ': ' + items.length + ' артикулов, ' + items.reduce((s, r) => s + (r.give || 0), 0) + ' шт', 'success');
+}
+
+function trShowModal(title, bodyHtml) {
+    let ov = document.getElementById('trModalOverlay');
+    if (!ov) {
+        ov = document.createElement('div');
+        ov.id = 'trModalOverlay';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; display:flex; align-items:center; justify-content:center;';
+        ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+        const box = document.createElement('div');
+        box.style.cssText = 'background:var(--card-bg,#fff); border-radius:14px; max-width:860px; width:92%; max-height:85vh; padding:16px 18px; box-shadow:0 10px 40px rgba(0,0,0,0.3); overflow:auto;';
+        box.id = 'trModalBox';
+        ov.appendChild(box);
+        document.body.appendChild(ov);
+    }
+    const box = document.getElementById('trModalBox');
+    box.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">'
+        + '<h4 style="margin:0; font-size:0.9rem;">' + title + '</h4>'
+        + '<button class="btn-export-all" onclick="document.getElementById(\'trModalOverlay\').remove()">✖ Закрыть</button></div>'
+        + bodyHtml;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const c = document.getElementById('computeTransferBtn');
+    if (c) c.addEventListener('click', () => {
+        try { if (cachedData.fullData.length) applyFilters(); } catch (e) {}   // применить фильтры панели
+        computeTransferRecommendations();
+    });
+    const ed = document.getElementById('exportTransferDocBtn');
+    if (ed) ed.addEventListener('click', exportTransferDocExcel);
+    const sf = document.getElementById('trStoreFilter');
+    if (sf) sf.addEventListener('change', trApplyStoreFilter);
+    const rl = document.getElementById('trOnlyLocal');
+    if (rl) rl.addEventListener('change', () => { if (trState.allRows.length) computeTransferRecommendations(); });
+    const ha = document.getElementById('trHideAvs');
+    if (ha) ha.addEventListener('change', () => { if (trState.allRows.length) trApplyStoreFilter(); });
+    const pr = document.getElementById('trPackRound');
+    if (pr) pr.addEventListener('change', () => { if (trState.allRows.length) computeTransferRecommendations(); });
+    // 🔽 клики по заголовкам таблицы трансферов — сортировка
+    const hr = document.getElementById('trHeadRow');
+    if (hr) {
+        hr.querySelectorAll('th[data-k]').forEach(th => {
+            th.style.cursor = 'pointer';
+            th.style.userSelect = 'none';
+            th.addEventListener('click', () => trSetSort(th.getAttribute('data-k')));
+        });
+    }
+    trUpdateHistoryBtn(); // 🕘 счётчик истории заявок
+});
+</script>
 
 <script>
 // ==================== Toast система ====================
@@ -2515,7 +3349,7 @@ const BASE_COLUMNS = [
     "Действие",                // 🆕
     "Вместимость","Наполненность полки",
     "Отгружено в сред. За 7 дн","Теор сток ГАММА","Запас, шт.","Запас, дн.","В пути, шт.","В пути, дн.","Срок поставки в магазин","Размер упаковки",
-    "УТО, руб.","ПУТО","УТО, шт.","Кол-во случаев перебоя за 30 дн","Кол-во дней в перебое","20/80","ТС","МС","Корекции","Недопоставки",
+    "УТО, руб.","ПУТО","Цена DPAC","УТО, шт.","Кол-во случаев перебоя за 30 дн","Кол-во дней в перебое","20/80","ТС","МС","Корекции","Недопоставки",
     "Подотдел","ТИП","Дни выхода заказа поставщика","Номер поставщика","Поставщик","Запас больше вместимости",
     "Дата AVS","Штрихкод","Серия","Бренд","Коллекция","Стиль"
 ];
@@ -3532,6 +4366,10 @@ function calculateRow(gammaItem) {
     }
     
     const vmesimost = toNumber(gammaItem["Сумма Вместимость полки"]) || 0;
+    // 🚚 v2.12: стоимость товара в ДЕПАК — из отчёта ГАММА, столбец «Сумма Цена DPAC»
+    const dpacPrice = toNumber(gammaItem["Сумма Цена DPAC"], 0)
+        || toNumber(gammaItem["Цена DPAC"], 0)
+        || toNumber(gammaItem["Сумма Цена DPAC "], 0) || 0;
     const zapasBolsheVmes = (zapasSht >= vmesimost && vmesimost > 0) ? "да" : "нет";
     const utoItem = utoMap.get(mapKey);
     const utoRub = utoItem ? toNumber(utoItem["Уп.GMV руб"]) || 0 : 0;
@@ -3628,10 +4466,9 @@ function calculateRow(gammaItem) {
         "Доп. презентация": cleanValue(dopPrezentaciya, "Доп. презентация"),
         "Наибольший резерв MIN": naibolshiyRezervMin,
         "Наибольший резерв MIN (число)": naibolshiyRezervMinNumber,
-        // «Вид минимума»/«Кол-во проектов» — ТОЛЬКО применённые пользователем МИНЫ (иначе пусто)
-        "Вид минимума": _appliedType,
-        "Кол-во проектов": _hasApplied ? _appliedQty : "",
-        // 🆕 рекомендации заполняются ВСЕГДА (как в прошлой версии); применённое — приоритетно и идёт в выгрузку
+                "Вид минимума": activeMinType,
+        "Кол-во проектов": activeMinCount > 0 ? activeMinCount : "",
+        // 🆕 рекомендации заполняются ВСЕГДА (как в рабочем коде); применённое — приоритетно и идёт в выгрузку
         "Рекомендуемый MIN": (_hasApplied && _appliedQty > 0) ? _appliedQty : (recommendedMinData.recommended > 0 ? recommendedMinData.recommended : ""),
         "MIN 441 (реком.)": (_hasApplied && _appliedQty > 0 && _appliedType === "441") ? _appliedQty : (recommendedMinData.min441 > 0 ? recommendedMinData.min441 : ""),
         "MIN 500 (реком.)": (_hasApplied && _appliedQty > 0 && _appliedType === "500") ? _appliedQty : (recommendedMinData.min500 > 0 ? recommendedMinData.min500 : ""),
@@ -3650,6 +4487,7 @@ function calculateRow(gammaItem) {
         "Размер упаковки": gammaItem["Размер упаковки"] || "",
         "УТО, руб.": cleanValue(utoRub, "УТО, руб."),
         "ПУТО": puto,
+        "Цена DPAC": dpacPrice > 0 ? dpacPrice : "",
         "УТО, шт.": cleanValue(utoSht, "УТО, шт."),
         "Кол-во случаев перебоя за 30 дн": cleanValue(pereboiCount, "Кол-во случаев перебоя за 30 дн"),
         "Кол-во дней в перебое": cleanValue(pereboiDays, "Кол-во дней в перебое"),
@@ -3734,6 +4572,8 @@ function calculateRecommendedMin(params) {
         min441: rec441,
         min500: rec500,
         currentMin,
+        current441: current441,
+        current500: current500,
         status,
         statusCode,
         reason,
@@ -4013,25 +4853,26 @@ function applyFilters() {
                     });
                 }
                 
-                if (isOnlineMode) {
-                    if (topFilter !== 'all') {
-                        if (topFilter === '0') {
-                            result = result.filter(row => {
-                                const topVal = row["ТОП"];
-                                return topVal === undefined || 
-                                       topVal === null || 
-                                       topVal === "" || 
-                                       String(topVal).trim() === "" || 
-                                       String(topVal).replace(/\.00$/, '') === "0";
-                            });
-                        } else {
-                            result = result.filter(row => {
-                                const topVal = String(row["ТОП"] || "").replace(/\.00$/, '');
-                                return topVal === topFilter;
-                            });
-                        }
+                // 🆕 ТОП-фильтр применяется ВСЕГДА (и в базовом, и в онлайн-режиме)
+                if (topFilter !== 'all') {
+                    if (topFilter === '0') {
+                        result = result.filter(row => {
+                            const topVal = row["ТОП"];
+                            return topVal === undefined ||
+                                   topVal === null ||
+                                   topVal === "" ||
+                                   String(topVal).trim() === "" ||
+                                   String(topVal).replace(/\.00$/, '') === "0";
+                        });
+                    } else {
+                        result = result.filter(row => {
+                            const topVal = String(row["ТОП"] || "").replace(/\.00$/, '');
+                            return topVal === topFilter;
+                        });
                     }
-                    
+                }
+
+                if (isOnlineMode) {
                     if (stockMin <= stockMax) {
                         const min = stockMin;
                         const max = stockMax;
@@ -4623,26 +5464,50 @@ input.title = "Введите количество проектов. -1 = отм
             } else if (col === "Рекомендуемый MIN") {
                 const rec = row["Рекомендуемый MIN"];
                 const details = row["_recomDetails"] || {};
+                const avsVal = String(row["Дата AVS"] || "").trim();
+                const avsDanger = rec && rec > 0 && avsVal; // рекомендация повысить MIN, но есть дата AVS
                 if (rec && rec > 0) {
                     td.innerHTML = `
-                        <strong style="color:#FF8C00; font-size:0.75rem;">${rec}</strong>
+                        <strong style="color:${avsDanger ? '#e53935' : '#FF8C00'}; font-size:0.75rem;">${rec}</strong>
+                        ${avsDanger ? '<span style="color:#e53935; font-size:0.55rem; font-weight:700; display:block;" title="У товара есть дата AVS (' + avsVal + ') — повышение MIN спорно">⚠️ AVS ' + avsVal + '</span>' : ''}
                         <span style="font-size:0.5rem; color:var(--text-muted); display:block;"
                               title="${details.reason || ''}">${details.reason || ''}</span>
                     `;
-                    td.title = details.reason || '';
+                    td.title = avsDanger ? ('⚠️ Дата AVS: ' + avsVal + ' — система рекомендует увеличить MIN, но товар с датой AVS') : (details.reason || '');
+                    if (avsDanger) td.style.background = 'rgba(229,57,53,0.14)';
                 } else {
                     td.textContent = '';
                 }
                 
             } else if (col === "MIN 441 (реком.)") {
                 const val = row["MIN 441 (реком.)"];
-                td.textContent = (val !== "" && val > 0) ? val : '';
-                if (val !== "" && val > 0) td.style.background = 'rgba(255,224,130,0.3)';
+                const details = row["_recomDetails"] || {};
+                if (val !== "" && val > 0) {
+                    const cur = details.current441 || 0;
+                    td.innerHTML = `
+                        <span style="font-weight:600;">${cur > 0 ? cur + ' → ' : ''}<strong>${val}</strong></span>
+                        <span style="font-size:0.5rem; color:var(--text-muted); display:block;" title="${details.reason || ''}">${details.reason || ''}</span>
+                    `;
+                    td.style.background = 'rgba(255,224,130,0.3)';
+                    td.title = (cur > 0 ? 'Текущий MIN 441: ' + cur + '. ' : '') + (details.reason || '');
+                } else {
+                    td.textContent = '';
+                }
 
             } else if (col === "MIN 500 (реком.)") {
                 const val = row["MIN 500 (реком.)"];
-                td.textContent = (val !== "" && val > 0) ? val : '';
-                if (val !== "" && val > 0) td.style.background = 'rgba(255,224,130,0.3)';
+                const details = row["_recomDetails"] || {};
+                if (val !== "" && val > 0) {
+                    const cur = details.current500 || 0;
+                    td.innerHTML = `
+                        <span style="font-weight:600;">${cur > 0 ? cur + ' → ' : ''}<strong>${val}</strong></span>
+                        <span style="font-size:0.5rem; color:var(--text-muted); display:block;" title="${details.reason || ''}">${details.reason || ''}</span>
+                    `;
+                    td.style.background = 'rgba(255,224,130,0.3)';
+                    td.title = (cur > 0 ? 'Текущий MIN 500: ' + cur + '. ' : '') + (details.reason || '');
+                } else {
+                    td.textContent = '';
+                }
 
             } else if (col === "Статус MIN") {
                 const status = row["Статус MIN"] || '';
@@ -6357,6 +7222,26 @@ async function exportAllData() {
     loadingDiv.style.display = 'block';
     document.getElementById('loadingText').innerText = 'Формируем Excel...';
     try {
+        // 🫀 защита от «Страница не отвечает»: при больших объёмах
+        // 1) каждые 3000 строк отдаём поток браузеру (страница живёт, виден прогресс);
+        // 2) после 20 000 строк отключаем поячеечные стили (рамки/шрифты/заливки) —
+        //    именно они съедают память на ~3 млн ячеек. Шапка остаётся цветной.
+        const LIGHT = dataToExport.length > 20000;
+        let processedRows = 0;
+        const totalRows = dataToExport.length;
+        const loadingText = document.getElementById('loadingText');
+        // 📊 прогресс-бар внутри индикатора загрузки
+        let bar = document.getElementById('exportProgressBar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'exportProgressBar';
+            bar.style.cssText = 'height:10px;background:rgba(0,0,0,0.08);border-radius:6px;overflow:hidden;margin-top:8px;max-width:420px;';
+            bar.innerHTML = '<div style="height:100%;width:0;background:linear-gradient(90deg,#4CAF50,#FF8C00);transition:width .12s;"></div>';
+            loadingDiv.appendChild(bar);
+        }
+        const barFill = bar.firstChild;
+        if (LIGHT) showToast('📦 Большая выгрузка (' + totalRows.toLocaleString('ru') + ' строк): облегчённый режим — цвета столбцов и строк сохранены, без рамок и выравнивания', 'info', 6000);
+
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Сводная STOCKWISE');
         worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
@@ -6452,15 +7337,16 @@ async function exportAllData() {
                 rowData.push(value);
             }
             const dataRow = worksheet.addRow(rowData);
+            // 🫀 дыхание: каждые 2500 строк обновляем прогресс-бар и отдаём поток браузеру
+            processedRows++;
+            if (processedRows % 2500 === 0) {
+                loadingText.innerText = 'Формируем Excel... ' + processedRows.toLocaleString('ru') + ' из ' + totalRows.toLocaleString('ru');
+                if (barFill) barFill.style.width = Math.round(processedRows / totalRows * 100) + '%';
+                await new Promise(r => setTimeout(r, 0));
+            }
             visibleCols.forEach((col, idx) => {
                 const cell = dataRow.getCell(idx + 1);
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-                    left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-                    bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-                    right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
-                };
-                
+
                 const val = row[col];
                 const numVal = toNumber(val, 0);
                 let fillArgb = null;
@@ -6634,32 +7520,49 @@ async function exportAllData() {
                 if (fillArgb) {
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillArgb } };
                 }
-                                if (fontColor) {
-                    cell.font = { color: { argb: fontColor }, bold: isBold, size: 9 };
-                } else {
-                    cell.font = { size: 9 };
+                // 🎨 цвет шрифта/жирность — только когда есть что показать
+                // (раньше каждому объекту присваивался font — миллионы лишних объектов)
+                if (fontColor || isBold) {
+                    cell.font = { color: { argb: fontColor || 'FF1E1E1E' }, bold: isBold, size: 9 };
                 }
-                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                if (!LIGHT) {
+                    // 🫀 лёгкий режим: без рамок и выравнивания — они давали основной вес памяти
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+                    };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                }
             });
         }
         
         // 🆕 Компактная ширина столбцов: ограничиваем 14 символами,
         // длинные заголовки переносятся через wrapText.
         // Так на одной странице поместится больше колонок.
-        worksheet.columns.forEach((column, idx) => {
-            const headerLen = visibleCols[idx].length;
-            // Базовый размер по заголовку (но не более 14)
-            let width = Math.min(headerLen + 2, 14);
-            // Но если данные в колонке короткие — берём по данным
-            let maxDataLen = 0;
-            worksheet.getColumn(idx + 1).eachCell({ includeEmpty: true }, (cell) => {
-                if (cell.row === 1) return; // шапку не считаем
-                const v = cell.value ? String(cell.value).length : 0;
-                if (v > maxDataLen) maxDataLen = v;
+        if (!LIGHT) {
+            worksheet.columns.forEach((column, idx) => {
+                const headerLen = visibleCols[idx].length;
+                // Базовый размер по заголовку (но не более 14)
+                let width = Math.min(headerLen + 2, 14);
+                // Но если данные в колонке короткие — берём по данным
+                let maxDataLen = 0;
+                worksheet.getColumn(idx + 1).eachCell({ includeEmpty: true }, (cell) => {
+                    if (cell.row === 1) return; // шапку не считаем
+                    const v = cell.value ? String(cell.value).length : 0;
+                    if (v > maxDataLen) maxDataLen = v;
+                });
+                width = Math.max(width, Math.min(maxDataLen + 2, 14));
+                worksheet.getColumn(idx + 1).width = width;
             });
-            width = Math.max(width, Math.min(maxDataLen + 2, 14));
-            worksheet.getColumn(idx + 1).width = width;
-        });
+        } else {
+            // 🫀 лёгкий режим: ширина только по заголовкам (не сканируем все ячейки)
+            visibleCols.forEach((col, idx) => {
+                const c = worksheet.getColumn(idx + 1);
+                if (c) c.width = Math.min(col.length + 2, 16);
+            });
+        }
         
         // Универсальная функция: 1 → A, 26 → Z, 27 → AA, 55 → BC
         function colLetter(n) {
@@ -6688,6 +7591,7 @@ worksheet.autoFilter = { from: 'A1', to: `${colLetter(visibleCols.length)}${data
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
+        if (barFill) barFill.style.width = '100%';
         loadingDiv.style.display = 'none';
         showToast(`✅ Выгружено ${dataToExport.length} товаров`, 'success');
     } catch (error) {
@@ -7061,6 +7965,15 @@ function renderTopDeficit() {
     }
 }
 
+// 🆕 Новинка без MIN 401: реалистичная рекомендация = размер упаковки (обычно 1–2 шт).
+// Раньше предлагалось вместимость × 50% (или фикс. 50) — для крупногабарита это нереально.
+// Вновь открытые артикулы без продаж лучше вообще не ставить на MIN — решайте по галке фильтра.
+function min401RecommendedQty(row) {
+    const pack = toNumber(row["Размер упаковки"], 0);
+    if (pack > 0) return pack;
+    return 1;
+}
+
 function renderTopErrors() {
     const tbody = document.getElementById('topErrorsBody');
     tbody.innerHTML = '';
@@ -7098,7 +8011,7 @@ function renderTopErrors() {
             currentMinValue = min441;
         } else if (row.errorType === 'min401') {
             errorDesc = 'Новинка без MIN 401';
-            solution = `📈 Добавить MIN 401 (${vmesimost > 0 ? Math.ceil(vmesimost * 0.5) : 50} шт)`;
+            solution = `📈 Добавить MIN 401 (${min401RecommendedQty(row)} шт — размер упаковки; новинке без продаж MIN может быть не нужен)`;
             currentMinValue = min401;
         } else if (row.errorType === 'zapas') {
             const days = toNumber(row["Запас, дн."], 999);
@@ -7464,19 +8377,21 @@ function suggestFixes() {
         }
         
         if (row.errorType === 'min401') {
-            const recVal = vmesimost > 0 ? Math.ceil(vmesimost * 0.5) : 50;
+            // 🆕 новинка без истории продаж: рекомендация = размер упаковки (обычно 1–2 шт),
+            // а не половина вместимости — «50 шт снегоуборщика» нереалистично
+            const recVal = min401RecommendedQty(row);
             suggestions.push({
                 store,
                 article,
                 name,
                 field: 'min 401 NEW',
                 current: '0 шт',
-                recommended: `${recVal} шт (добавить MIN 401)`,
+                recommended: `${recVal} шт (добавить MIN 401 по размеру упаковки)`,
                 reason: 'Новинка без MIN 401',
                 type: 'min401',
                 newValue: '401',
                 quantity: recVal,
-                comment: 'аномалия: новинка без MIN 401'
+                comment: 'аномалия: новинка без MIN 401 (по размеру упаковки)'
             });
         }
         
@@ -7867,8 +8782,17 @@ function computeMinRecommendations() {
             const needDays = lead + days; // подвоз + период покрытия MIN
             if (coverDays >= needDays) {
                 qty = (type === "441") ? cur441 : cur500; // оставляем как есть
-                why = "🚚 запас " + Math.round(coverDays) + " дн ≥ подвоз " + Math.round(lead) + " + MIN " + Math.round(days) + " дн — избыток, MIN-подстраховка не требуется";
-                if (qty === 0) { why += "; текущего MIN нет — и не нужно"; }
+                // 🆕 избыток: если по выбранному типу MIN не стоит, а стоит ДРУГОЙ MIN —
+                // «снять» должно относиться к реально действующему MIN иначе строка
+                // «снять 441» (которого нет) попадала в чип MIN 441, а MIN 500 оставался
+                let снятТип = "";
+                if (qty === 0 && cur441 > 0 && cur500 > 0) {
+                    снятТип = (type === "441") ? "500" : "441";
+                    type = снятТип;
+                }
+                why = "🚚 запас " + Math.round(coverDays) + " дн ≥ подвоз " + Math.round(lead) + " + MIN " + Math.round(days) + " дн — избыток, MIN-подстраховка не требуется"
+                    + (снятТип ? ("; снимаем действующий MIN " + снятТип) : "");
+                if (qty === 0 && !снятТип) { why += "; текущего MIN нет — и не нужно"; }
             } else {
                 why += " · запас " + Math.round(coverDays) + " дн < подвоз " + Math.round(lead) + " + MIN " + Math.round(days) + " дн";
             }
@@ -7883,7 +8807,12 @@ function computeMinRecommendations() {
         else if (qty > cur) action = "Поднять " + cur + "→" + qty;
         else action = "Снизить " + cur + "→" + qty;
 
-        minCalcResults.push({ store: store, article: article, name: name, cur441: cur441, rec441: rec441, cur500: cur500, rec500: rec500, type: type, qty: qty, action: action, why: why, isBest: isBest, is2080: is2080 });
+        minCalcResults.push({ store: store, article: article, name: name, cur441: cur441, rec441: rec441, cur500: cur500, rec500: rec500, type: type, qty: qty, action: action, why: why, isBest: isBest, is2080: is2080,
+            gamma: String(row["Гамма"] || "").trim(),
+            novelty: String(row["Новинка"] || "").trim() !== "" && String(row["Новинка"] || "").trim() !== "0",
+            avs: String(row["Дата AVS"] || "").trim(),
+            dayAvg: dayAvg,
+            isIncrease: action.indexOf('Поставить') === 0 || action.indexOf('Поднять') === 0 });
     }
 
     renderMinTable();
@@ -7891,6 +8820,30 @@ function computeMinRecommendations() {
     const sum = document.getElementById('minCalcSummary');
     sum.style.display = 'block';
     sum.innerHTML = '🎯 Позиций: ' + minCalcResults.length + ' | Требуют изменения: <strong>' + changed + '</strong> | Поставить/поднять: ' + minCalcResults.filter(function (r) { return r.action.indexOf('Поставить') === 0 || r.action.indexOf('Поднять') === 0; }).length + ' | Снять/снизить: ' + minCalcResults.filter(function (r) { return r.action.indexOf('Снять') === 0 || r.action.indexOf('Снизить') === 0; }).length;
+
+    // 🏬 сводка по магазинам: где самая горячая правка мин
+    const ssEl = document.getElementById('minStoreSummary');
+    if (ssEl) {
+        const byStore = new Map();
+        for (const r of minCalcResults) {
+            if (r.action === "Без изменений") continue;
+            if (!byStore.has(r.store)) byStore.set(r.store, { up: 0, down: 0, qty: 0 });
+            const s = byStore.get(r.store);
+            if (r.action.indexOf('Поставить') === 0 || r.action.indexOf('Поднять') === 0) s.up++;
+            else s.down++;
+            s.qty += (r.qty || 0);
+        }
+        if (byStore.size) {
+            const rows = [...byStore.entries()].sort((a, b) => (b[1].up + b[1].down) - (a[1].up + a[1].down));
+            ssEl.style.display = 'block';
+            ssEl.innerHTML = '<div style="font-weight:800; margin-bottom:4px;">🏬 Правки MIN по магазинам (отсортировано по количеству изменений):</div>'
+                + rows.map(function (e) {
+                    return '<span style="display:inline-block; padding:3px 10px; margin:2px; border-radius:14px; background:rgba(255,140,0,0.12); border:1px solid rgba(255,140,0,0.35); font-size:0.65rem;">магазин <b>' + e[0] + '</b>: ⬆️ поднять <b>' + e[1].up + '</b> · ⬇️ снять/снизить <b>' + e[1].down + '</b></span>';
+                }).join('');
+        } else {
+            ssEl.style.display = 'none';
+        }
+    }
     showToast('✅ Рекомендации MIN рассчитаны', 'success');
 }
 
@@ -7910,7 +8863,7 @@ function renderMinTable() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!minCalcResults.length) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">Нажмите «🧮 РАССЧИТАТЬ» после вычисления сводной таблицы</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:10px;">Нажмите «🧮 РАССЧИТАТЬ» после вычисления сводной таблицы</td></tr>';
         return;
     }
     let sorted = minCalcResults.filter(function (r) { return r.action !== "Без изменений"; });
@@ -7919,6 +8872,7 @@ function renderMinTable() {
             if (minTypeFilter === 'снять') return r.qty === 0;
             if (minTypeFilter === 'повысить') return r.action.indexOf('Повысить') === 0 || r.action.indexOf('Поднять') === 0 || r.action.indexOf('Установить') === 0;
             if (minTypeFilter === 'понизить') return r.action.indexOf('Снизить') === 0 || r.action.indexOf('Снять') === 0;
+            if (minTypeFilter === 'vip') return r.isBest || r.is2080; // ⭐ приоритетные позиции
             return r.type === minTypeFilter;
         });
     }
@@ -7928,24 +8882,40 @@ function renderMinTable() {
         const badge = r.qty === 0
             ? '<span class="badge-no-transit">снять</span>'
             : (r.type === "441" ? '<span class="badge-transit">441</span>' : '<span class="badge-uto">500</span>');
-        const tags = (r.isBest ? '⭐' : '') + (r.is2080 ? ' 🏷️' : '');
+        const tags = (r.isBest ? '⭐' : '') + (r.is2080 ? ' 🏷️' : '') + (r.novelty ? ' <span title="Новинка / возможно вновь открытый артикул — MIN может быть не нужен" style="color:#e65100;font-weight:700;">🆕</span>' : '');
         const tdAction = r.action.indexOf('Снять') === 0 || r.action.indexOf('Снизить') === 0 ? '#e53935' : '#2c5f2d';
+        // ⚠️ AVS: система рекомендует ПОВЫСИТЬ min, но у товара есть дата AVS — подсветка красным
+        const avsWarn = r.isIncrease && r.avs;
+        if (avsWarn) tr.style.background = 'rgba(229,57,53,0.14)';
+        // 🚚 связка МИНЫ ↔ ПУТО: позиция уже стоит в заявке на трансфер (требуется расчёт на вкладке ПУТО/УТО)
+        let transferLink = false;
+        try {
+            transferLink = (typeof trState !== 'undefined') && trState.basket.size > 0 && trState.basket.has(r.store + '|' + r.article);
+        } catch (e) {}
+        if (transferLink && !avsWarn) tr.style.background = 'rgba(33,150,243,0.14)';
+        else if (transferLink && avsWarn) tr.style.background = 'rgba(229,57,53,0.22)';
+        const whyHtml = r.why
+            + (avsWarn ? ' <span style="color:#e53935;font-weight:700;">⚠️ товар с датой AVS (' + r.avs + ') — повышение MIN спорно</span>' : '')
+            + (transferLink ? ' <span style="color:#1565c0;font-weight:700;">🚚 уже в заявке на трансфер (вкл. ПУТО/УТО) — возможно, MIN не нужен</span>' : '');
+        // 📊 эффект MIN: сколько дней продаж покроет рекомендуемое количество
+        const effect = (r.qty > 0 && r.dayAvg > 0) ? ' <span style="color:var(--text-muted);font-weight:400;font-size:0.55rem;">≈ ' + Math.round(r.qty / r.dayAvg) + ' дн</span>' : '';
         tr.innerHTML =
             '<td class="rank">' + (idx + 1) + '</td>' +
             '<td>' + r.store + '</td>' +
-            '<td><strong onclick="openProductInMagPortal(\'' + r.article + '\')" style="cursor:pointer;color:#FF8C00;">' + r.article + '</strong></td>' +
+            '<td><strong onclick="openProductInMagPortal(\'' + r.article + '\')" style="cursor:pointer;color:' + (avsWarn ? '#e53935' : '#FF8C00') + ';">' + r.article + '</strong></td>' +
             '<td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (r.name || '') + '">' + (r.name || '').substring(0, 22) + '</td>' +
+            '<td style="font-size:0.55rem; color:var(--text-muted); white-space:nowrap;" title="Гамма товара">' + (r.gamma || '—') + '</td>' +
             '<td>' + r.cur441 + ' → ' + (r.type === "441" ? r.qty : r.rec441) + '</td>' +
             '<td>' + r.cur500 + ' → ' + (r.type === "500" ? r.qty : r.rec500) + '</td>' +
             '<td>' + badge + ' ' + tags + '</td>' +
-            '<td style="font-weight:700;">' + r.qty + '</td>' +
+            '<td style="font-weight:700;">' + r.qty + effect + '</td>' +
             '<td><span style="color:' + tdAction + ';font-size:0.55rem;font-weight:600;">' + r.action + '</span></td>' +
-            '<td style="font-size:0.5rem;color:var(--text-muted);">' + r.why + '</td>' +
+            '<td style="font-size:0.5rem;color:var(--text-muted);">' + whyHtml + '</td>' +
             '<td><button class="export-btn" onclick="applySingleMinRec(' + idx + ')">✅</button></td>';
         tbody.appendChild(tr);
     });
     if (sorted.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">' +
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:10px;">' +
             (minTypeFilter !== 'all' ? '🔎 Нет рекомендаций по выбранному фильтру' : '✅ Все позиции без изменений') + '</td></tr>';
     }
 }
@@ -8319,7 +9289,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('scanAlertsBtn').addEventListener('click', scanAlerts);
     // 🆕 v2.10: вкладка «МИНЫ»
     restoreMinSettings();
-    document.getElementById('computeMinBtn').addEventListener('click', computeMinRecommendations);
+    document.getElementById('computeMinBtn').addEventListener('click', () => {
+        try { if (cachedData.fullData.length) applyFilters(); } catch (e) {}   // применить фильтры панели (магазин/отдел/тип и т.д.)
+        computeMinRecommendations();
+    });
     document.getElementById('applyAllMinBtn').addEventListener('click', applyAllMinRecommendations);
     document.getElementById('exportMinTemplateBtn').addEventListener('click', exportMinTemplate);
     // настройки живут в левой панели (lp-инпуты), их слушатели ниже
