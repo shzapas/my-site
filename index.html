@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>STOCKWISE 2.11 — единый движок MIN</title>
+    <title>STOCKWISE 2.13 — единый движок MIN + ПУТО/УТО</title>
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){
             m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -960,6 +960,14 @@
             font-weight: 600;
             color: #4a148c;
         }
+
+        /* 🛠 v2.13.3: голубая подсветка признака ПУТО = 1 */
+        .full-table td.puto-highlight {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+            border-left: 3px solid #1565c0 !important;
+            font-weight: 600;
+            color: #0d47a1;
+        }
         .full-table td.best-highlight {
             background: linear-gradient(135deg, #fff8e1 0%, #ffe082 100%) !important;
             border-left: 3px solid #f9a825 !important;
@@ -1350,7 +1358,7 @@
 <body>
 <div class="app-container" id="appContainer">
     <div class="header">
-        <h1>📊 STOCKWISE <small>Умный анализ запасов</small> <span style="font-size:0.55em;background:#1B5E20;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle">v2.13 · единый движок MIN + ПУТО/УТО</span></h1>
+        <h1>📊 STOCKWISE <small>Умный анализ запасов</small> <span style="font-size:0.55em;background:#1B5E20;color:#fff;border-radius:10px;padding:2px 10px;vertical-align:middle">v2.13.3</span></h1>
         <div class="header-controls">
             <button id="helpToggleBtn" class="help-toggle-btn">❓ Инструкция</button>
             <button id="themeToggleBtn" class="theme-toggle-btn">🌙 Тёмная</button>
@@ -1515,7 +1523,7 @@
                     <li>Пример: отгрузка 14.7 за нед → 2.1/дн; 441 = 50×90% = 45; 500 = 2.1×14 = 30. 30 &lt; 45 → <strong>MIN 441 = 45</strong>.</li>
                     <li>Метка 🏷️ = 20/80, ⭐ = Бест — для них свой срок 22 дн.</li>
                     <li>Статусы: 🟢 установить · 🟡 повысить · 🔴 понизить · ✅ норма · ⚪ снять.</li>
-                    <li>Настройки (дни, % полки, сезонность, пики) — сверху вкладки, кнопка «⬇️ ШАБЛОН MIN» — готовый файл коллегам.</li>
+                    <li>Настройки (дни, % полки, сезонность, пики) — сверху вкладки.</li>
                 </ul>
             </div>
 
@@ -1532,13 +1540,16 @@
                         <span>1. «🔍 Сканировать». 2. Выберите типы ошибок галочками. 3. «💡 Предложить исправления» → примите нужные «✅ Принять». 4. Выгрузите рекомендации для поставщиков. Принятое попадёт в «ВЫГРУЗИТЬ MIN Custom».</span>
                     </div>
                     <div class="grid-item"><strong>🎯 Вкладка «МИНЫ»</strong>
-                        <span>1. Сначала «🧮 ВЫЧИСЛИТЬ» на Таблице. 2. Проверьте настройки (дни, % полки, пики). 3. «🧮 РАССЧИТАТЬ». 4. Фильтруйте чипами (MIN 441 / 500 / Снять / Повысить / ⭐). 5. Применяйте по одной «✅» или «✅ ПРИМЕНИТЬ ВСЕ». 6. «⬇️ ШАБЛОН MIN» — файл коллегам. Колонка «Гамма» и тег 🆕 — новинки/вновь открытые артикулы: MIN, возможно, не нужен.</span>
+                        <span>1. Сначала «🧮 ВЫЧИСЛИТЬ» на Таблице. 2. Проверьте настройки (дни, % полки, пики). 3. «🧮 РАССЧИТАТЬ». 4. Фильтруйте чипами (MIN 441 / 500 / Снять / Повысить / ⭐). 5. Применяйте по одной «✅» или «✅ ПРИМЕНИТЬ ВСЕ». Колонка «Гамма» и тег 🆕 — новинки/вновь открытые артикулы: MIN, возможно, не нужен.</span>
                     </div>
                     <div class="grid-item"><strong>🚚 Вкладка «ПУТО/УТО»</strong>
                         <span>1. Слева выберите магазин-получатель + подотделы. 2. Настройте правила (горизонт, порог, локальная группа). 3. «🚚 РАССЧИТАТЬ». 4. Добавляйте «➕» в заявку. 5. «📦 Быстрая сборка» — проверьте разбивку по донорам и суммы DPAC → у каждого донора «⬇️ Шаблон» (CSV только его артикулов). 6. «🧾 Сопроводиловка» — Excel на согласование. История заявок — «🕘».</span>
                     </div>
                     <div class="grid-item"><strong>🟠 УТО и ПУТО — в чём разница</strong>
                         <span>УТО — уже упущенная выручка (факт из отчёта). ПУТО — прогноз потерь вперёд: продажи/дн × дефицитные дни × Цена DPAC. В ПУТО/УТО приоритет и сортировка идут по сумме УТО+ПУТО.</span>
+                    </div>
+                    <div class="grid-item"><strong>🔁 Вкладка «МС/ТС»</strong>
+                        <span>Обмен мёртвым/токсичным стоком между магазинами (замена макроса). 1. Выберите магазин-донор (подставится из левого фильтра). 2. «🔁 РАССЧИТАТЬ» — для каждого МС/ТС-товара найдутся магазины, где он продаётся и запаса меньше. 3. «➕» — в общую заявку, дальше «📦 Быстрая сборка» / «🧾 Сопроводиловка» на ПУТО/УТО.</span>
                     </div>
                 </div>
             </div>
@@ -1757,6 +1768,7 @@
                 <button class="tab-btn" data-tab="alerts">🚨 Аномалии</button>
                 <button class="tab-btn" data-tab="mincalc">🎯 МИНЫ</button>
                 <button class="tab-btn" data-tab="transfer">🚚 ПУТО/УТО</button>
+                <button class="tab-btn" data-tab="msts">🔁 МС/ТС</button>
             </div>
 
             <div id="tab-table" class="tab-content active">
@@ -1780,6 +1792,7 @@
                 <div class="color-legend">
                     <span class="legend-item"><span class="legend-color gradient"></span> Градиент по дням</span>
                     <span class="legend-item"><span class="legend-color uto"></span> УТО</span>
+                    <span class="legend-item"><span class="legend-color" style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-color:#1565c0;"></span> ПУТО = 1</span>
                     <span class="legend-item"><span class="legend-color best"></span> Бест</span>
                     <span class="legend-item"><span class="legend-color min"></span> Мины</span>
                     <span class="legend-item"><span class="legend-color" style="background:#fff3e0;border-color:#FF8C00;"></span> Наибольший резерв MIN</span>
@@ -1852,7 +1865,7 @@
                         </div>
                         <div class="stat-card warning" id="statMin">
                             <div class="stat-value" id="statMinValue">0</div>
-                            <div class="stat-label">📋 Мины (заказ завтра)</div>
+                            <div class="stat-label">📋 Мины (заказ на завтра)</div>
                             <div class="stat-hint">📤 Кликните для выгрузки</div>
                         </div>
                         <div class="stat-card info" id="statInTransit">
@@ -2063,7 +2076,7 @@
                     <div class="action-buttons">
                         <button id="computeMinBtn" class="btn-compute">🧮 РАССЧИТАТЬ</button>
                         <button id="applyAllMinBtn" class="btn-compute">✅ ПРИМЕНИТЬ ВСЕ</button>
-                        <button id="exportMinTemplateBtn" class="btn-excel-export">⬇️ ШАБЛОН MIN</button>
+                        <!-- 🧹 v2.13.1: кнопка «⬇️ ШАБЛОН MIN» убрана по просьбе коллег -->
                     </div>
                 </div>
 
@@ -2129,7 +2142,7 @@
                             <tbody id="minRecBody"></tbody>
                         </table>
                     </div>
-                    <div class="info-note" style="margin-top:4px;">Кнопка «✅» записывает рекомендацию как правку — она попадёт в «ВЫГРУЗИТЬ MIN Custom». «⬇️ ШАБЛОН MIN» — готовый файл в формате коллег. 🚚 <b>Связка с ПУТО/УТО:</b> если артикул стоит в заявке на трансфер, строка подсвечивается голубым — MIN, возможно, не нужен. Подсветка появляется после «🧮 РАССЧИТАТЬ» на вкладке ПУТО/УТО (заявка хранится до очистки). «≈ N дн» в колонке Кол-во — на сколько дней продаж хватит рекомендуемого MIN.</div>
+                    <div class="info-note" style="margin-top:4px;">Кнопка «✅» записывает рекомендацию как правку — она попадёт в «ВЫГРУЗИТЬ MIN Custom». 🚚 <b>Связка с ПУТО/УТО:</b> если артикул стоит в заявке на трансфер, строка подсвечивается голубым — MIN, возможно, не нужен. Подсветка появляется после «🧮 РАССЧИТАТЬ» на вкладке ПУТО/УТО (заявка хранится до очистки). «≈ N дн» в колонке Кол-во — на сколько дней продаж хватит рекомендуемого MIN.</div>
                 </div>
             </div>
             <div id="tab-transfer" class="tab-content">
@@ -2154,10 +2167,10 @@
                         5️⃣ <b>Макс. доля донора (50%)</b> — защита донора от разорения, работает в два шага:<br>
                         &nbsp;&nbsp;&nbsp;&nbsp;• Шаг А. Донор обязан оставить себе <b>«неприкосновенный запас» = max(2; 15×СДО)</b> — то есть либо минимум 2 шт, либо запас на 15 дней его собственных продаж (что больше). Пример: донор продаёт 3 шт/дн → оставит себе max(2; 45) = 45 шт.<br>
                         &nbsp;&nbsp;&nbsp;&nbsp;• Шаг Б. Кроме того, донор отдаст <b>не более 50% своего остатка</b> (чтобы не оголять полку вдвое).<br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;• Итог: «Передать, шт» = меньшее из «сколько нужно получателю» и «сколько донор может отдать» (Шаг А и Шаг Б). Колонка донора показывает остаток после передачи — «после: X дн / Y шт»; красным 🛡️, если донору осталось меньше 14 дн.<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;• Итог: «Передать, шт» = меньшее из «сколько нужно получателю» и «сколько донор может отдать» (Шаг А и Шаг Б). Донор показывается в трёх отдельных колонках: <b>«Донор»</b> (номер магазина), <b>«Запас донора»</b> (его текущее покрытие, дн / остаток, шт) и <b>«Остаток донора»</b> (что останется ПОСЛЕ передачи — дн / шт); красным 🛡️, если донору осталось меньше 14 дн.<br>
                         6️⃣ <b>Высокий приоритет от (10 000 ₽)</b> — кандидаты с УТО+ПУТО выше суммы помечаются 🔴, остальные 🟡.<br>
                         7️⃣ <b>Локальная группа (8, 92, 147, 165, 258)</b> — магазины, между которыми возим в первую очередь; галочка «Только локальные доноры» оставляет лишь их. Галочка <b>«Скрыть товары с датой AVS»</b> убирает из кандидатов товары с AVS.<br>
-                        8️⃣ <b>Получатель</b> — фильтр по магазину-получателю (по умолчанию берётся фильтр магазина основной панели). <b>Фильтры основной панели</b> (подотдел, тип, ТОП, дни) применяются и к получателям, и к донорам; фильтр «Магазин» действует только на получателей — доноры ищутся по всем загруженным магазинам.<br>
+                        8️⃣ <b>Получатель</b> — фильтр по магазину-получателю: берётся из фильтра магазина основной панели и обновляется сразу при его смене (без пересчёта). <b>Фильтры основной панели</b> (подотдел, тип, ТОП, дни) применяются и к получателям, и к донорам; фильтр «Магазин» действует только на получателей — доноры ищутся по всем загруженным магазинам.<br>
                         9️⃣ Нажмите «🧮 РАССЧИТАТЬ» → таблица отсортирована по стоимости DPAC (сначала дорогие) → клик по заголовку меняет сортировку → добавляйте нужные строки «➕» в заявку.<br>
                         🔟 <b>Далее:</b> «📦 Быстрая сборка» — заявка по магазинам-донорам с суммами DPAC; в шапке каждого донора кнопка «⬇️ Шаблон для магазина N» — CSV (Артикул;Кол-во) <b>только с его артикулами</b>, грузите каждый файл под своего донора. «🧾 Сопроводиловка» — Excel для согласования с итоговой суммой.<br>
                         <br>
@@ -2236,7 +2249,9 @@
                                     <th data-k="sdo" title="Среднедневные отгрузки, шт/дн">СДО</th>
                                     <th data-k="cover" title="Покрытие запасом, дн">Покрытие, дн</th>
                                     <th data-k="supplyDn" title="Поставка / в пути">Поставка</th>
-                                    <th data-k="donor" title="Донор (его запас, дн)">Донор (запас)</th>
+                                    <th data-k="donor" title="Магазин-донор (откуда забираем товар)">Донор</th>
+                                    <th data-k="donorCover" title="Запас донора сейчас: покрытие, дн / остаток, шт">Запас донора</th>
+                                    <th data-k="donorAfter" title="Остаток у донора ПОСЛЕ передачи: покрытие, дн / остаток, шт (🛡️ красным, если осталось меньше 14 дн)">Остаток донора</th>
                                     <th data-k="give" title="Количество к перемещению, шт">Передать, шт</th>
                                     <th data-k="cost" title="Стоимость товара в ДЕПАК: кол-во × Цена DPAC">Стоимость, ₽ (DPAC)</th>
                                     <th>➕</th>
@@ -2253,6 +2268,82 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ==================== 🔁 v2.13.1: вкладка МС/ТС — обмен мёртвым/токсичным стоком между магазинами ==================== -->
+            <div id="tab-msts" class="tab-content">
+                <div class="right-header">
+                    <h3>🔁 МС/ТС — обмен мёртвым и токсичным стоком между магазинами</h3>
+                    <div class="action-buttons">
+                        <button id="computeMstsBtn" class="btn-compute">🔁 РАССЧИТАТЬ</button>
+                    </div>
+                </div>
+
+                <div class="filters-area" style="min-height:auto; padding:10px 14px; margin:8px 0;">
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-size:0.65rem;">Магазин-донор (где МС/ТС)
+                            <select id="mstsDonor" style="padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;"><option value="">— выберите —</option></select>
+                        </label>
+                        <label style="font-size:0.65rem;">Тип стока
+                            <select id="mstsType" style="padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                                <option value="all">МС + ТС</option>
+                                <option value="ms">только МС</option>
+                                <option value="ts">только ТС</option>
+                            </select>
+                        </label>
+                        <label style="font-size:0.65rem;" title="На сколько дней продаж обеспечиваем ПОЛУЧАТЕЛЯ. «Передать, шт» = min(запас донора; горизонт × СДО получателя − его остаток − в пути). Больше горизонт — больше передаём">Горизонт получателя, дн
+                            <input type="number" id="mstsHorizon" value="30" min="1" max="365" style="width:52px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;" title="Получателем становится только магазин, где тот же артикул продаётся и его текущий запас покрывает МЕНЬШЕ этого числа дней (иначе товар там и так лежит)">Макс. покрытие получателя, дн
+                            <input type="number" id="mstsMaxCover" value="30" min="1" max="999" style="width:52px; padding:3px 6px; border-radius:10px; border:1px solid var(--input-border); margin-left:4px;">
+                        </label>
+                        <label style="font-size:0.65rem;"><input type="checkbox" id="mstsOnlySelling" checked> Только продающие получатели (СДО &gt; 0)</label>
+                        <label style="font-size:0.65rem;"><input type="checkbox" id="mstsOnlyLocal"> Только локальные получатели (группа из ПУТО/УТО)</label>
+                    </div>
+                    <div style="font-size:0.58rem; color:var(--text-secondary); margin-top:6px; line-height:1.5;">
+                        💡 <b>Горизонт получателя, дн</b> — на сколько дней продаж обеспечиваем получателя: «Передать, шт» = min(запас донора; горизонт × СДО получателя − его остаток − в пути).<br>
+                        💡 <b>Макс. покрытие получателя, дн</b> — получателем становится только магазин, где артикул продаётся и его текущий запас покрывает <b>меньше</b> этого числа дней (иначе товар там и так лежит).<br>
+                        💡 <b>Остаток получателя</b> — текущий запас магазина-получателя (не донора!); строка «после: N шт» — его будущий сток после передачи.
+                    </div>
+                    <div id="mstsSummary" style="display:none; margin-top:8px; font-size:0.72rem; background:var(--bg-secondary); border:1px solid var(--input-border); border-radius:10px; padding:8px 12px;"></div>
+                </div>
+
+                <details class="info-note" style="margin:8px 0; padding:8px 14px;">
+                    <summary style="cursor:pointer; font-weight:800; font-size:0.78rem;">⚙️ Как работает обмен МС/ТС (нажмите, чтобы раскрыть)</summary>
+                    <div style="margin-top:6px; line-height:1.55; font-size:0.68rem;">
+                        1️⃣ Выберите <b>магазин-донор</b> — тот, у кого по товарам стоят метки <b>МС</b> (мёртвый сток) и/или <b>ТС</b> (токсичный сток). По умолчанию подставляется магазин из левого фильтра «Магазин» и обновляется при его смене.<br>
+                        2️⃣ Для каждого такого товара таблица ищет <b>получателей</b> — другие загруженные магазины, где тот же артикул <b>продаётся</b> (СДО &gt; 0) и его запас <b>меньше</b> (покрытие ≤ «Макс. покрытие получателя, дн»). Сначала — где покрытие наименьшее.<br>
+                        3️⃣ <b>«Передать, шт»</b> — сколько донор может отдать: min(запас донора; горизонт×СДО получателя − его запас − в пути), но не меньше 1. Число можно править вручную.<br>
+                        4️⃣ Кнопка «➕» добавляет позицию в <b>общую заявку на трансфер</b> (вкладка 🚚 ПУТО/УТО) — дальше «📦 Быстрая сборка» и «🧾 Сопроводиловка» работают как обычно, донором будет магазин с МС/ТС.<br>
+                        5️⃣ У мёртвого стока донора нет продаж, поэтому его покрытие после передачи показывается как «∞» — товар у него всё равно лежит без движения.<br>
+                        6️⃣ Это замена ручного макроса «прогнать список МС/ТС по всем магазинам и посмотреть, где запас меньше» — теперь всё считается одной кнопкой.
+                    </div>
+                </details>
+
+                <div class="top-table-wrapper" style="max-height:480px;">
+                    <table class="top-table" id="mstsTable">
+                        <thead>
+                            <tr id="mstsHeadRow">
+                                <th data-k="idx" title="№ строки">#</th>
+                                <th data-k="art" title="Артикул">Артикул</th>
+                                <th data-k="name" title="Наименование">Наименование</th>
+                                <th data-k="msts" title="Тип стока у донора: МС — мёртвый, ТС — токсичный">Сток</th>
+                                <th data-k="donorStock" title="Запас ДОНОРА (магазина, У КОТОРОГО лежит МС/ТС): остаток, шт и его стоимость в ₽ (DPAC) — «замороженные» деньги">Запас донора</th>
+                                <th data-k="store" title="Магазин-получатель (где товар продаётся)">Получатель</th>
+                                <th data-k="stock" title="Текущий запас ПОЛУЧАТЕЛЯ (магазина, куда отправляем МС/ТС), шт. Это НЕ остаток донора — донор в соседней колонке «Запас донора»">Остаток получателя, шт</th>
+                                <th data-k="cover" title="Покрытие ПОЛУЧАТЕЛЯ, дн: на сколько дней хватит ЕГО текущего остатка при ЕГО продажах (СДО). К донору не относится. Чем меньше — тем нужнее товар">Покрытие получателя, дн</th>
+                                <th data-k="sdo" title="Среднедневные отгрузки получателя, шт/дн">СДО</th>
+                                <th data-k="give" title="Количество к перемещению, шт (можно править вручную)">Передать, шт</th>
+                                <th data-k="cost" title="Стоимость товара в ДЕПАК: кол-во × Цена DPAC">Стоимость, ₽ (DPAC)</th>
+                                <th>➕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mstsBody"></tbody>
+                    </table>
+                </div>
+                <div class="info-note" style="margin-top:4px;">
+                    🔽 Сортировка: клик по заголовку колонки. «➕» — в общую заявку (счётчик «в заявке» на вкладке 🚚 ПУТО/УТО). «Стоимость, ₽ (DPAC)» = количество × «Сумма Цена DPAC».
+                </div>
+            </div>
         </div>
     </div>
     <footer>STOCKWISE — умный анализ резервов и товарных запасов. Автозагрузка работает в Chrome/Edge/Opera.</footer>
@@ -2266,7 +2357,7 @@
 const trState = { allRows: [], rows: [], basket: new Set(), mainFilter: "", sortKey: 'cost', sortDir: -1 };
 
 // 🔽 сортировка кликом по заголовку таблицы трансферов
-const TR_SORT_NUMERIC = new Set(['idx','uto','stock','sdo','cover','give','cost']);
+const TR_SORT_NUMERIC = new Set(['idx','uto','stock','sdo','cover','give','cost','donorCover','donorAfter']);
 function trSetSort(k) {
     if (trState.sortKey === k) { trState.sortDir = -trState.sortDir; }
     else { trState.sortKey = k; trState.sortDir = (k === 'name' || k === 'store' || k === 'art') ? 1 : -1; } // числа: сначала большие, текст: А→Я
@@ -2278,7 +2369,9 @@ function trSortRows(rows) {
         let va, vb;
         if (k === 'idx') { va = trState.rows.indexOf(a); vb = trState.rows.indexOf(b); }
         else if (k === 'prio') { va = a.prio.indexOf('🔴') === 0 ? 1 : 0; vb = b.prio.indexOf('🔴') === 0 ? 1 : 0; }
-        else if (k === 'donor') { va = a.donor.cover; vb = b.donor.cover; }
+        else if (k === 'donor') { va = a.donor.store; vb = b.donor.store; } // 🆕 v2.13.1: донор — по номеру магазина
+        else if (k === 'donorCover') { va = a.donor.cover; vb = b.donor.cover; } // 🆕 v2.13.1: запас донора
+        else if (k === 'donorAfter') { va = a.donorAfter; vb = b.donorAfter; } // 🆕 v2.13.1: остаток донора после
         else if (k === 'supplyDn') { const p = s => parseFloat(String(s)) || 999; va = p(a.supplyDn); vb = p(b.supplyDn); }
         else { va = a[k]; vb = b[k]; }
         if (num) return (vb - va) * (d === -1 ? 1 : -1);
@@ -2287,6 +2380,21 @@ function trSortRows(rows) {
 }
 
 function trNum(v){ const n = parseFloat(String(v ?? '').replace(',', '.')); return isNaN(n) ? 0 : n; }
+
+// 🆕 v2.13.1: синхронизация «Получателя» (вкладка ПУТО/УТО) с фильтром магазина основной панели.
+// Коллеги меняют магазин в левом фильтре — селект «Получатель» теперь обновляется сразу,
+// без нажатия «🚚 РАССЧИТАТЬ» (раньше залипал на «все магазины» до пересчёта).
+function trSyncMainStoreFilter() {
+    let mainStore = '';
+    try {
+        const ms = document.getElementById('storeFilter');
+        if (ms && ms.value && ms.value !== 'all' && ms.value !== '-- Все магазины --') mainStore = String(ms.value).trim();
+    } catch (e) {}
+    if (mainStore === (trState.mainFilter || '')) return;
+    trState.mainFilter = mainStore;
+    // если трансферы уже рассчитаны — сразу перестраиваем список получателей и таблицу
+    if (trState.allRows.length) trApplyStoreFilter();
+}
 
 // 🆕 Пул ДОНОРОВ: все загруженные магазины, но с учётом фильтров панели
 // (подотдел/тип/ТОП). Фильтр «Магазин» на доноров НЕ влияет — он выбирает получателя.
@@ -2443,20 +2551,25 @@ function computeTransferRecommendations() {
 
 function trApplyStoreFilter() {
     const sel = document.getElementById('trStoreFilter');
-    const f = sel ? sel.value : '';
     // база: учёт фильтра магазина основной панели
     let base = trState.mainFilter ? trState.allRows.filter(r => r.store === trState.mainFilter) : trState.allRows;
     // ⚠️ AVS: опционально скрываем товары с датой AVS
     const hideAvs = document.getElementById('trHideAvs');
     if (hideAvs && hideAvs.checked) base = base.filter(r => !r.avs);
     if (sel) {
+        const prev = sel.value; // 🆕 v2.13.1: помним выбор пользователя
         while (sel.options.length > 1) sel.remove(1);
         const stores = [...new Set(base.map(r => r.store))].sort();
         for (const st of stores) {
             const o = document.createElement('option'); o.value = st; o.textContent = 'Магазин ' + st; sel.appendChild(o);
         }
-        if (trState.mainFilter) sel.value = trState.mainFilter;
+        // 🆕 v2.13.1: приоритет — магазин из левого фильтра; иначе сохраняем ручной выбор; иначе «все магазины»
+        if (trState.mainFilter && stores.includes(trState.mainFilter)) sel.value = trState.mainFilter;
+        else if (prev && stores.includes(prev)) sel.value = prev;
+        else sel.value = '';
     }
+    // 🆕 v2.13.1: фильтруем по ИТОГОВОМУ значению селекта (после перестроения списка)
+    const f = sel ? sel.value : '';
     trState.rows = f ? base.filter(r => r.store === f) : base;
     renderTransferTable();
 }
@@ -2476,7 +2589,7 @@ function renderTransferTable() {
         });
     }
     if (!shown.length) {
-        body.innerHTML = '<tr><td colspan="15" style="text-align:center; padding:24px; color:var(--text-secondary);">Кандидатов не найдено (либо загрузите выгрузки и нажмите РАССЧИТАТЬ)</td></tr>';
+        body.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:24px; color:var(--text-secondary);">Кандидатов не найдено (либо загрузите выгрузки и нажмите РАССЧИТАТЬ)</td></tr>';
     } else {
         body.innerHTML = shown.map((r, i) => {
             const key = r.store + '|' + r.art;
@@ -2488,25 +2601,32 @@ function renderTransferTable() {
                 + (r.packSize > 1 ? '<div style="font-size:0.52rem; color:var(--text-secondary);" title="Размер упаковки (ГАММА)">📦 упак. ' + r.packSize + '</div>' : '') + '</td>'
                 + '<td>' + r.name + '</td>'
                 + '<td style="font-size:0.55rem; color:var(--text-secondary); white-space:nowrap;" title="Гамма товара">' + (r.gamma || '—') + '</td>'
-                + '<td style="font-weight:700;" title="УТО факт — уже упущенная выручка; ПУТО — прогноз потерь за горизонт без трансфера: продажи/дн × дефицитные дни × Цена DPAC">'
+                + '<td style="font-weight:700;' + (r.puto ? ' background:rgba(21,101,192,0.12); box-shadow:inset 3px 0 0 #1565c0;' : '') + '" title="УТО факт — уже упущенная выручка; ПУТО — прогноз потерь за горизонт без трансфера: продажи/дн × дефицитные дни × Цена DPAC'
+                + (r.puto ? '. Голубая подсветка = признак ПУТО = 1 в отчёте (подтверждённый потенциальный УТО)' : '') + '">'
                 + r.utoTotal.toLocaleString('ru') + ' ₽'
                 + '<div style="font-size:0.52rem; font-weight:400;">'
                 + (r.uto > 0 ? '<span style="color:#7b1fa2;">УТО ' + r.uto.toLocaleString('ru') + '</span>' : '')
                 + (r.uto > 0 && r.putoRub > 0 ? ' + ' : '')
                 + (r.putoRub > 0 ? '<span style="color:#e65100;">ПУТО ' + r.putoRub.toLocaleString('ru') + '</span>' : '')
                 + (r.uto === 0 && r.putoRub === 0 ? '—' : '')
-                + '</div></td>'
+                + '</div>'
+                + (r.puto ? '<div style="font-size:0.5rem; font-weight:800; color:#1565c0;" title="Признак ПУТО = 1 в отчёте — визуальное подтверждение">ПУТО = 1 ✓</div>' : '')
+                + '</td>'
                 + '<td>' + r.prio + '</td>'
                 + '<td>' + r.stock + '</td><td>' + r.sdo.toFixed(1) + '</td>'
                 + '<td style="color:' + (r.cover < 7 ? '#e53935' : 'inherit') + ';font-weight:700;">' + r.cover.toFixed(1) + '</td>'
                 + '<td>' + r.supplyDn + '</td>'
+                + '<td style="font-weight:700; white-space:nowrap;" title="Магазин-донор (откуда забираем товар)">' + r.donor.store + (r.donor.local ? '' : ' <span style="color:#e65100; font-size:0.55rem; font-weight:700;" title="Донор вне локальной группы">⚠️далеко</span>') + '</td>'
+                + '<td style="white-space:nowrap;" title="Запас донора СЕЙЧАС: покрытие ' + r.donor.cover.toFixed(0) + ' дн, остаток ' + r.donor.stock + ' шт">' + r.donor.cover.toFixed(0) + ' дн'
+                + '<div style="font-size:0.55rem; color:var(--text-secondary);">' + r.donor.stock + ' шт</div></td>'
                 + (() => {
                     // 🛡️ защита от перекладывания УТО: у донора после передачи должно оставаться ≥ 14 дн
                     const warn = r.donorAfter < 14;
-                    const ttl = 'Покрытие донора ПОСЛЕ передачи: ' + r.donorAfter.toFixed(1) + ' дн' + (warn ? ' — меньше 14 дн, донор сам попадёт в дефицит!' : ' — в норме');
-                    return '<td' + (warn ? ' style="background:rgba(229,57,53,0.14);color:#e53935;font-weight:700;"' : '') + ' title="' + ttl
-                        + '">' + r.donor.store + ' (' + r.donor.cover.toFixed(0) + ' дн)' + (r.donor.local ? '' : ' ⚠️далеко')
-                        + '<div style="font-size:0.55rem;">после: ' + r.donorAfter.toFixed(1) + ' дн / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)) + ' шт' + (warn ? ' 🛡️' : '') + '</div></td>';
+                    const afterStock = (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give));
+                    const ttl = 'Остаток у донора ПОСЛЕ передачи ' + r.give + ' шт: ' + r.donorAfter.toFixed(1) + ' дн / ' + afterStock + ' шт' + (warn ? ' — меньше 14 дн, донор сам попадёт в дефицит!' : ' — в норме');
+                    return '<td' + (warn ? ' style="background:rgba(229,57,53,0.14);color:#e53935;font-weight:700;"' : '') + ' title="' + ttl + '">'
+                        + r.donorAfter.toFixed(1) + ' дн'
+                        + '<div style="font-size:0.55rem;' + (warn ? ' font-weight:700;' : ' color:var(--text-secondary);') + '">' + afterStock + ' шт' + (warn ? ' 🛡️' : '') + '</div></td>';
                 })()
                 + '<td style="font-weight:800;color:#2e7d50;">'
                 + '<input type="number" min="1" value="' + r.give + '" '
@@ -2702,7 +2822,7 @@ async function exportTransferDocExcel() {
         const row = ws.addRow({
             store: r.store, art: r.art, name: r.name, give: r.give, cost: r.cost,
             donor: r.donor.store,
-            donorAfter: Math.round(r.donorAfter * 10) / 10 + ' / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)),
+            donorAfter: (r.donorAfter >= 999 ? '∞' : Math.round(r.donorAfter * 10) / 10) + ' / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)),
             uto: r.uto, prio: r.prio, avs: r.avs || ''
         });
         row.getCell('cost').numFmt = '# ##0';
@@ -2852,7 +2972,7 @@ function trOpenAssembly() {
                 + '<td style="padding:3px 8px; text-align:center;">' + r.store + '</td>'
                 + '<td style="padding:3px 8px; text-align:center; font-weight:800; color:#2e7d50;">' + r.give + '</td>'
                 + '<td style="padding:3px 8px; text-align:right;">' + (r.cost || 0).toLocaleString('ru') + '</td>'
-                + '<td style="padding:3px 8px; text-align:center;' + (r.donorAfter < 14 ? 'color:#e53935;font-weight:700;' : '') + '">' + r.donorAfter.toFixed(1) + ' / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)) + (r.donorAfter < 14 ? ' 🛡️' : '') + '</td></tr>';
+                + '<td style="padding:3px 8px; text-align:center;' + (r.donorAfter < 14 ? 'color:#e53935;font-weight:700;' : '') + '">' + (r.donorAfter >= 999 ? '∞' : r.donorAfter.toFixed(1)) + ' / ' + (r.donorAfterStock !== undefined ? r.donorAfterStock : Math.max(0, r.donor.stock - r.give)) + (r.donorAfter < 14 ? ' 🛡️' : '') + '</td></tr>';
         }
         html += '</table></div>';
     }
@@ -2860,6 +2980,284 @@ function trOpenAssembly() {
         + '<div style="margin-top:6px; font-size:0.6rem; color:var(--text-secondary);">⬇️ Шаблон (CSV «Артикул;Количество») скачивается <b>отдельно для каждого магазина-донора</b> — кнопкой в шапке его блока. В файл попадают только артикулы, которые забираем именно у этого магазина. Сопроводиловка остаётся доступной по кнопке в шапке вкладки.</div>';
 
     trShowModal('📦 Быстрая сборка — заявка по донорам', html);
+}
+
+// ==================== 🔁 v2.13.1: вкладка МС/ТС — обмен мёртвым/токсичным стоком ====================
+// Замена ручного макроса: для товаров с метками МС/ТС в магазине-доноре ищем другие магазины,
+// где тот же артикул продаётся (СДО>0) и запас меньше — кандидатов, куда передать сток.
+const mstsState = { rows: [], sortKey: 'cost', sortDir: -1 };
+const MST_SORT_NUMERIC = new Set(['donorStock','stock','cover','sdo','give','cost']);
+
+function mstsSetSort(k) {
+    if (mstsState.sortKey === k) { mstsState.sortDir = -mstsState.sortDir; }
+    else { mstsState.sortKey = k; mstsState.sortDir = (k === 'name' || k === 'store' || k === 'art' || k === 'msts') ? 1 : -1; }
+    renderMstsTable();
+}
+function mstsSortRows(rows) {
+    const k = mstsState.sortKey, d = mstsState.sortDir, num = MST_SORT_NUMERIC.has(k);
+    return rows.slice().sort((a, b) => {
+        let va, vb;
+        if (k === 'idx') { va = mstsState.rows.indexOf(a); vb = mstsState.rows.indexOf(b); }
+        else if (k === 'msts') { va = a.mstsType; vb = b.mstsType; }
+        else if (k === 'donorStock') { va = a.donor.stock; vb = b.donor.stock; }
+        else { va = a[k]; vb = b[k]; }
+        if (num) return (vb - va) * (d === -1 ? 1 : -1);
+        return String(va).localeCompare(String(vb), 'ru') * (d === 1 ? 1 : -1);
+    });
+}
+
+function mstsAllStores() {
+    const set = new Set();
+    for (const r of (cachedData.fullData || [])) {
+        const s = String(r["№ магазина"] ?? '').trim();
+        if (s) set.add(s);
+    }
+    return [...set].sort((a, b) => (Number(a) - Number(b)) || String(a).localeCompare(String(b), 'ru'));
+}
+
+function mstsFillDonorSelect(preferred) {
+    const sel = document.getElementById('mstsDonor');
+    if (!sel) return;
+    const prev = (preferred !== undefined) ? preferred : sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    for (const st of mstsAllStores()) {
+        const o = document.createElement('option'); o.value = st; o.textContent = 'Магазин ' + st; sel.appendChild(o);
+    }
+    if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+// 🔄 донор подстраивается под левый фильтр «Магазин» (как «Получатель» на ПУТО/УТО)
+function mstsSyncDonorFromMainFilter() {
+    let mainStore = '';
+    try {
+        const ms = document.getElementById('storeFilter');
+        if (ms && ms.value && ms.value !== 'all' && ms.value !== '-- Все магазины --') mainStore = String(ms.value).trim();
+    } catch (e) {}
+    if (!mainStore) return;
+    const sel = document.getElementById('mstsDonor');
+    if (!sel) return;
+    if (![...sel.options].some(o => o.value === mainStore)) {
+        const o = document.createElement('option'); o.value = mainStore; o.textContent = 'Магазин ' + mainStore; sel.appendChild(o);
+    }
+    if (sel.value !== mainStore) {
+        sel.value = mainStore;
+        if (mstsState.rows.length) computeMstsCandidates();
+    }
+}
+
+function computeMstsCandidates() {
+    const sum = document.getElementById('mstsSummary');
+    const donor = String((document.getElementById('mstsDonor') || {}).value || '').trim();
+    if (!donor) {
+        mstsState.rows = [];
+        renderMstsTable();
+        if (sum) { sum.style.display = 'block'; sum.innerHTML = 'Выберите магазин-донор — тот, у кого по товарам стоят метки МС/ТС.'; }
+        return;
+    }
+    if (!cachedData.fullData.length) { showToast('⚠️ Нет данных. Сначала выполните «🧮 ВЫЧИСЛИТЬ» на Таблице.', 'warning'); return; }
+
+    const typeSel = document.getElementById('mstsType') ? document.getElementById('mstsType').value : 'all';
+    const horizon = Math.max(1, toNumber(document.getElementById('mstsHorizon') ? document.getElementById('mstsHorizon').value : 30, 30) || 30);
+    const maxCover = Math.max(1, toNumber(document.getElementById('mstsMaxCover') ? document.getElementById('mstsMaxCover').value : 30, 30) || 30);
+    const onlySelling = document.getElementById('mstsOnlySelling') ? document.getElementById('mstsOnlySelling').checked : true;
+    const onlyLocal = document.getElementById('mstsOnlyLocal') ? document.getElementById('mstsOnlyLocal').checked : false;
+    const localSet = new Set(String((document.getElementById('trLocalGroup') || {}).value || '').split(',').map(x => x.trim()).filter(Boolean));
+
+    const base = cachedData.fullData || [];
+
+    // индекс артикулов по всем остальным магазинам (потенциальные получатели)
+    const byArt = new Map();
+    for (const r of base) {
+        const st = String(r["№ магазина"] ?? '').trim();
+        if (!st || st === donor) continue;
+        const a = String(r["Артикул"] ?? '').trim();
+        if (!a) continue;
+        if (!byArt.has(a)) byArt.set(a, []);
+        byArt.get(a).push(r);
+    }
+
+    // 1) МС/ТС-товары донора → 2) получатели с меньшим запасом
+    const out = [];
+    const seenPairs = new Set();
+    for (const d of base) {
+        if (String(d["№ магазина"] ?? '').trim() !== donor) continue;
+        const mc = toNumber(d["МС"], 0) > 0;
+        const ts = toNumber(d["ТС"], 0) > 0;
+        if (!mc && !ts) continue;
+        if (typeSel === 'ms' && !mc) continue;
+        if (typeSel === 'ts' && !ts) continue;
+        const art = String(d["Артикул"] ?? '').trim();
+        if (!art) continue;
+        const dStock = Math.max(0, toNumber(d["Запас, шт."], 0));
+        if (dStock <= 0) continue; // стока физически нет — двигать нечего
+        const dpac = toNumber(d["Цена DPAC"], 0);
+        const mstsType = (mc && ts) ? 'МС+ТС' : (mc ? 'МС' : 'ТС');
+        const frozenRub = Math.round(dStock * dpac);
+        const name = String(d["Наименование"] ?? '');
+        const barcode = String(d["Штрихкод"] ?? '').trim();
+        const packSize = Math.max(1, Math.round(toNumber(d["Размер упаковки"], 0)) || 1);
+        const avs = String(d["Дата AVS"] || "").trim();
+        const gamma = String(d["Гамма"] ?? '').trim();
+
+        const cands = (byArt.get(art) || []).map(r => {
+            const st = String(r["№ магазина"] ?? '').trim();
+            const sdo = toNumber(r["Отгружено в сред. За 7 дн"], 0) / 7;
+            const stock = Math.max(0, toNumber(r["Запас, шт."], 0));
+            const onWay = Math.max(0, toNumber(r["В пути, шт."], 0));
+            const cover = sdo > 0 ? stock / sdo : 999;
+            return { st, sdo, stock, onWay, cover };
+        })
+        .filter(c => !onlySelling || c.sdo > 0)
+        .filter(c => c.cover <= maxCover)
+        .filter(c => !onlyLocal || localSet.has(c.st))
+        .sort((a, b) => a.cover - b.cover); // сначала где запас наименьший
+
+        for (const c of cands) {
+            const key = c.st + '|' + art;
+            if (seenPairs.has(key)) continue;
+            seenPairs.add(key);
+            const need = Math.ceil(horizon * c.sdo - c.stock - c.onWay);
+            const give = Math.max(1, Math.min(dStock, need));
+            out.push({
+                store: c.st, art, name, gamma,
+                uto: frozenRub, puto: 0, putoRub: 0, utoTotal: frozenRub,
+                prio: '⚪ МС/ТС',
+                stock: c.stock, sdo: c.sdo, cover: c.cover, supplyDn: '—',
+                donor: { store: donor, cover: 0, stock: dStock, sdo: 0, local: localSet.has(donor) },
+                give, dpac, cost: Math.round(give * dpac),
+                donorAfter: 999, donorAfterStock: Math.max(0, dStock - give),
+                avs, barcode, packSize, mstsType, frozenRub, need
+            });
+        }
+    }
+
+    out.sort((a, b) => (b.frozenRub - a.frozenRub) || (a.cover - b.cover));
+    mstsState.rows = out;
+    renderMstsTable();
+    if (out.length) showToast('🔁 МС/ТС: найдено ' + out.length + ' вариантов передачи (донор — магазин ' + donor + ')', 'success');
+}
+
+function renderMstsTable() {
+    const body = document.getElementById('mstsBody');
+    if (!body) return;
+    const sum = document.getElementById('mstsSummary'); // 🛠 фикс: sum is not defined (строка 3168)
+    const shown = mstsSortRows(mstsState.rows);
+    const headRow = document.getElementById('mstsHeadRow');
+    if (headRow) {
+        headRow.querySelectorAll('th[data-k]').forEach(th => {
+            const base = th.getAttribute('data-k');
+            th.textContent = th.textContent.replace(/ [▼▲]$/, '');
+            if (base === mstsState.sortKey) th.textContent += (mstsState.sortDir === -1 ? ' ▼' : ' ▲');
+        });
+    }
+    if (!shown.length) {
+        body.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:24px; color:var(--text-secondary);">Позиций не найдено: выберите магазин-донор с метками МС/ТС (или ослабьте фильтры получателя)</td></tr>';
+    } else {
+        body.innerHTML = shown.map((r, i) => {
+            const key = r.store + '|' + r.art;
+            const inB = trState.basket.has(key);
+            const badge = r.mstsType === 'МС' ? '<span style="background:#EF9A9A;color:#B71C1C;font-weight:800;border-radius:8px;padding:1px 7px;font-size:0.55rem;">МС</span>'
+                : (r.mstsType === 'ТС' ? '<span style="background:#C62828;color:#fff;font-weight:800;border-radius:8px;padding:1px 7px;font-size:0.55rem;">ТС</span>'
+                : '<span style="background:#EF9A9A;color:#B71C1C;font-weight:800;border-radius:8px;padding:1px 6px;font-size:0.55rem;">МС</span><span style="background:#C62828;color:#fff;font-weight:800;border-radius:8px;padding:1px 6px;font-size:0.55rem;margin-left:2px;">ТС</span>');
+            return '<tr>'
+                + '<td>' + (i + 1) + '</td>'
+                + '<td><a href="#" onclick="openProductInMagPortal(\'' + r.art + '\');return false;" style="color:#FF8C00;font-weight:700;text-decoration:underline;" title="Открыть в MagPortal">' + r.art + '</a>'
+                + (r.avs ? ' <span style="color:#e53935;font-weight:700;font-size:0.55rem;" title="У товара есть дата AVS (' + r.avs + ')">⚠️AVS</span>' : '')
+                + (r.barcode ? '<div style="font-size:0.52rem; color:var(--text-secondary);" title="Штрихкод">' + r.barcode + '</div>' : '') + '</td>'
+                + '<td>' + r.name + '</td>'
+                + '<td style="white-space:nowrap;">' + badge + '</td>'
+                + '<td style="font-weight:700; white-space:nowrap;" title="Запас донора: ' + r.donor.stock + ' шт — «заморожено» на ' + r.frozenRub.toLocaleString('ru') + ' ₽ (по цене DPAC)">' + r.donor.stock + ' шт'
+                + '<div style="font-size:0.55rem; color:var(--text-secondary);">' + r.frozenRub.toLocaleString('ru') + ' ₽</div></td>'
+                + '<td>' + r.store + (r.donor.local ? '' : '') + '</td>'
+                + '<td style="white-space:nowrap;" title="Остаток ПОЛУЧАТЕЛЯ сейчас и сколько у него будет после передачи: остаток + «Передать, шт»">' + r.stock + ' шт'
+                + '<div style="font-size:0.52rem; color:#1565c0; font-weight:600;" title="Будущий сток получателя после передачи">после: ' + (r.stock + r.give) + ' шт</div></td>'
+                + '<td style="font-weight:700; color:' + (r.cover <= 7 ? '#e53935' : 'inherit') + ';" title="Покрытие ПОЛУЧАТЕЛЯ, дн: на сколько дней хватит ЕГО остатка при ЕГО продажах (донора не касается). Чем меньше — тем нужнее товар">' + (r.cover >= 999 ? '—' : r.cover.toFixed(1)) + '</td>'
+                + '<td>' + r.sdo.toFixed(1) + '</td>'
+                + '<td style="font-weight:800;color:#2e7d50;">'
+                + '<input type="number" min="1" max="' + r.donor.stock + '" value="' + r.give + '" '
+                + 'onchange="mstsSetGive(\'' + key + '\', this.value)" '
+                + 'style="width:52px; padding:1px 4px; font-weight:800; color:#2e7d50; border:1px solid var(--input-border); border-radius:6px; background:var(--input-bg); font-size:0.62rem;" '
+                + 'title="Можно изменить вручную (не больше запаса донора: ' + r.donor.stock + ' шт). Потребность получателя на горизонт: ' + r.need + ' шт">'
+                + '</td>'
+                + '<td style="font-weight:700;color:#1565c0;">' + (r.cost > 0 ? r.cost.toLocaleString('ru') + ' ₽' : '—') + '</td>'
+                + '<td><button class="btn-compute" style="padding:2px 8px;font-size:0.6rem;" onclick="toggleMstsBasket(\'' + key.replace(/'/g, "\\'") + '\')" title="Добавить в общую заявку на трансфер (вкладка 🚚 ПУТО/УТО)">' + (inB ? '✅' : '➕') + '</button></td>'
+                + '</tr>';
+        }).join('');
+    }
+    if (sum) {
+        if (shown.length) {
+            const ms = shown.filter(r => r.mstsType.indexOf('МС') === 0).length;
+            const tsCount = shown.filter(r => r.mstsType.indexOf('ТС') !== -1).length;
+            const frozenSum = shown.reduce((s, r, idx, arr) => {
+                const k = r.donor.store + '|' + r.art;
+                return arr.findIndex(x => (x.donor.store + '|' + x.art) === k) === idx ? s + r.frozenRub : s;
+            }, 0);
+            const costSum = shown.reduce((s, r) => s + (r.cost || 0), 0);
+            const recipients = new Set(shown.map(r => r.store)).size;
+            sum.style.display = 'block';
+            sum.innerHTML = '🔁 Вариантов передачи: <b>' + shown.length + '</b> · позиций МС/ТС у донора: <b>' + new Set(shown.map(r => r.art)).size + '</b> (МС: ' + ms + ' · ТС: ' + tsCount + ')'
+                + ' · получателей: <b>' + recipients + '</b>'
+                + ' · заморожено у донора: <b style="color:#B71C1C;">' + frozenSum.toLocaleString('ru') + ' ₽</b>'
+                + ' · стоимость к перемещению (DPAC): <b style="color:#1565c0;">' + costSum.toLocaleString('ru') + ' ₽</b>'
+                + ' · донор: <b>магазин ' + (shown[0] ? shown[0].donor.store : '') + '</b>'
+                + ' · в заявке: <b>' + trState.basket.size + '</b>';
+        } else {
+            sum.style.display = 'none';
+        }
+    }
+}
+
+// ✍️ ручная правка «Передать, шт» на вкладке МС/ТС (не больше запаса донора)
+function mstsSetGive(key, val) {
+    const r = mstsState.rows.find(x => (x.store + '|' + x.art) === key);
+    if (!r) return;
+    let n = Math.floor(toNumber(val, 0));
+    if (!n || n < 1) { n = 1; showToast('⚠️ Количество должно быть ≥ 1', 'warning', 2000); }
+    if (n > r.donor.stock) { n = r.donor.stock; showToast('⚠️ У донора всего ' + r.donor.stock + ' шт этого артикула', 'warning', 4000); }
+    r.give = n;
+    r.cost = Math.round(n * r.dpac);
+    r.donorAfterStock = Math.max(0, r.donor.stock - n);
+    if (trState.basket.has(key) && trState.snapshot) trState.snapshot.set(key, r); // обновить заявку
+    renderMstsTable();
+}
+
+// ➕/✅ добавление позиции МС/ТС в ОБЩУЮ заявку на трансфер (пандус ПУТО/УТО)
+function toggleMstsBasket(key) {
+    if (trState.basket.has(key)) {
+        trState.basket.delete(key);
+    } else {
+        trState.basket.add(key);
+        if (!trState.snapshot) trState.snapshot = new Map();
+        const live = mstsState.rows.find(r => (r.store + '|' + r.art) === key);
+        if (live) trState.snapshot.set(key, live);
+        const art = live ? live.art : key.split('|')[1];
+        const past = trFindInHistory(art);
+        if (past) showToast('🕘 Артикул ' + art + ' уже был в заявке от ' + past.date + ' (' + past.give + ' шт → магазин ' + past.store + '). Если он уже перемещён — сейчас может быть лишним.', 'warning', 10000);
+    }
+    renderMstsTable();
+    const bi = document.getElementById('trBasketInfo');
+    if (bi) bi.textContent = 'в заявке: ' + trState.basket.size;
+}
+
+// 🔁 кнопка «РАССЧИТАТЬ» на вкладке МС/ТС
+function mstsRecalc() {
+    if (!cachedData.fullData.length) { showToast('⚠️ Нет данных. Сначала выполните «🧮 ВЫЧИСЛИТЬ» на Таблице.', 'warning'); return; }
+    mstsFillDonorSelect();
+    const sel = document.getElementById('mstsDonor');
+    if (!sel.value) {
+        try {
+            const ms = document.getElementById('storeFilter');
+            if (ms && ms.value && ms.value !== 'all' && ms.value !== '-- Все магазины --') sel.value = String(ms.value).trim();
+        } catch (e) {}
+    }
+    if (!sel.value) {
+        renderMstsTable();
+        const sum = document.getElementById('mstsSummary');
+        if (sum) { sum.style.display = 'block'; sum.innerHTML = 'Выберите магазин-донор — тот, у кого по товарам стоят метки МС/ТС.'; }
+        showToast('Выберите магазин-донор (или укажите магазин в левом фильтре)', 'warning');
+        return;
+    }
+    computeMstsCandidates();
 }
 
 // 🆕 CSV-шаблон для КОНКРЕТНОГО магазина-донора: только его артикулы
@@ -2920,6 +3318,23 @@ document.addEventListener('DOMContentLoaded', () => {
             th.style.cursor = 'pointer';
             th.style.userSelect = 'none';
             th.addEventListener('click', () => trSetSort(th.getAttribute('data-k')));
+        });
+    }
+    // ==================== 🔁 v2.13.1: слушатели вкладки МС/ТС ====================
+    const cm = document.getElementById('computeMstsBtn');
+    if (cm) cm.addEventListener('click', mstsRecalc);
+    const md = document.getElementById('mstsDonor');
+    if (md) md.addEventListener('change', () => { if (cachedData.fullData.length) computeMstsCandidates(); });
+    ['mstsType', 'mstsHorizon', 'mstsMaxCover', 'mstsOnlySelling', 'mstsOnlyLocal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', () => { if (mstsState.rows.length) computeMstsCandidates(); });
+    });
+    const mh = document.getElementById('mstsHeadRow');
+    if (mh) {
+        mh.querySelectorAll('th[data-k]').forEach(th => {
+            th.style.cursor = 'pointer';
+            th.style.userSelect = 'none';
+            th.addEventListener('click', () => mstsSetSort(th.getAttribute('data-k')));
         });
     }
     trUpdateHistoryBtn(); // 🕘 счётчик истории заявок
@@ -3334,6 +3749,48 @@ function getTomorrowDay() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return DAYS[tomorrow.getDay()];
+}
+
+// 🛠 v2.13.3: целевой день для «Мин» = ЗАВТРА, с перескоком через выходные:
+// в пятницу и субботу «завтра» = ПН (в выходные заказы поставщикам не выходят).
+function getMinTargetDay() {
+    const d = getTomorrowDay();
+    return (d === 'СБ' || d === 'ВС') ? 'ПН' : d;
+}
+
+// Подпись целевого дня для статусов/выгрузки: «СР (завтра)» или «ПН (перескок через выходные)»
+function getMinTargetLabel() {
+    const target = getMinTargetDay();
+    return (target === 'ПН' && (getTomorrowDay() === 'СБ' || getTomorrowDay() === 'ВС'))
+        ? target + ' (перескок через выходные)'
+        : target + ' (завтра)';
+}
+
+// 🛠 v2.13.3 (багфикс «Мин»): строка дней поставщика может содержать ЛЮБЫЕ сочетания:
+// отдельные дни («СР»), диапазоны («СР-ЧТ», «ПН-СР», «СР-ПТ») и их списки («ПН,СР-ЧТ»).
+// Матчим, если целевой день входит в одиночный день ИЛИ внутрь диапазона
+// (диапазон «ПТ-ПН» — циклический, через выходные). Регистронезависимо
+// («Пн,Ср», «пн, ср»), «ПЯТ» = «ПТ», любое тире («-», «–», «—»).
+function isMinOrderDay(daysString) {
+    const raw = String(daysString || "").trim();
+    if (!raw) return false;
+    const target = getMinTargetDay();
+    const ti = DAYS.indexOf(target);
+    const tokens = raw.split(/[,;]+/);
+    for (let token of tokens) {
+        token = token.trim().toUpperCase().replace(/[–—−]/g, '-').replace(/ПЯТ/g, 'ПТ');
+        if (!token) continue;
+        if (token.indexOf('-') !== -1) {
+            const parts = token.split('-').map(x => x.trim());
+            const a = DAYS.indexOf(parts[0]);
+            const b = DAYS.indexOf(parts[1]);
+            if (a === -1 || b === -1) continue;
+            if (a <= b ? (ti >= a && ti <= b) : (ti >= a || ti <= b)) return true;
+        } else if (token === target) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // ==================== БАЗОВЫЕ КОЛОНКИ ====================
@@ -4534,15 +4991,20 @@ function calculateRecommendedMin(params) {
     const rec500 = dayAvg > 0 ? Math.ceil(dayAvg * days * (st.peak ? st.peakK : 1)) : 0;
 
     let type, recommended, reason;
+    // 🆕 v2.13.1: у каждой колонки — СВОЁ описание расчёта (раньше MIN 500 дублировал reason победителя)
+    const reason441 = rec441 > 0 ? ('MIN 441 = вместимость ' + vmesimost + ' шт × ' + st.p441 + '%') : 'вместимость 0 — MIN 441 не считается';
+    const reason500calc = dayAvg > 0
+        ? (dayAvg.toFixed(1) + ' шт/дн × ' + Math.round(days) + ' дн' + (priority ? ' (20/80/Бест)' : '') + (st.peak ? ' × пик ' + st.peakK : ''))
+        : 'нет продаж — снять MIN';
     if (dayAvg <= 0) {
         type = '500'; recommended = 0;
         reason = 'нет продаж — снять MIN';
     } else if (rec441 > 0 && rec500 <= rec441) {
         type = '441'; recommended = rec441;
-        reason = 'MIN 441 = вместимость ' + vmesimost + ' шт × ' + st.p441 + '%';
+        reason = reason441;
     } else {
         type = '500'; recommended = rec500;
-        reason = dayAvg.toFixed(1) + ' шт/дн × ' + Math.round(days) + ' дн' + (priority ? ' (20/80/Бест)' : '') + (st.peak ? ' × пик ' + st.peakK : '');
+        reason = reason500calc;
     }
 
     const current441 = activeMin441?.count || 0;
@@ -4577,6 +5039,8 @@ function calculateRecommendedMin(params) {
         status,
         statusCode,
         reason,
+        reason441: reason441,
+        reason500: reason500calc,
         effectiveSales: dayAvg,
         isNew: false
     };
@@ -4697,11 +5161,14 @@ function applyQuickFilter(filter) {
             'all': '🔍 Показаны все товары',
             'uto': '📊 Показаны товары с УТО',
             'best': '⭐ Показаны товары с признаком Бест',
-            'min': `📋 Показаны товары с заказом на ${getTomorrowDay()}`,
+            'min': `📋 Показаны товары с заказом на ${getMinTargetLabel()}`,
             'puto': '📌 Показаны товары с ПУТО'
         };
         const statusDiv = document.getElementById('quickFilterStatus');
         if (statusDiv) statusDiv.textContent = statusMap[filter] || statusMap['all'];
+        // 🛠 v2.13.3: пересчитываем и при повторном клике — если вкладка была открыта
+        // с прошлых суток, список «Мин» должен переключиться на новый день
+        if (cachedData.fullData.length) scheduleFilter();
         return;
     }
     
@@ -4716,7 +5183,7 @@ function applyQuickFilter(filter) {
         'all': '🔍 Показаны все товары',
         'uto': '📊 Показаны товары с УТО',
         'best': '⭐ Показаны товары с признаком Бест',
-        'min': `📋 Показаны товары с заказом на ${getTomorrowDay()}`,
+        'min': `📋 Показаны товары с заказом на ${getMinTargetLabel()}`,
         'puto': '📌 Показаны товары с ПУТО'
     };
     const statusDiv = document.getElementById('quickFilterStatus');
@@ -4910,13 +5377,9 @@ function applyFilters() {
                                (row["BEST NEXT"] && row["BEST NEXT"] !== "");
                     });
                 } else if (activeQuickFilter === 'min') {
-                    const tomorrow = getTomorrowDay();
-                    result = result.filter(row => {
-                        const days = String(row["Дни выхода заказа поставщика"] || "").trim();
-                        if (!days) return false;
-                        const dayList = days.split(',').map(d => d.trim());
-                        return dayList.includes(tomorrow);
-                    });
+                    // 🛠 v2.13.3: заказ на завтра (в пт/сб — перескок на ПН);
+                    // матчатся любые сочетания дней из отчёта: «СР», «ПН,СР», «ПН,СР,ПТ», «ВТ,ЧТ» …
+                    result = result.filter(row => isMinOrderDay(row["Дни выхода заказа поставщика"]));
                 } else if (activeQuickFilter === 'puto') {
                     result = result.filter(row => {
                         return toNumber(row["ПУТО"], 0) === 1;
@@ -4933,7 +5396,12 @@ function applyFilters() {
                     };
                     const filterName = quickFilterName[activeQuickFilter] || activeQuickFilter;
                     emptyType = 'empty_quickfilter';
-                    showToast(`🔍 В выбранном диапазоне нет товаров с признаком "${filterName}"`, 'warning');
+                    // 🛠 v2.13.3: для «Мин» сообщение конкретнее — с целевым днём заказа
+                    if (activeQuickFilter === 'min') {
+                        showToast(`🔍 В выбранном диапазоне нет товаров с заказом на ${getMinTargetLabel()} (Мины)`, 'warning');
+                    } else {
+                        showToast(`🔍 В выбранном диапазоне нет товаров с признаком "${filterName}"`, 'warning');
+                    }
                 }
                 
                 if (articleFilterList && articleFilterList.size > 0) {
@@ -5322,7 +5790,6 @@ function renderFullTableWithFilter(emptyType = null) {
         isBestCol[col] = BEST_COLUMNS.includes(col);
         isMinCol[col] = MIN_COLUMNS.includes(col);
     });
-    const tomorrowDay = getTomorrowDay();
     
     for (const row of dataToShow) {
         const tr = document.createElement("tr");
@@ -5338,8 +5805,7 @@ function renderFullTableWithFilter(emptyType = null) {
         const hasBest = (row["BEST гамма"] && row["BEST гамма"] !== "") || 
                         (row["BEST NEXT"] && row["BEST NEXT"] !== "");
         
-        const daysString = String(row["Дни выхода заказа поставщика"] || "").trim();
-        const hasMin = daysString.split(',').map(d => d.trim()).includes(tomorrowDay);
+        const hasMin = isMinOrderDay(row["Дни выхода заказа поставщика"]); // 🛠 v2.13.3: заказ на завтра (в пт/сб — ПН)
         
         if (isEdited) tr.classList.add('edited-row');
         if (hasUto) tr.classList.add('uto-row');
@@ -5482,14 +5948,16 @@ input.title = "Введите количество проектов. -1 = отм
             } else if (col === "MIN 441 (реком.)") {
                 const val = row["MIN 441 (реком.)"];
                 const details = row["_recomDetails"] || {};
+                // 🆕 v2.13.1: своё описание расчёта MIN 441 (не «победившей» рекомендации)
+                const cellReason = details.reason441 || details.reason || '';
                 if (val !== "" && val > 0) {
                     const cur = details.current441 || 0;
                     td.innerHTML = `
                         <span style="font-weight:600;">${cur > 0 ? cur + ' → ' : ''}<strong>${val}</strong></span>
-                        <span style="font-size:0.5rem; color:var(--text-muted); display:block;" title="${details.reason || ''}">${details.reason || ''}</span>
+                        <span style="font-size:0.5rem; color:var(--text-muted); display:block;" title="${cellReason}">${cellReason}</span>
                     `;
                     td.style.background = 'rgba(255,224,130,0.3)';
-                    td.title = (cur > 0 ? 'Текущий MIN 441: ' + cur + '. ' : '') + (details.reason || '');
+                    td.title = (cur > 0 ? 'Текущий MIN 441: ' + cur + '. ' : '') + cellReason;
                 } else {
                     td.textContent = '';
                 }
@@ -5497,14 +5965,16 @@ input.title = "Введите количество проектов. -1 = отм
             } else if (col === "MIN 500 (реком.)") {
                 const val = row["MIN 500 (реком.)"];
                 const details = row["_recomDetails"] || {};
+                // 🆕 v2.13.1: своё описание расчёта MIN 500 (раньше дублировалось из MIN 441)
+                const cellReason = details.reason500 || details.reason || '';
                 if (val !== "" && val > 0) {
                     const cur = details.current500 || 0;
                     td.innerHTML = `
                         <span style="font-weight:600;">${cur > 0 ? cur + ' → ' : ''}<strong>${val}</strong></span>
-                        <span style="font-size:0.5rem; color:var(--text-muted); display:block;" title="${details.reason || ''}">${details.reason || ''}</span>
+                        <span style="font-size:0.5rem; color:var(--text-muted); display:block;" title="${cellReason}">${cellReason}</span>
                     `;
                     td.style.background = 'rgba(255,224,130,0.3)';
-                    td.title = (cur > 0 ? 'Текущий MIN 500: ' + cur + '. ' : '') + (details.reason || '');
+                    td.title = (cur > 0 ? 'Текущий MIN 500: ' + cur + '. ' : '') + cellReason;
                 } else {
                     td.textContent = '';
                 }
@@ -5655,8 +6125,16 @@ input.title = "Введите количество проектов. -1 = отм
                 }
                 
                 if (isMinCol[col]) {
-                    if (String(value || "").trim().split(',').map(d => d.trim()).includes(tomorrowDay)) {
+                    // 🛠 v2.13.3: подсветка заказа на завтра (в пт/сб — ПН)
+                    if (isMinOrderDay(value)) {
                         td.classList.add('min-highlight');
+                    }
+                }
+
+                if (col === "ПУТО") {
+                    // 🛠 v2.13.3: голубая подсветка признака ПУТО = 1 (визуальное подтверждение)
+                    if (String(value).trim() === '1') {
+                        td.classList.add('puto-highlight');
                     }
                 }
                 
@@ -5893,9 +6371,7 @@ function updateAnalytics(data) {
             totalBest++;
         }
         
-        const tomorrow = getTomorrowDay();
-        const daysString = String(row["Дни выхода заказа поставщика"] || "").trim();
-        const hasMin = daysString.split(',').map(d => d.trim()).includes(tomorrow);
+        const hasMin = isMinOrderDay(row["Дни выхода заказа поставщика"]); // 🛠 v2.13.3: заказ на завтра (в пт/сб — ПН)
         if (hasMin) {
             storeStats[store].min++;
             totalMin++;
@@ -6342,13 +6818,11 @@ function exportCardData(cardType) {
             reason = 'Признак "Бест" в гамме или NEXT';
             break;
         case 'min':
-            const tomorrow = getTomorrowDay();
-            items = data.filter(row => {
-                const days = String(row["Дни выхода заказа поставщика"] || "").trim();
-                return days.split(',').map(d => d.trim()).includes(tomorrow);
-            });
+            // 🛠 v2.13.3: заказ на завтра с перескоком через выходные (в пт/сб → ПН);
+            // матчатся одиночные дни и диапазоны («СР», «СР-ЧТ», «ПН-СР», «СР-ПТ»)
+            items = data.filter(row => isMinOrderDay(row["Дни выхода заказа поставщика"]));
             fileName = 'Мины_заказ_завтра';
-            reason = `Заказ поставщика на ${tomorrow}`;
+            reason = `Заказ поставщика на ${getMinTargetLabel()}`;
             break;
         case 'inTransit':
             items = data.filter(row => {
@@ -7418,11 +7892,9 @@ async function exportAllData() {
                     fillArgb = 'FFFFF59D'; fontColor = 'FF827717'; isBold = true;
                 }
                 
-                // ===== Дни выхода заказа (мины) =====
+                // ===== Дни выхода заказа (мины) — 🛠 v2.13.3: заказ на завтра (в пт/сб — ПН) =====
                 if (col === "Дни выхода заказа поставщика") {
-                    const tomorrow = getTomorrowDay();
-                    const days = String(val).split(',').map(d => d.trim());
-                    if (days.includes(tomorrow)) {
+                    if (isMinOrderDay(val)) {
                         fillArgb = 'FFC62828'; fontColor = 'FFFFFFFF'; isBold = true;
                     }
                 }
@@ -9171,6 +9643,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById('storeFilter').addEventListener('change', function() { 
+        // 🆕 v2.13.1: сразу синхронизируем «Получатель» на вкладке ПУТО/УТО с выбранным магазином
+        if (typeof trSyncMainStoreFilter === 'function') { try { trSyncMainStoreFilter(); } catch (e) {} }
+        // 🆕 v2.13.1: и донора на вкладке МС/ТС
+        if (typeof mstsSyncDonorFromMainFilter === 'function') { try { mstsSyncDonorFromMainFilter(); } catch (e) {} }
         if (cachedData.fullData.length) scheduleFilter();
         else computeSummaryAsync();
     });
@@ -9294,7 +9770,7 @@ document.addEventListener('DOMContentLoaded', function() {
         computeMinRecommendations();
     });
     document.getElementById('applyAllMinBtn').addEventListener('click', applyAllMinRecommendations);
-    document.getElementById('exportMinTemplateBtn').addEventListener('click', exportMinTemplate);
+    // 🧹 v2.13.1: кнопка «ШАБЛОН MIN» убрана — слушатель удалён вместе с ней
     // настройки живут в левой панели (lp-инпуты), их слушатели ниже
 
 
@@ -9395,6 +9871,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🆕 v2.4: В Excel убрана заливка "Вместимость" и "Наибольший резерв MIN (число)"');
     console.log('🆕 v2.4: "Срок поставки в магазин" выделяется красным (пусто) / зелёным (заполнено)');
     console.log('🆕 v2.4: Исправлено подтягивание "Срок поставки в магазин" из отчёта "Детали поставки"');
+    console.log('🆕 v2.13.1: убрана кнопка "⬇️ ШАБЛОН MIN" на вкладке МИНЫ');
+    console.log('🆕 v2.13.1: "MIN 500 (реком.)" показывает СВОЁ описание расчёта (раньше дублировал MIN 441)');
+    console.log('🆕 v2.13.1: донор в трансферах — 3 отдельных столбца: Донор / Запас донора / Остаток донора (после передачи)');
+    console.log('🆕 v2.13.1: "Получатель" на вкладке ПУТО/УТО синхронизируется с фильтром магазина сразу');
+    console.log('🆕 v2.13.1: новая вкладка "🔁 МС/ТС" — обмен мёртвым/токсичным стоком между магазинами (замена макроса); «➕» добавляет в общую заявку ПУТО/УТО');
+    console.log('🛠 v2.13.3: багфикс «Мин» — целевой день = ЗАВТРА с перескоком через выходные (в пт/сб ищем ПН, а не СБ/ВС); матчатся любые сочетания дней из отчёта («СР», «ПН,СР», «ПН,СР,ПТ», «ВТ,ЧТ» …); регистронезависимо; повторный клик по чипу пересчитывает список');
     console.log('🆕 v2.4: "Наименование" компактнее (0.55rem, max 190px, обрезка с ...)');
     console.log('🆕 v2.4: Ускорение фильтрации — debounce 150мс, прогресс-бар 5→25→35→65→80→100%, кэш DOM');
 });
